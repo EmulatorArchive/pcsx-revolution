@@ -1,0 +1,31 @@
+#summary How to compile and launch.
+
+= Compile =
+
+  * Download latest [http://wiibrew.org/wiki/DevkitPro Devkitpro] and install.
+   # Win: 
+    * Download [http://tortoisesvn.net/downloads TortoiseSVN].
+    * Create folder, right click on it -> TortoiseSVN -> checkout -> http://pcsx-revolution.googlecode.com/svn/trunk/
+    * Run Programmer's Notepad (installed with devkitPro)
+    * Find the Makefile.Wii from the source you downloaded. Click Tools > Make.
+   # Unix: 
+    * Install subversion.
+    * svn checkout http://pcsx-revolution.googlecode.com/svn/trunk/ pcsx-revolution-read-only
+    * "cd ./pcsx-revolution-read-only/Gamecube && make -f Makefile.Wii". Or you can modify build.sh script for your system.
+
+= Launch =
+File organisation:
+{{{
+sd
+|-wiisx
+  |-bios
+  |-memcards
+  |-games
+}}}
+  * Put scph1001.bin in bios dir.
+  * Memory cards will be created automaticaly on the first launch.
+  * Default folder for games is sd:/wiisx/games.
+  * Supported types: iso, bin, bin+cue, bin+toc, img.
+  * All config files stored in sd:/wiisx.
+
+  * Don't forget to configure PAD, default is GCpad.
