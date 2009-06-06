@@ -1,6 +1,5 @@
-#summary About.
+#summary About it project and some TODO's.
 
-= About =
 It's only a playground, so do not expect much.
 
 = TODO =
