@@ -65,7 +65,7 @@ static void delayRead(int reg, u32 bpc) {
 
 	psxRegs.pc = bpc;
 
-	//TEST_BRANCH();
+	TEST_BRANCH();
 
 	psxRegs.GPR.r[reg] = rold;
 	execI(); // first branch opcode
@@ -88,7 +88,7 @@ static void delayWrite(int reg, u32 bpc) {
 	branch = 0;
 	psxRegs.pc = bpc;
 
-	//TEST_BRANCH();
+	TEST_BRANCH();
 }
 
 static void delayReadWrite(int reg, u32 bpc) {
@@ -100,7 +100,7 @@ static void delayReadWrite(int reg, u32 bpc) {
 	branch = 0;
 	psxRegs.pc = bpc;
 
-	//TEST_BRANCH();
+	TEST_BRANCH();
 }
 
 // this defines shall be used with the tmp 
@@ -276,7 +276,7 @@ void psxDelayTest(int reg, u32 bpc) {
 	branch = 0;
 	psxRegs.pc = bpc;
 
-	//TEST_BRANCH();
+	TEST_BRANCH();
 }
 
 __inline void doBranch(u32 tar) {

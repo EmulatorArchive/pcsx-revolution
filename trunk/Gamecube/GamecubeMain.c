@@ -127,7 +127,8 @@ static void Initialise (void){
 	GX_SetCullMode (GX_CULL_NONE); 
 	GX_CopyDisp(xfb[0], GX_TRUE); // This clears the efb
 	//  GX_CopyDisp (xfb[0], GX_TRUE); // This clears the xfb
-	fatInitDefault();
+	//fatInitDefault();
+	fatInit(64, 1);
   //printf("Initialize - whichfb = %d; xfb = %x, %x\n",(u32)whichfb,(u32)xfb[0],(u32)xfb[1]);
 }
 
