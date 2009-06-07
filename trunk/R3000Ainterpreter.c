@@ -32,6 +32,10 @@ static int branch = 0;
 static int branch2 = 0;
 static u32 branchPC;
 
+#define TEST_BRANCH() \
+	if (psxRegs.NextBranchCycle <= psxRegs.cycle) \
+		psxBranchTest();
+
 // These macros are used to assemble the repassembler functions
 
 #ifdef PSXCPU_LOG
@@ -61,9 +65,7 @@ static void delayRead(int reg, u32 bpc) {
 
 	psxRegs.pc = bpc;
 
-	s32 woot = psxRegs.NextBranchCycle - psxRegs.cycle;
-	if( woot <= 0 )
-		psxBranchTest();
+	//TEST_BRANCH();
 
 	psxRegs.GPR.r[reg] = rold;
 	execI(); // first branch opcode
@@ -86,9 +88,7 @@ static void delayWrite(int reg, u32 bpc) {
 	branch = 0;
 	psxRegs.pc = bpc;
 
-	s32 woot = psxRegs.NextBranchCycle - psxRegs.cycle;
-	if( woot <= 0 )
-		psxBranchTest();
+	//TEST_BRANCH();
 }
 
 static void delayReadWrite(int reg, u32 bpc) {
@@ -100,9 +100,7 @@ static void delayReadWrite(int reg, u32 bpc) {
 	branch = 0;
 	psxRegs.pc = bpc;
 
-	s32 woot = psxRegs.NextBranchCycle - psxRegs.cycle;
-	if( woot <= 0 )
-		psxBranchTest();
+	//TEST_BRANCH();
 }
 
 // this defines shall be used with the tmp 
@@ -278,9 +276,7 @@ void psxDelayTest(int reg, u32 bpc) {
 	branch = 0;
 	psxRegs.pc = bpc;
 
-	s32 woot = psxRegs.NextBranchCycle - psxRegs.cycle;
-	if( woot <= 0 )
-		psxBranchTest();
+	//TEST_BRANCH();
 }
 
 __inline void doBranch(u32 tar) {
@@ -346,11 +342,7 @@ __inline void doBranch(u32 tar) {
 	branch = 0;
 	psxRegs.pc = branchPC;
 
-/* FIXME It gives 3-5 fps on Wii, but breaks memcards
-and TODO: Get rid of woot, then bug will be fixed. Move it in psxBranchTest */
-//	s32 woot = psxRegs.NextBranchCycle - psxRegs.cycle;
-//	if( woot <= 0 )
-		psxBranchTest();
+	TEST_BRANCH();
 }
 
 /*********************************************************
@@ -703,13 +695,11 @@ __inline void psxCFC0() { if (!_Rt_) return; _rRt_ = _rFs_; }
 __inline void psxMTC0()
 {
 	psxRegs.CP0.r[_Rd_] = _rRt_;
-	psxRegs.interrupt|= 0x80000000;
 }
 
 __inline void psxCTC0()
 {
 	psxRegs.CP0.r[_Rd_] = _rRt_;
-	psxRegs.interrupt|= 0x80000000;
 }
 
 /*********************************************************

@@ -47,14 +47,14 @@ PadDataS pad;
 _sio sio;
 
 // clk cycle byte
-// 4us * 8bits = ((PSXCLK / 1000000) * 32) >> BIAS; (linuzappz)
-#define SIO_INT() PSX_INT(PsxEvt_SIO, 200 );
+// 4us * 8bits = ((PSXCLK / 1000000) * 32) / BIAS; (linuzappz)
+//#define SIO_INT() PSX_INT(PsxEvt_SIO, 200 );
 
+#define SIO_INT() PSX_INT(PsxEvt_SIO, 540 );
 
 void sioInit()
 {
-	//memset(sio, 0, sizeof(sio));
-	//memset(m_PostSavestateCards, 0, sizeof(m_PostSavestateCards));
+	memset(&sio, 0, sizeof(sio));
 
 	// Transfer(?) Ready and the Buffer is Empty
 	sio.StatReg = TX_RDY | TX_EMPTY;
@@ -319,7 +319,6 @@ void sioInterrupt() {
 //	SysPrintf("Sio Interrupt\n");
 	sio.StatReg|= IRQ;
 	psxHu32ref(0x1070)|= SWAPu32(0x80);
-	//psxExceptionTest();
 	psxRegs.interrupt|= 0x80000000;
 }
 
