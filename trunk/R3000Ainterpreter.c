@@ -22,19 +22,11 @@
  * PSX assembly interpreter.
  */
 
-#ifndef __GAMECUBE__
-#include "psxcommon.h"
-#include "r3000a.h"
-#include "gte.h"
-#include "psxhle.h"
-/*FIXME*/
-#include "../gui/hdebug.h"
-#else //!__GAMECUBE__
+
 #include "PsxCommon.h"
 #include "R3000A.h"
 #include "Gte.h"
 #include "PsxHLE.h"
-#endif
 
 static int branch = 0;
 static int branch2 = 0;
@@ -49,7 +41,6 @@ static u32 branchPC;
 #endif
 
 inline void execI();
-inline void execIDbg();
 
 // Subsets
 void (*psxBSC[64])();
@@ -58,30 +49,6 @@ void (*psxREG[32])();
 void (*psxCP0[32])();
 void (*psxCP2[64])();
 void (*psxCP2BSC[32])();
-
-__inline int ConditionalException( uint code, int cond )
-{
-	if( cond )
-	{
-		psxException( code, branch );
-	}
-	return cond;
-}
-
-__inline int _OverflowCheck( u64 result )
-{
-	// This 32bit method can rely on the MIPS documented method of checking for
-	// overflow, which simply compares bit 32 (rightmost bit of the upper word),
-	// against bit 31 (leftmost of the lower word).
-#ifdef __GAMECUBE__
-	//FIXME: Need a proper swap. Disable for now.
-	u64 ppc_result = SWAP32(result);
-	const u32* resptr = (u32*)&ppc_result;
-#else
-	const u32* resptr = (u32*)&result;
-#endif
-	return ConditionalException( 12, !!(resptr[1] & 1) != !!(resptr[0] & 0x80000000) );
-}
 
 static void delayRead(int reg, u32 bpc) {
 	u32 rold, rnew;
@@ -390,15 +357,9 @@ and TODO: Get rid of woot, then bug will be fixed. Move it in psxBranchTest */
 * Arithmetic with immediate operand                      *
 * Format:  OP rt, rs, immediate                          *
 *********************************************************/
-// FIXME: Drop exceptions on overflow. Need to find a bug
+
 __inline void psxADDI() 	{ 		// Rt = Rs + Im 	(Exception on Integer Overflow)
-#if 0
-	s64 result = (s64)_i32(_rRs_) + _Imm_;
-	if( !_OverflowCheck( result ) )
-		_i32(_rRt_) = (s32)result;
-#else
- if (!_Rt_) return; _i32(_rRt_) = _i32(_rRs_) + _Imm_ ; 
-#endif
+	if (!_Rt_) return; _i32(_rRt_) = _i32(_rRs_) + _Imm_ ; 
 }
 __inline void psxADDIU()	{ if (!_Rt_) return; _i32(_rRt_) = _i32(_rRs_) + _Imm_ ; }		// Rt = Rs + Im
 __inline void psxANDI() 	{ if (!_Rt_) return; _rRt_ = _u32(_rRs_) & _ImmU_; }		// Rt = Rs And Im
@@ -412,23 +373,11 @@ __inline void psxSLTIU()	{ if (!_Rt_) return; _rRt_ = _u32(_rRs_) < ((u32)_Imm_)
 * Format:  OP rd, rs, rt                                 *
 *********************************************************/
 __inline void psxADD()	{	// Rd = Rs + Rt		(Exception on Integer Overflow)
-#ifndef __GAMECUBE__
-	s64 result = (s64)_i32(_rRs_) + _i32(_rRt_);
-	if( !_OverflowCheck( result ) )
-		_i32(_rRd_) = (s32)result;
-#else
 	if (!_Rd_) return; _i32(_rRd_) = _i32(_rRs_) + _i32(_rRt_); 
-#endif
 }
 
 __inline void psxSUB() 	{	// Rd = Rs - Rt		(Exception on Integer Overflow)
-#ifndef __GAMECUBE__
-	s64 result = (s64)_i32(_rRs_) - _i32(_rRt_);
-	if( !_OverflowCheck( result ) )
-		_i32(_rRd_) = (s32)result;
-#else
 	if (!_Rd_) return; _i32(_rRd_) = _i32(_rRs_) - _i32(_rRt_); 
-#endif
 }
 
 __inline void psxADDU() { if (!_Rd_) return; _i32(_rRd_) = _i32(_rRs_) + _i32(_rRt_); }	// Rd = Rs + Rt
@@ -751,51 +700,18 @@ __inline void psxSWR() {
 __inline void psxMFC0() { if (!_Rt_) return; _rRt_ = _rFs_; }
 __inline void psxCFC0() { if (!_Rt_) return; _rRt_ = _rFs_; }
 
-void psxTestSWInts() {
-	// the next code is untested, if u know please
-	// tell me if it works ok or not (linuzappz)
-	if (psxRegs.CP0.n.Cause & psxRegs.CP0.n.Status & 0x0300 &&
-		psxRegs.CP0.n.Status & 0x1) {
-		printf("* Intrepeter: psxTestSWInts!\n");
-		psxException(psxRegs.CP0.n.Cause, branch);
-	}
-}
-#if 1
-__inline void MTC0(int reg, u32 val) {
-//	SysPrintf("MTC0 %d: %x\n", reg, val);
-	switch (reg) {
-		case 12: // Status
-			psxRegs.CP0.r[12] = val;
-			psxTestSWInts();
-			psxRegs.interrupt|= 0x80000000;
-			break;
-
-		case 13: // Cause
-			psxRegs.CP0.n.Cause = val & ~(0xfc00);
-			psxTestSWInts();
-			break;
-
-		default:
-			psxRegs.CP0.r[reg] = val;
-			break;
-	}
-}
-
-__inline void psxMTC0() { MTC0(_Rd_, _u32(_rRt_)); }
-__inline void psxCTC0() { MTC0(_Rd_, _u32(_rRt_)); }
-#else
 __inline void psxMTC0()
 {
-	//u32 oldfs = psxRegs.CP0.r[_Rd_];
 	psxRegs.CP0.r[_Rd_] = _rRt_;
+	psxRegs.interrupt|= 0x80000000;
 }
 
 __inline void psxCTC0()
 {
-	//u32 oldfs = psxRegs.CP0.r[_Rd_];
 	psxRegs.CP0.r[_Rd_] = _rRt_;
+	psxRegs.interrupt|= 0x80000000;
 }
-#endif
+
 /*********************************************************
 * Unknow instruction (would generate an exception)       *
 * Format:  ?                                             *
@@ -925,7 +841,6 @@ static void intShutdown() {
 // interpreter execution
 inline void execI() { 
 	u32 *code = (u32 *)PSXM(psxRegs.pc); 
-	//psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
 	if(code == NULL)
 	{
 		psxRegs.pc += 4;
@@ -943,53 +858,11 @@ inline void execI() {
 	psxBSC[psxRegs.code >> 26]();
 }
 
-/* debugger version */
-inline void execIDbg() { 
-#ifndef __GAMECUBE__
-	u32 *code = (u32 *)PSXM(psxRegs.pc);
-	psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
-
-	// dump opcode when LOG_CPU is enabled
-	debugI();
-
-	// normal execution
-	if (!hdb_pause) {
-		psxRegs.pc += 4;
-		psxRegs.cycle++;
-		psxBSC[psxRegs.code >> 26]();
-	}
-
-	// trace one instruction
-	if(hdb_pause == 2) {
-		psxRegs.pc += 4;
-		psxRegs.cycle++;
-		psxBSC[psxRegs.code >> 26]();
-		hdb_pause = 1;
-	}
-	
-	// wait for breakpoint
-	if(hdb_pause == 3) {
-		psxRegs.pc+= 4; psxRegs.cycle++;
-		psxBSC[psxRegs.code >> 26]();
-		if(psxRegs.pc == hdb_break) hdb_pause = 1;
-	}
-#endif 
-}
-
 R3000Acpu psxInt = {
 	intInit,
 	intReset,
 	intExecute,
 	intExecuteBlock,
-	intClear,
-	intShutdown
-};
-
-R3000Acpu psxIntDbg = {
-	intInit,
-	intReset,
-	intExecuteDbg,
-	intExecuteBlockDbg,
 	intClear,
 	intShutdown
 };

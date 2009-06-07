@@ -15,7 +15,7 @@ include $(DEVKITPPC)/wii_rules
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-TARGET		:=	WiiSX
+TARGET		:=	pcsx
 BUILD		:=	build
 SOURCES		:=	source . .. ../ppc/ ../PeopsSoftGPU/ ../PeopsSpu109/
 DATA		:=	data  
@@ -39,8 +39,6 @@ CFLAGS	= -g -mcpu=750 -O2 -pipe -fno-strict-aliasing $(MACHDEP) $(INCLUDE) -D__G
 		  
 		  
 CXXFLAGS	=	$(CFLAGS)
-
-#LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
 
 LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map -Wl,--cref
 

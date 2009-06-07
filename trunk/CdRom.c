@@ -486,15 +486,7 @@ void cdrInterrupt() {
 
 		case AUTOPAUSE:
 			cdr.OCUP = 0;
-/*			SetResultSize(1);
-			StopCdda();
-			StopReading();
-			cdr.OCUP = 0;
-        	cdr.StatP&=~0x20;
-			cdr.StatP|= 0x2;
-        	cdr.Result[0] = cdr.StatP;
-    		cdr.Stat = DataEnd;
-*/			AddIrqQueue(CdlPause, 0x400);
+			AddIrqQueue(CdlPause, 0x400);
 			break;
 
 		case READ_ACK:
@@ -524,21 +516,7 @@ void cdrInterrupt() {
 			break;
 
 		case REPPLAY: 
-			if ((cdr.Mode & 5) != 5) break;
-/*			if (CDR_getStatus(&stat) == -1) {
-				cdr.Result[0] = 0;
-				cdr.Result[1] = 0;
-				cdr.Result[2] = 0;
-				cdr.Result[3] = 0;
-				cdr.Result[4] = 0;
-				cdr.Result[5] = 0;
-				cdr.Result[6] = 0;
-				cdr.Result[7] = 0;
-			} else memcpy(cdr.Result, &stat.Track, 8);
-			cdr.Stat = 1;
-			SetResultSize(8);
-			AddIrqQueue(REPPLAY_ACK, cdReadTime);
-*/			break;
+			break;
 
 		case 0xff:
 			return;
@@ -550,11 +528,7 @@ void cdrInterrupt() {
 
 	if (cdr.Stat != NoIntr && cdr.Reg2 != 0x18)
 		psxIntcIrq(2);
-/* {
-		psxHu32ref(0x1070) |= SWAP32((u32)0x4);
-		psxRegs.interrupt |= 0x80000000;
-	}
-*/
+
 #ifdef CDR_LOG
 	CDR_LOG("cdrInterrupt() Log: CDR Interrupt IRQ %x\n", Irq);
 #endif
@@ -587,7 +561,7 @@ void cdrReadInterrupt() {
 
 	if (cdr.RErr == -1) {
 #ifdef CDR_LOG
-		fprintf(emuLog, "cdrReadInterrupt() Log: err\n");
+		CDR_LOG("cdrReadInterrupt() Log: err\n");
 #endif
 		memset(cdr.Transfer, 0, 2340);
 		cdr.Stat = DiskError;
@@ -601,7 +575,7 @@ void cdrReadInterrupt() {
     cdr.Stat = DataReady;
 
 #ifdef CDR_LOG
-	fprintf(emuLog, "cdrReadInterrupt() Log: cdr.Transfer %x:%x:%x\n", cdr.Transfer[0], cdr.Transfer[1], cdr.Transfer[2]);
+	CDR_LOG("cdrReadInterrupt() Log: cdr.Transfer %x:%x:%x\n", cdr.Transfer[0], cdr.Transfer[1], cdr.Transfer[2]);
 #endif
 
 	if ((cdr.Muted == 1) && (cdr.Mode & 0x40) && (!Config.Xa) && (cdr.FirstSector != -1)) { // CD-XA
@@ -634,7 +608,6 @@ void cdrReadInterrupt() {
 #ifdef CDR_LOG
 		CDR_LOG("cdrReadInterrupt() Log: Autopausing read\n");
 #endif
-//		AddIrqQueue(AUTOPAUSE, 0x800);
 		AddIrqQueue(CdlPause, 0x800);
 	}
 	else {
@@ -642,8 +615,6 @@ void cdrReadInterrupt() {
 		CDREAD_INT((cdr.Mode & 0x80) ? (cdReadTime / 2) : cdReadTime);
 	}
 	psxIntcIrq(2);
-	//psxHu32ref(0x1070) |= SWAP32((u32)0x4);
-	//psxRegs.interrupt |= 0x80000000;
 }
 
 /*

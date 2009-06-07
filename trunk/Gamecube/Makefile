@@ -25,12 +25,18 @@ INCLUDES	:=	.. ../ppc/ ../PeopsSpu109/
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -O2 -Wall $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
-		  -D__GX__ -D_SDL -DSHOW_DEBUG -DEMBEDDED_FONTS -DNOTHREADLIB
+#debug flags
+#CFLAGS	= -g $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
+#		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -DNOTHREADLIB \
+
+CFLAGS	= -g -O2 -pipe -fno-strict-aliasing $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
+		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -DNOTHREADLIB \
+		  -fomit-frame-pointer \
+		  -Wno-unused-parameter -Wno-strict-aliasing
 		  
 CXXFLAGS	=	$(CFLAGS)
 
-LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map
+LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map -Wl,--cref
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project

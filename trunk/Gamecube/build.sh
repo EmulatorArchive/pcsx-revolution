@@ -21,4 +21,4 @@ else
 	make -f Makefile.Wii
 fi
 
-cp -v WiiSX.dol /media/disk-2/apps/0dev_wiisx/boot.dol
+cp -v pcsx.dol /media/disk-2/apps/0dev_wiisx/boot.dol

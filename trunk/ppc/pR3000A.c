@@ -3327,7 +3327,7 @@ static void recMTC0() {
 		iFlushRegs(0);
 		LIW(PutHWRegSpecial(PSXPC), (u32)pc);
 		FlushAllHWReg();
-		CALLFunc((u32)psxTestSWInts);
+		//CALLFunc((u32)psxTestSWInts);
 		branch = 2;
 		iRet();
 	}
