@@ -12,6 +12,7 @@ void PADWriteConfig();
 
 void GPUReadConfig();
 void SPUReadConfig();
+int SMBReadConfig();
 
 typedef struct {
 	int ShowFPS;			// 0-1
@@ -32,10 +33,18 @@ typedef struct {
 } audio_config;
 
 typedef struct {
+	char	ip[16];
+	char	user[20];
+	char	pwd[20];
+	char	share[20];
+} smb_settings;
+
+typedef struct {
 	char filename[255];
 	int device;
 	video_config GPU;
 	audio_config SPU;
+	smb_settings smb;
 } settings;
 
 extern settings Settings;

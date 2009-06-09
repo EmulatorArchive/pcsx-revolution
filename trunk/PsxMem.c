@@ -19,59 +19,67 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
-//#include <sys/mman.h>
 
 #include "PsxCommon.h"
 
-s8 psxM[0x200000];
-s8 psxP[0x010000];
-s8 psxR[0x080000];
-s8 psxH[0x010000];
-u32 psxMemWLUT[0x10000];
-u32 psxMemRLUT[0x10000];
-
-
 int psxMemInit() {
 	int i;
-	memset(psxMemWLUT,0,sizeof(psxMemWLUT));
-	memset(psxMemRLUT,0,sizeof(psxMemRLUT));
+	
+	psxMemRLUT = (u8**)malloc(0x10000 * sizeof(void*));
+	psxMemWLUT = (u8**)malloc(0x10000 * sizeof(void*));
+	memset(psxMemRLUT, 0, 0x10000 * sizeof(void*));
+	memset(psxMemWLUT, 0, 0x10000 * sizeof(void*));
+	
+	psxM = (s8*)malloc(0x00220000 * sizeof(void*));
+	
+	psxP = &psxM[0x200000];
+	psxH = &psxM[0x210000];
+
+	psxR = (char*)malloc(0x00080000);
+
+	if (psxMemRLUT == NULL || psxMemWLUT == NULL || 
+		psxM == NULL || psxP == NULL || psxH == NULL) {
+		SysMessage(_("Error allocating memory!"));
+		return -1;
+	}
 
 // MemR
-	for (i=0; i<0x80; i++) psxMemRLUT[i + 0x0000] = (u32)&psxM[(i & 0x1f) << 16];
-	memcpy(psxMemRLUT + 0x8000, psxMemRLUT, 0x80 * 4);
-	memcpy(psxMemRLUT + 0xa000, psxMemRLUT, 0x80 * 4);
+	for (i=0; i<0x80; i++) psxMemRLUT[i + 0x0000] = (u8*)&psxM[(i & 0x1f) << 16];
 
-	for (i=0; i<0x01; i++) psxMemRLUT[i + 0x1f00] = (u32)&psxP[i << 16];
+	memcpy(psxMemRLUT + 0x8000, psxMemRLUT, 0x80 * sizeof(void*));
+	memcpy(psxMemRLUT + 0xa000, psxMemRLUT, 0x80 * sizeof(void*));
 
-	for (i=0; i<0x01; i++) psxMemRLUT[i + 0x1f80] = (u32)&psxH[i << 16];
+	for (i=0; i<0x01; i++) psxMemRLUT[i + 0x1f00] = (u8*)&psxP[i << 16];
 
-	for (i=0; i<0x08; i++) psxMemRLUT[i + 0xbfc0] = (u32)&psxR[i << 16];
+	for (i=0; i<0x01; i++) psxMemRLUT[i + 0x1f80] = (u8*)&psxH[i << 16];
+
+	for (i=0; i<0x08; i++) psxMemRLUT[i + 0xbfc0] = (u8*)&psxR[i << 16];
 
 // MemW
-	for (i=0; i<0x80; i++) psxMemWLUT[i + 0x0000] = (u32)&psxM[(i & 0x1f) << 16];
-	memcpy(psxMemWLUT + 0x8000, psxMemWLUT, 0x80 * 4);
-	memcpy(psxMemWLUT + 0xa000, psxMemWLUT, 0x80 * 4);
+	for (i=0; i<0x80; i++) psxMemWLUT[i + 0x0000] = (u8*)&psxM[(i & 0x1f) << 16];
+	memcpy(psxMemWLUT + 0x8000, psxMemWLUT, 0x80 * sizeof(void*));
+	memcpy(psxMemWLUT + 0xa000, psxMemWLUT, 0x80 * sizeof(void*));
 
-	for (i=0; i<0x01; i++) psxMemWLUT[i + 0x1f00] = (u32)&psxP[i << 16];
+	for (i=0; i<0x01; i++) psxMemWLUT[i + 0x1f00] = (u8*)&psxP[i << 16];
 
-	for (i=0; i<0x01; i++) psxMemWLUT[i + 0x1f80] = (u32)&psxH[i << 16];
+	for (i=0; i<0x01; i++) psxMemWLUT[i + 0x1f80] = (u8*)&psxH[i << 16];
 
 	return 0;
 }
 
 void psxMemReset() {
 	FILE *f = NULL;
-	char Bios[256];
+	char bios[1024];
 
 	memset(psxM, 0, 0x00200000);
 	memset(psxP, 0, 0x00010000);
 
 	if (strcmp(Config.Bios, "HLE")) {
-		sprintf(Bios, "%s%s", Config.BiosDir, Config.Bios);
-		f = fopen(Bios, "rb");
-		
+		sprintf(bios, "%s/%s", Config.BiosDir, Config.Bios);
+		f = fopen(bios, "rb");
+
 		if (f == NULL) {
-			SysMessage (_("Could not open bios:\"%s\". Enabling HLE Bios\n"), Bios);
+			SysMessage (_("Could not open BIOS:\"%s\". Enabling HLE Bios!\n"), bios);
 			memset(psxR, 0, 0x80000);
 			Config.HLE = BIOS_HLE;
 		}
@@ -84,7 +92,11 @@ void psxMemReset() {
 }
 
 void psxMemShutdown() {
+	free(psxM);
 
+	free(psxR);
+	free(psxMemRLUT);
+	free(psxMemWLUT);
 }
 
 static int writeok=1;
@@ -255,18 +267,18 @@ void psxMemWrite32(u32 mem, u32 value) {
 						case 0x800: case 0x804:
 							if (writeok == 0) break;
 							writeok = 0;
-							memset(psxMemWLUT + 0x0000, 0, 0x80 * 4);
-							memset(psxMemWLUT + 0x8000, 0, 0x80 * 4);
-							memset(psxMemWLUT + 0xa000, 0, 0x80 * 4);
+							memset(psxMemWLUT + 0x0000, 0, 0x80 * sizeof(void*));
+							memset(psxMemWLUT + 0x8000, 0, 0x80 * sizeof(void*));
+							memset(psxMemWLUT + 0xa000, 0, 0x80 * sizeof(void*));
 							break;
 						case 0x1e988:
 							if (writeok == 1) break;
 							writeok = 1;
 
 							for (i=0; i<0x80; i++) 
-								psxMemWLUT[i + 0x0000] = (u32)&psxM[(i & 0x1f) << 16];
-							memcpy(psxMemWLUT + 0x8000, psxMemWLUT, 0x80 * 4);
-							memcpy(psxMemWLUT + 0xa000, psxMemWLUT, 0x80 * 4);
+								psxMemWLUT[i + 0x0000] = (void*)&psxM[(i & 0x1f) << 16];
+							memcpy(psxMemWLUT + 0x8000, psxMemWLUT, 0x80 * sizeof(void*));
+							memcpy(psxMemWLUT + 0xa000, psxMemWLUT, 0x80 * sizeof(void*));
 
 							break;
 						default:

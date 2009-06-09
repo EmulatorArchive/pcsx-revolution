@@ -17,7 +17,7 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	pcsx
 BUILD		:=	build
-SOURCES		:=	source . .. ../ppc/ ../PeopsSoftGPU/ ../PeopsSpu109/
+SOURCES		:=	source . ./ui .. ../ppc/ ../PeopsSoftGPU/ ../PeopsSpu109/
 DATA		:=	data  
 INCLUDES	:=	.. ../ppc/ ../PeopsSpu109/
 
@@ -45,7 +45,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map -Wl,--cref
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	-lwiiuse -lbte -lm -lfat -logc 
+LIBS	:=	-lwiiuse -lbte -lm -lfat -logc  -ltinysmb
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

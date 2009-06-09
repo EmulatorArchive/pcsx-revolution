@@ -465,3 +465,41 @@ void SPUWriteConfig() {
 }
 
 /////////////////////////////////////////////////////////
+
+int SMBReadConfig()
+{
+	struct stat buf;
+	FILE *f;
+	int size;
+	char *data, *tmp;
+
+	char path[255];
+	strcpy(path, "sd:/wiisx/smb.ini");
+
+	if (stat(path, &buf) == -1)
+	{
+		strcpy(path, "usb:/wiisx/smb.ini");
+		if (stat(path, &buf) == -1)
+			return -1;
+	}
+	size = buf.st_size;
+
+	f = fopen(path, "r");
+	if (f == NULL) return -1;
+
+	data = (char*)malloc(size);
+	if (data == NULL) return -1;
+	rewind(f);
+	fread(data, 1, size, f);
+	fclose(f);
+	
+	GetValue("ip", Settings.smb.ip);
+	GetValue("user", Settings.smb.user);
+	GetValue("pwd", Settings.smb.pwd);
+	GetValue("share", Settings.smb.share);
+	printf("ip = %s\nuser = %s\npwd = %s\nshare = %s\n", Settings.smb.ip, Settings.smb.user, Settings.smb.pwd, Settings.smb.share);
+	usleep(10000000);
+	free(data);
+
+	return 0;
+}

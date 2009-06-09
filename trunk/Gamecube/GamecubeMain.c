@@ -26,7 +26,7 @@
 #include <string.h>
 #include <time.h>
 #include <fat.h>
-#include "PsxCommon.h"
+#include "System.h"
 #include "DEBUG.h"
 
 #include "Config.h"
@@ -35,9 +35,9 @@
 #include "pad.h"
 
 #ifdef USE_GUI
-#include "guimenu.h"
+#include "gui/guimenu.h"
 #else
-#include "textmenu.h"
+#include "ui/textmenu.h"
 #endif
 
 /* function prototypes */
@@ -61,9 +61,10 @@ GXRModeObj *vmode;				/*** Graphics Mode Object ***/
 
 
 void ScanPADSandReset() 
-{ 
+{
 	PAD_ScanPads();
 #ifdef HW_RVL
+	CHECK_POWER_BUTTONS();
 	WPAD_ScanPads();
 #endif
 }
@@ -203,8 +204,6 @@ int SysInit() {
     SysPrintf("LoadPlugins()\r\n");
 	if(LoadPlugins()==-1)
 		SysPrintf("ErrorLoadingPlugins()\r\n");
-    //SysPrintf("LoadMcds()\r\n");
-	//LoadMcds();
 	SysPrintf("end SysInit()\r\n");
 	return 0;
 }

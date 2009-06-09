@@ -268,7 +268,7 @@ void psxDma1(u32 adr, u32 bcr, u32 chcr) {
 	size = (bcr >> 16) * (bcr & 0xffff);
 
 	image = (u16*)PSXM(adr);
-	MDECOUTDMA_INT(PSXCLK / 50);		// Working well. And no extra ints from IRQ2. Yay!
+	MDECOUTDMA_INT(PSXCLK / 50);		// Working well. And no extra ints from IRQ29
 	if (mdec.command & 0x08000000) {
 		size = size / ((16 * 16) / 2);
 		for ( ; size > 0; size--, image += (16 * 16) ) {

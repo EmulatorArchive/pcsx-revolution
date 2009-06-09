@@ -39,6 +39,5 @@ void init_gc_pad(struct_pad *pad);
 void init_classic_controller(struct_pad *pad);
 void init_wiimote(struct_pad *pad);
 #endif
-u32 set_button(char msg[15], int type, int pad_num);
 
 #endif
