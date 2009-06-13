@@ -17,10 +17,16 @@
 File organisation:
 {{{
 sd
-|-wiisx
+|-apps
+| `-wiisx
+|   |-boot.dol
+|   |-meta.xml
+|   `icon.png
+|
+`-wiisx
   |-bios
   |-memcards
-  |-games
+  `-games
 }}}
   * Put scph1001.bin in bios dir.
   * Memory cards will be created automaticaly on the first launch.
