@@ -16,12 +16,14 @@
 = Launch =
 File organisation:
 {{{
-sd
+[sd:]&[usb:]
 |-apps
 | `-wiisx
 |   |-boot.dol
 |   |-meta.xml
 |   `icon.png
+|
+[sd:]&[usb:]&[smb:]
 |
 `-wiisx
   |-bios
