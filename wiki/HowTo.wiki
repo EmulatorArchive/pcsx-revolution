@@ -17,7 +17,9 @@
 File organisation:
 {{{
 [sd:]&[usb:]
+|
 |-apps
+| |
 | `-wiisx
 |   |-boot.dol
 |   |-meta.xml
