@@ -24,8 +24,8 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
-#include <time.h>
-#include <fat.h>
+//#include <time.h>
+//#include <fat.h>
 #include "System.h"
 #include "DEBUG.h"
 
@@ -38,6 +38,7 @@
 #include "gui/guimenu.h"
 #else
 #include "ui/textmenu.h"
+#include "ui/wiifat.h"
 #endif
 
 /* function prototypes */
@@ -59,33 +60,9 @@ GXRModeObj *vmode;				/*** Graphics Mode Object ***/
 #define DEFAULT_FIFO_SIZE ( 256 * 1024 )
 //static u8 gp_fifo[DEFAULT_FIFO_SIZE] ATTRIBUTE_ALIGN(32); /*** 3D GX FIFO ***/
 
-
-void ScanPADSandReset() 
+static inline void VideoInit()
 {
-	PAD_ScanPads();
-#ifdef HW_RVL
-	CHECK_POWER_BUTTONS();
-	WPAD_ScanPads();
-#endif
-}
-
-static void Initialise (void){
-
 	whichfb = 0;				/*** Frame buffer toggle ***/
-	VIDEO_Init();
-
-#ifdef HW_RVL
-	WPAD_Init();
-	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);
-	// Wii Power/Reset buttons
-	// See gcMisc,h
-	WPAD_SetPowerButtonCallback((WPADShutdownCallback)ShutdownCB);
-	SYS_SetPowerCallback(ShutdownCB);
-	SYS_SetResetCallback(ResetCB);
-#endif
-	PAD_Init();
-	PAD_Reset(0xf0000000);
-
 	vmode = VIDEO_GetPreferredMode(NULL);
 
 #ifdef HW_RVL
@@ -104,7 +81,7 @@ static void Initialise (void){
 	VIDEO_ClearFrameBuffer (vmode, xfb[0], COLOR_BLACK);
 	VIDEO_ClearFrameBuffer (vmode, xfb[1], COLOR_BLACK);
 	VIDEO_SetNextFramebuffer (xfb[0]);
-	VIDEO_SetPostRetraceCallback (ScanPADSandReset);
+	//VIDEO_SetPostRetraceCallback (ScanPADSandReset);
 	VIDEO_SetBlack (0);
 	VIDEO_Flush ();
 	VIDEO_WaitVSync ();		/*** Wait for VBL ***/
@@ -127,10 +104,29 @@ static void Initialise (void){
 	GX_SetDispCopyDst (vmode->fbWidth, vmode->xfbHeight); 
 	GX_SetCullMode (GX_CULL_NONE); 
 	GX_CopyDisp(xfb[0], GX_TRUE); // This clears the efb
-	//  GX_CopyDisp (xfb[0], GX_TRUE); // This clears the xfb
+}
+
+static void Initialise (void){
+	VIDEO_Init();
+	PAD_Init();
+
+#ifdef HW_RVL
+	WPAD_Init();
+#endif
+
+	VideoInit();
+
+#ifdef HW_RVL
+	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);
+	// Wii Power/Reset buttons
+	// See gcMisc,h
+	WPAD_SetPowerButtonCallback((WPADShutdownCallback)ShutdownCB);
+	SYS_SetPowerCallback(ShutdownCB);
+	SYS_SetResetCallback(ResetCB);
+#endif
+
 	//fatInitDefault();
-	fatInit(64, 1);
-  //printf("Initialize - whichfb = %d; xfb = %x, %x\n",(u32)whichfb,(u32)xfb[0],(u32)xfb[1]);
+	MountAllFAT();
 }
 
 // Plugin structure
@@ -146,29 +142,14 @@ PluginTable plugins[] =
 	  PLUGIN_SLOT_7 
 };
 
-
-/* draw background */
-void draw_splash(void)
-{
-   printf("Splash Screen");
-}
-
 long LoadCdBios;
 
 int main(int argc, char *argv[]) {
-/*	char *file = NULL;
-	int runcd = 0;
-	int loadst = 0;
-	int i;
-*/
 
 	Initialise();
 
-    //draw_splash();
 	/* Configure pcsx */
 	memset(&Config, 0, sizeof(PcsxConfig));
-	//memset(&pads[0], 0, sizeof(users_pad));
-	//memset(&pads[1], 0, sizeof(users_pad));
 	strcpy(Config.Net, "Disabled");
 	if (LoadConfig() == -1)
 	{

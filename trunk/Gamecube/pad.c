@@ -32,7 +32,7 @@ void init_default_pads()
 	{
 		init_gc_pad(&pads[i]);
 		
-		pads[i].analog 		= 0;
+		pads[i].analog 		= 4;
 		pads[i].type 		= 0;
 		pads[i].num 		= i;
 	}

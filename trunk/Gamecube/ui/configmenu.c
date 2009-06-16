@@ -17,13 +17,15 @@ void Config_menu()
 	while(1)
 	{	
 		CHECK_POWER_BUTTONS();
-		if(GetInput(UP, UP, UP))
+		if(GetHeld(UP, UP, UP))
 		{
 			if(index) index--;
+			usleep(100000);
 		}
-		if(GetInput(DOWN, DOWN, DOWN))
+		if(GetHeld(DOWN, DOWN, DOWN))
 		{
 			if(index < 4) index++;
+			usleep(100000);
 		}
 			
 		if(GetInput(A, A, A)) 
@@ -103,13 +105,15 @@ static void ConfigurePAD(struct_pad *pad)
 		if(data->exp.type == WPAD_EXP_NUNCHUK) thirddevice = "Wiimote + nunchak";
 		if(data->exp.type == WPAD_EXP_CLASSIC) thirddevice = "Classic controller";
 #endif
-		if(GetInput(UP, UP, UP))
+		if(GetHeld(UP, UP, UP))
 		{
 			if(index) index--;
+			usleep(100000);
 		}
-		if(GetInput(DOWN, DOWN, DOWN))
+		if(GetHeld(DOWN, DOWN, DOWN))
 		{
 			if(index < 3) index++;
+			usleep(100000);
 		}
 		if(GetInput(RIGHT, RIGHT, RIGHT))
 		{
@@ -129,7 +133,7 @@ static void ConfigurePAD(struct_pad *pad)
 					break;
 
 				case 2: 
-					if(!pad->analog) pad->analog++;
+					if(pad->analog == 4) pad->analog = 7;
 			}
 		}
 		
@@ -144,7 +148,7 @@ static void ConfigurePAD(struct_pad *pad)
 					break;
 						
 				case 2: 
-					if(pad->analog) pad->analog--;
+					if(pad->analog == 7) pad->analog = 4;
 			}
 		}
 			
@@ -225,12 +229,12 @@ static void ConfigurePAD(struct_pad *pad)
 		printf("\n\tConfigure buttons\n" );
 
 		printf("\x1b[%um", (index == 2) ? 32 : 37);
-		printf("\tType: %s\n", pad->analog ? "analog" : "standart");
+		printf("\tType: %s\n", pad->analog == 7 ? "analog" : "standart");
 
 		printf("\x1b[%um", (index == 3) ? 32 : 37);
 		printf("\tBack\n\n");
 
-		if(pad->analog)
+		if(pad->analog == 7)
 		{
 			printf("\x1b[36m");
 			printf("\tInput may be broken in some games.");
@@ -251,14 +255,16 @@ static void ConfigureGPU()
 	{
 		CHECK_POWER_BUTTONS();
 		
-		if(GetInput(UP, UP, UP))
+		if(GetHeld(UP, UP, UP))
 		{
 			if(index) index--;
+			usleep(100000);
 		}
 
-		if(GetInput(DOWN, DOWN, DOWN))
+		if(GetHeld(DOWN, DOWN, DOWN))
 		{
 			if(index < 4) index++;
+			usleep(100000);
 		}
 
 		if(GetInput(A, A, A)) 
@@ -339,14 +345,16 @@ static void ConfigureSPU()
 	{
 		CHECK_POWER_BUTTONS();
 		
-		if(GetInput(UP, UP, UP))
+		if(GetHeld(UP, UP, UP))
 		{
 			if(index) index--;
+			usleep(100000);
 		}
 
-		if(GetInput(DOWN, DOWN, DOWN))
+		if(GetHeld(DOWN, DOWN, DOWN))
 		{
 			if(index < 8) index++;
+			usleep(100000);
 		}
 
 		if(GetInput(A, A, A)) 
@@ -456,12 +464,20 @@ u32 set_button(char msg[15], int type, int pad_num)
 #ifdef HW_RVL
 	if(type)												// All except GC pad
 	{
-		while(WPAD_ButtonsHeld(pad_num)) VIDEO_WaitVSync();
+		while(WPAD_ButtonsHeld(pad_num)) 
+		{
+			CHECK_POWER_BUTTONS();
+			VIDEO_WaitVSync();
+		}
 		
 		clrscr();
 		SysPrintf("\tPress button for %s", msg);
 		
-		while(!WPAD_ButtonsDown(pad_num)) VIDEO_WaitVSync();
+		while(!WPAD_ButtonsDown(pad_num)) 
+		{
+			CHECK_POWER_BUTTONS();
+			VIDEO_WaitVSync();
+		}
 
 		b = WPAD_ButtonsHeld(pad_num);
 		while(WPAD_ButtonsHeld(pad_num) & b)
@@ -471,18 +487,27 @@ u32 set_button(char msg[15], int type, int pad_num)
 				b = WPAD_ButtonsHeld(pad_num);
 				break;
 			}
+			CHECK_POWER_BUTTONS();
 			VIDEO_WaitVSync();
 		}
 	}
 	else
 #endif
 	{
-		while(PAD_ButtonsHeld(pad_num)) VIDEO_WaitVSync();
+		while(PAD_ButtonsHeld(pad_num)) 
+		{
+			CHECK_POWER_BUTTONS();
+			VIDEO_WaitVSync();
+		}
 		
 		clrscr();
 		SysPrintf("\tPress button for %s", msg);
 		
-		while(!PAD_ButtonsDown(pad_num)) VIDEO_WaitVSync();
+		while(!PAD_ButtonsDown(pad_num)) 
+		{
+			CHECK_POWER_BUTTONS();
+			VIDEO_WaitVSync();
+		}
 
 		b = PAD_ButtonsHeld(pad_num);
 		while(PAD_ButtonsHeld(pad_num) & b)
@@ -492,6 +517,7 @@ u32 set_button(char msg[15], int type, int pad_num)
 				b = PAD_ButtonsHeld(pad_num);
 				break;
 			}
+			CHECK_POWER_BUTTONS();
 			VIDEO_WaitVSync();
 		}
 	}

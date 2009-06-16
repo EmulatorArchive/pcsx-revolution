@@ -19,18 +19,46 @@
 #ifndef __PSXMEMORY_H__
 #define __PSXMEMORY_H__
 
-#if defined(__BIGENDIAN__)
+extern s8 psxM[0x200000];
+extern s8 psxP[0x010000];
+extern s8 psxR[0x080000];
+extern s8 psxH[0x010000];
+extern u32 psxMemWLUT[0x10000];
+extern u32 psxMemRLUT[0x10000];
 
+#if defined(__MACOSX__) || defined(__GAMECUBE__)
+//df
 #define _SWAP16(b) ((((unsigned char*)&(b))[0]&0xff) | (((unsigned char*)&(b))[1]&0xff)<<8)
 #define _SWAP32(b) ((((unsigned char*)&(b))[0]&0xff) | ((((unsigned char*)&(b))[1]&0xff)<<8) | ((((unsigned char*)&(b))[2]&0xff)<<16) | (((unsigned char*)&(b))[3]<<24))
 
 #define SWAP16(v) ((((v)&0xff00)>>8) +(((v)&0xff)<<8))
 #define SWAP32(v) ((((v)&0xff000000ul)>>24) + (((v)&0xff0000ul)>>8) + (((v)&0xff00ul)<<8) +(((v)&0xfful)<<24))
+
 #define SWAPu32(v) SWAP32((u32)(v))
 #define SWAPs32(v) SWAP32((s32)(v))
 
 #define SWAPu16(v) SWAP16((u16)(v))
 #define SWAPs16(v) SWAP16((s16)(v))
+//df
+
+/*#define _SWAP16(b) ((((unsigned char*)&(b))[0]&0xff) | (((unsigned char*)&(b))[1]&0xff)<<8)
+#define _SWAP32(b) ((((unsigned char*)&(b))[0]&0xff) | ((((unsigned char*)&(b))[1]&0xff)<<8) | ((((unsigned char*)&(b))[2]&0xff)<<16) | (((unsigned char*)&(b))[3]<<24))
+
+//#define SWAP16(v) ((((v)&0xff00)>>8) +(((v)&0xff)<<8))
+//#define SWAP32(v) ((((v)&0xff000000ul)>>24) + (((v)&0xff0000ul)>>8) + (((v)&0xff00ul)<<8) +(((v)&0xfful)<<24))
+
+#define SWAPu32(v) SWAP32((u32)(v))
+#define SWAPs32(v) (s32)SWAP32((s32)(v))
+
+#define SWAPu16(v) SWAP16((u16)(v))
+#define SWAPs16(v) (s16)SWAP16((s16)(v))
+
+#define SWAP16(x) ((((x)>>8) & 0xff) | (((x)<<8) & 0xff00))
+#define SWAP32(x) ((((x)>>24) & 0xfful) | (((x)>>8) & 0xff00ul) | (((x)<<8) & 0xff0000ul) | (((x)<<24) & 0xff000000ul))
+*/
+#define SWAP16p(ptr) ({u16 __ret, *__ptr=(ptr); __asm__ ("lhbrx %0, 0, %1" : "=r" (__ret) : "r" (__ptr)); __ret;})
+#define SWAP32p(ptr) ({u32 __ret, *__ptr=(ptr); __asm__ ("lwbrx %0, 0, %1" : "=r" (__ret) : "r" (__ptr)); __ret;})
+#define SWAP32wp(ptr,val) ({u32 __val=(val), *__ptr=(ptr); __asm__ ("stwbrx %0, 0, %1" : : "r" (__val), "r" (__ptr) : "memory");})
 
 #else
 
@@ -42,7 +70,6 @@
 
 #endif
 
-s8 *psxM;
 #define psxMs8(mem)		psxM[(mem) & 0x1fffff]
 #define psxMs16(mem)	(SWAP16(*(s16*)&psxM[(mem) & 0x1fffff]))
 #define psxMs32(mem)	(SWAP32(*(s32*)&psxM[(mem) & 0x1fffff]))
@@ -57,7 +84,6 @@ s8 *psxM;
 #define psxMu16ref(mem)	(*(u16*)&psxM[(mem) & 0x1fffff])
 #define psxMu32ref(mem)	(*(u32*)&psxM[(mem) & 0x1fffff])
 
-s8 *psxP;
 #define psxPs8(mem)	    psxP[(mem) & 0xffff]
 #define psxPs16(mem)	(SWAP16(*(s16*)&psxP[(mem) & 0xffff]))
 #define psxPs32(mem)	(SWAP32(*(s32*)&psxP[(mem) & 0xffff]))
@@ -72,7 +98,6 @@ s8 *psxP;
 #define psxPu16ref(mem)	(*(u16*)&psxP[(mem) & 0xffff])
 #define psxPu32ref(mem)	(*(u32*)&psxP[(mem) & 0xffff])
 
-s8 *psxR;
 #define psxRs8(mem)		psxR[(mem) & 0x7ffff]
 #define psxRs16(mem)	(SWAP16(*(s16*)&psxR[(mem) & 0x7ffff]))
 #define psxRs32(mem)	(SWAP32(*(s32*)&psxR[(mem) & 0x7ffff]))
@@ -87,7 +112,6 @@ s8 *psxR;
 #define psxRu16ref(mem)	(*(u16*)&psxR[(mem) & 0x7ffff])
 #define psxRu32ref(mem)	(*(u32*)&psxR[(mem) & 0x7ffff])
 
-s8 *psxH;
 #define psxHs8(mem)		psxH[(mem) & 0xffff]
 #define psxHs16(mem)	(SWAP16(*(s16*)&psxH[(mem) & 0xffff]))
 #define psxHs32(mem)	(SWAP32(*(s32*)&psxH[(mem) & 0xffff]))
@@ -101,9 +125,6 @@ s8 *psxH;
 #define psxHu8ref(mem)	(*(u8*) &psxH[(mem) & 0xffff])
 #define psxHu16ref(mem)	(*(u16*)&psxH[(mem) & 0xffff])
 #define psxHu32ref(mem)	(*(u32*)&psxH[(mem) & 0xffff])
-
-u8** psxMemWLUT;
-u8** psxMemRLUT;
 
 #define PSXM(mem)		(psxMemRLUT[(mem) >> 16] == 0 ? NULL : (u8*)(psxMemRLUT[(mem) >> 16] + ((mem) & 0xffff)))
 #define PSXMs8(mem)		(*(s8 *)PSXM(mem))
@@ -128,13 +149,13 @@ int  psxMemInit();
 void psxMemReset();
 void psxMemShutdown();
 
-u8   psxMemRead8 (u32 mem);
-u16  psxMemRead16(u32 mem);
-u32  psxMemRead32(u32 mem);
+u8   psxMemRead8 (u32 mem);// __attribute__ ((__pure__));
+u16  psxMemRead16(u32 mem);// __attribute__ ((__pure__));
+u32  psxMemRead32(u32 mem);// __attribute__ ((__pure__));
 void psxMemWrite8 (u32 mem, u8 value);
 void psxMemWrite16(u32 mem, u16 value);
 void psxMemWrite32(u32 mem, u32 value);
-void *psxMemPointer(u32 mem);
+void *psxMemPointer(u32 mem);// __attribute__ ((__pure__));
 
 #endif /* __PSXMEMORY_H__ */
 

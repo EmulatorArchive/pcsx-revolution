@@ -29,7 +29,7 @@ typedef struct users_pad {
 	
 	int type;		// 0 - pad; 	 1 - Remote; 	2 - Remote+Nunchak / Classic.
 	int num;		// 0 - first; 	 1 - second.
-	int analog;		// 0 - standart; 1 - analog.
+	int analog;		// 4 - standart; 7 - analog.
 } struct_pad;
 struct_pad pads[2];
 

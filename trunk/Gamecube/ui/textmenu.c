@@ -1,5 +1,7 @@
 #include "textmenu.h"
 #include "wiismb.h"
+#include "wiifat.h"
+#include "mount.h"
 
 #ifdef HW_RVL
 
@@ -36,18 +38,14 @@ char *devicename[DEVICES] = {
 static int NeedReset = 0;
 extern int Running;
 
-enum {
-	DEVICE_SD = 0
-,	DEVICE_USB
-,	DEVICE_SMB
-};
-
 static int OpenBrowser()
 {
 	switch(Settings.device)
 	{
 		case DEVICE_SD:
 		case DEVICE_USB:
+			if(MountFAT(Settings.device) == -1) 
+				return -1;
 			break;
 		case DEVICE_SMB:
 			if(ConnectShare != 0)
@@ -100,7 +98,8 @@ static int RunEmu()
 
 void Main_menu()
 {
-	int index 	= 0;
+	u8 index = 0;
+	u8 draw  = 1;
 
 	char *msg = NULL;
 
@@ -108,55 +107,63 @@ void Main_menu()
 	while(1)
 	{
 		CHECK_POWER_BUTTONS();
-		VIDEO_WaitVSync();
-		if(GetInput(UP, UP, UP))
+		if(GetHeld(UP, UP, UP))
 		{
 			if(index) index--;
+			usleep(100000);
+			draw = 1;
 		}
 
-		if(GetInput(DOWN, DOWN, DOWN))
+		if(GetHeld(DOWN, DOWN, DOWN))
 		{
 			if(index < 5) index++;
+			usleep(100000);
+			draw = 1;
 		}
 
 		if(GetInput(RIGHT, RIGHT, RIGHT))
 		{
-			clrscr();
 			switch(index)
 			{
 				case 2: 
 					if(Settings.device < DEVICES-1) Settings.device++;
 					msg = NULL;
+					draw = 1;
+					clrscr();
 					break;
 			}
 		}
 
 		if(GetInput(LEFT, LEFT, LEFT))
 		{
-			clrscr();
 			switch(index)
 			{
 				case 2: 
 					if(Settings.device) Settings.device--;
 					msg = NULL;
+					draw = 1;
+					clrscr();
 					break;
 			}
 		}
 
 		if(GetInput(A, A, A)) 
 		{
-			clrscr();
 			switch(index)
 			{
 				case 0:
 					if(strlen(Settings.filename) > 6)
 					{
+						clrscr();
 						if( RunEmu() == 0 )
 							return psxCpu->Execute();
 						else
 							msg = "Error loading CD image";
 					}
-					else msg = "Select a file first";
+					else 
+						msg = "Select a file first";
+					draw = 1;
+					clrscr();
 					break;
 					
 				case 1:
@@ -168,18 +175,19 @@ void Main_menu()
 					NeedReset = 1;
 
 					msg = NULL;
-					if( OpenBrowser() == -1 )
-					{
-						sprintf(msg, "Can't find %s" , devicename[Settings.device]);
-					}
-					index = 0;
+					if( OpenBrowser() == 0 )
+						index = 0;
+					else 
+						msg = "Device not found";
 
 					clrscr();
+					draw = 1;
 					break;
 					
 				case 4:
 					Config_menu();
 					clrscr();
+					draw = 1;
 					break;
 
 				case 5: 
@@ -188,44 +196,44 @@ void Main_menu()
 			}
 		}
 
-		printf("\x1B[2;2H");
-
-		printf("\x1b[33m");
-		printf("\tMain menu\n\n");
-
-		printf("\x1b[%um", (index == 0) ? 32 : 37); 	// Set Color
-		printf("\tStart\n");
-
-		printf("\x1b[%um", (index == 1) ? 32 : 37);
-		printf("\tReset\n");
-
-		printf("\x1b[%um", (index == 2) ? 32 : 37);
-
-		printf("\tSelect source: %s\n", devicename[Settings.device]);
-
-		printf("\x1b[%um", (index == 3) ? 32 : 37);
-		printf("\tSelect file\n");
-
-		printf("\x1b[%um", (index == 4) ? 32 : 37);
-		printf("\tConfig\n");
-
-		printf("\x1b[%um", (index == 5) ? 32 : 37);
-		printf("\tExit to HBC\n\n");
-
-		if(msg)
+		if(draw)
 		{
-			printf("\x1b[36m");
-			printf("\t%s\n\n", msg);
-		}
-		if(strlen(Settings.filename) > 4)
-		{
-			printf("\x1b[36m");
-			printf("\tSelected file: %s\n\n", Settings.filename);
-		}
+			draw = 0;
+			printf("\x1B[2;2H");
 
-		printf("\x1b[37m");								// Reset Color
+			printf("\x1b[33m");
+			printf("\tMain menu\n\n");
+
+			printf("\x1b[%um", (index == 0) ? 32 : 37); 	// Set Color
+			printf("\tStart\n");
+
+			printf("\x1b[%um", (index == 1) ? 32 : 37);
+			printf("\tReset\n");
+
+			printf("\x1b[%um", (index == 2) ? 32 : 37);
+			printf("\tSelect source: %s\n", devicename[Settings.device]);
+
+			printf("\x1b[%um", (index == 3) ? 32 : 37);
+			printf("\tSelect file\n");
+
+			printf("\x1b[%um", (index == 4) ? 32 : 37);
+			printf("\tConfig\n");
+
+			printf("\x1b[%um", (index == 5) ? 32 : 37);
+			printf("\tExit to HBC\n\n");
+
+			if(msg)
+			{
+				printf("\x1b[36m");
+				printf("\t%s\n\n", msg);
+			}
+			if(strlen(Settings.filename) > 4)
+			{
+				printf("\x1b[36m");
+				printf("\tSelected file: %s\n\n", Settings.filename);
+			}
+
+			printf("\x1b[37m");								// Reset Color
+		}
 	}
 }
-
-
-

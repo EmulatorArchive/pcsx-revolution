@@ -97,7 +97,6 @@ int ConnectShare ()
 		}
 	}
 	return ret;
-//	return ShareConnected;
 } 
 
 

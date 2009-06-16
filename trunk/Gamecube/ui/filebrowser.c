@@ -12,6 +12,8 @@ typedef struct {
 	int  attr;
 } dir_ent;
 
+static int const per_page = 20;
+
 int textFileBrowser(char* directory){
 	// Set everything up to read
 	DIR_ITER* dp = diropen(directory);
@@ -21,7 +23,7 @@ int textFileBrowser(char* directory){
 	int num_entries = 1, i = 0;
 	dir_ent* dir = malloc( num_entries * sizeof(dir_ent) );
 	// Read each entry of the directory
-	while( dirnext(dp, filename, &fstat) == 0 && i < 20 ){
+	while( dirnext(dp, filename, &fstat) == 0 ){
 		if((strcmp(filename, ".") != 0 && (fstat.st_mode  & S_IFDIR)) || TYPE_FILTER(filename))
 		{
 			// Make sure we have room for this one
@@ -40,21 +42,40 @@ int textFileBrowser(char* directory){
 	
 	int index	= (num_entries > 1) ? 2 : 1;
 	int temp	= 0;
-	
+
+	unsigned short page, start, limit;
+	short draw = 1;
+
 	clrscr();
 	while(1)
 	{
 		CHECK_POWER_BUTTONS();
-		if(GetInput(UP, UP, UP))
+		if(GetHeld(UP, UP, UP))
 		{
-			if(index) index--; 
+			if(index) index--;
+			usleep(100000);
+			draw = 1;
 		}
 		
-		if(GetInput(DOWN, DOWN, DOWN))
+		if(GetHeld(DOWN, DOWN, DOWN))
 		{
-			if(index <= num_entries - 1) index++; 
+			if(index < num_entries - 1) index++;
+			usleep(100000);
+			draw = 1;
 		}
-		
+
+		if(GetInput(LEFT, LEFT, LEFT))
+		{
+			index = 0;
+			draw = 1;
+		}
+
+		if(GetInput(RIGHT, RIGHT, RIGHT))
+		{
+			index = num_entries - 1;
+			draw = 1;
+		}
+
 		if(GetInput(A, A, A))
 		{
 			if(index == num_entries) 
@@ -84,21 +105,27 @@ int textFileBrowser(char* directory){
 			return 0;
 		}
 
-		printf("\x1B[2;2H");	
-
-		printf("\x1b[33m");
-		printf("\tFile browser\n\n");
-		printf("\tbrowsing %s:\n\n", directory);
-
-		for(temp = 0; temp < num_entries; temp++)
+		if(draw)
 		{
-			printf("\x1b[%um", (index == temp) ? 32 : 37);
-			printf("\t%s\t%s\n", (dir[temp].attr & S_IFDIR) ? "DIR" : "   ", dir[temp].name);
-		}
+			draw = 0;
+			printf("\x1B[2;2H");	
 
-		printf("\x1b[%um", (index == num_entries) ? 32 : 37);
-		printf("\tReturn to menu\n");
-		printf("\x1b[37m");
+			printf("\x1b[33m");
+			printf("\tFile browser\n\n");
+			printf("\tbrowsing %s:\n\n", directory);
+
+			page = index / per_page;
+			start = page * per_page;
+			limit = ( num_entries > (start + per_page) ) ? ( start + per_page ) : num_entries;
+
+			for(temp = start; temp < limit; temp++)
+			{
+				printf("\x1b[%um", (index == temp) ? 32 : 37);
+				printf("\t%s\t%s\n", (dir[temp].attr & S_IFDIR) ? "DIR" : "   ", dir[temp].name);
+			}
+
+			printf("\x1b[37m");
+		}
 		VIDEO_WaitVSync();
 	}
 } 

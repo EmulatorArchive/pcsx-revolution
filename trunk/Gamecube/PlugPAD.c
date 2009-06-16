@@ -29,22 +29,17 @@
 #define PSX_BUTTON_DDOWN	~(1 << 6)
 #define PSX_BUTTON_DLEFT	~(1 << 7)
 
-/* Controller type, later do this by a Variable in the GUI */
-//#define TYPE_ANALOG // Doesn't work on some games, but user can self select input type.
+#define PAD_PORT() \
+		if(pads[0].type != pads[1].type && (pads[0].type == 0 !| pads[1].type == 0)) 0 \
+		else 1
 
-long  PadFlags = 0;
+long PadFlags = 0;
 
 long PAD__init(long flags) {
 	SysPrintf("start PAD_init()\r\n");
-
-//	printf("Flags: %08x\n", flags);
 	PadFlags |= flags;
-
-
 	/* Read Configuration here */
-
 	SysPrintf("end PAD_init()\r\n");
-	
 	return PSE_PAD_ERR_SUCCESS;
 }
 
@@ -68,15 +63,20 @@ static long read_keys(int port, PadDataS* pad)
 	u32 b;
 	uint16_t pad_status = 0xFFFF;				//bit pointless why is this done this way?
 	struct_pad *cpad 	= &pads[port];
+	int wii_port = cpad->num;
 #ifdef HW_RVL
 	WPADData *data;
-	data = WPAD_Data(cpad->num);
+
+	if(pads[0].type != pads[1].type && (pads[0].type == 0 || pads[1].type == 0)) wii_port = 0; // If Wii Remote and GC pad, then we must read from 0 on both.
 
 	if(cpad->type)
-		b = WPAD_ButtonsHeld(cpad->num);
+	{
+		data = WPAD_Data(wii_port);
+		b = WPAD_ButtonsHeld(wii_port);
+	}
 	else
 #endif	
-		b = PAD_ButtonsHeld(cpad->num);
+		b = PAD_ButtonsHeld(wii_port);
 	
 	if (b & cpad->START)
 		pad_status &= PSX_BUTTON_START;
@@ -101,7 +101,7 @@ static long read_keys(int port, PadDataS* pad)
 		pad_status &= PSX_BUTTON_L1;
 
 #ifdef HW_RVL
-	if(data->exp.type == WPAD_EXP_NUNCHUK && !cpad->analog)
+	if(data->exp.type == WPAD_EXP_NUNCHUK && cpad->analog == 4)
 	{
 		if(data->exp.nunchuk.js.pos.y > 140)
 			pad_status &= PSX_BUTTON_DUP;
@@ -132,21 +132,15 @@ static long read_keys(int port, PadDataS* pad)
 	}
 					
 	
-	if(!cpad->analog)
+	if(cpad->analog == 7)
 	{
-		pad->controllerType = 4;
-	}
-	else
-	{
-		pad->controllerType = 7;										// Analog Pad
-	
 		switch(cpad->type)
 		{
 			case 0:														// GC Pad
-				pad->leftJoyX  = (u8)(PAD_StickX(cpad->num)+128);
-				pad->leftJoyY  = (u8)(PAD_StickY(cpad->num)+128);
-				pad->rightJoyX = (u8)(PAD_SubStickX(cpad->num)+128);
-				pad->rightJoyY = (u8)(PAD_SubStickY(cpad->num)+128);
+				pad->leftJoyX  = (u8)(PAD_StickX(wii_port)+128);
+				pad->leftJoyY  = (u8)(PAD_StickY(wii_port)+128);
+				pad->rightJoyX = (u8)(PAD_SubStickX(wii_port)+128);
+				pad->rightJoyY = (u8)(PAD_SubStickY(wii_port)+128);
 				break;
 #ifdef HW_RVL			
 			case 1:														// Wiimote
@@ -156,20 +150,13 @@ static long read_keys(int port, PadDataS* pad)
 			case 2:
 				if(data->exp.type == WPAD_EXP_NUNCHUK)
 				{
-					ir_t ir;											// analog via Remote IR
-					WPAD_IR(cpad->num, &ir);
-	
-					int cursor_x = ir.x; 								// from 0 to 560
-					int cursor_y = - (ir.y - 420); 						// from 0 to 420. 0 was on top, but we need on bottom
-					
-					cursor_x *= 0.456;									// now its 0-255
-					cursor_y *= 0.61;									// now its 0-256
-					
-					// It seems pcsx understand only 0, 128 and 255 (bottom/left, center, top/right).
-					pad->rightJoyX 	= (cursor_x > 180) ? 255 : ((cursor_x < 70) ? 0 : 128);
-					pad->rightJoyY 	= (cursor_y > 180) ? 255 : ((cursor_y < 70) ? 0 : 128);
-					pad->leftJoyX 	= (data->exp.nunchuk.js.pos.x > 140) ? 255 : ((data->exp.nunchuk.js.pos.x < 110) ? 0 : 128);
-					pad->leftJoyY 	= (data->exp.nunchuk.js.pos.y > 140) ? 255 : ((data->exp.nunchuk.js.pos.y < 110) ? 0 : 128);
+					//TODO: Check this
+					gforce_t gforce;
+					WPAD_GForce(wii_port, &gforce);
+					pad->leftJoyX 	= data->exp.nunchuk.js.pos.x;
+					pad->leftJoyY 	= data->exp.nunchuk.js.pos.y;
+					pad->rightJoyX 	= gforce.x;
+					pad->rightJoyY 	= gforce.y;
 				}
 				else
 				{
@@ -182,6 +169,7 @@ static long read_keys(int port, PadDataS* pad)
 #endif
 		}
 	}
+	pad->controllerType = cpad->analog;
 	pad->buttonStatus = pad_status;									// Copy Buttons
 	return PSE_PAD_ERR_SUCCESS;
 }
