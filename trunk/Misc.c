@@ -569,11 +569,11 @@ int LoadState(const char *file) {
 		psxRegs.code = SWAP32p(&psxRegs.code);
 		psxRegs.cycle = SWAP32p((u32*)&psxRegs.cycle);
 		psxRegs.interrupt = SWAP32p(&psxRegs.interrupt);
-		for (i=0; i<32; i++)
+		/*for (i=0; i<32; i++)
 		{
 			psxRegs.sCycle[i] = SWAP32p(&psxRegs.sCycle[i]);
 			psxRegs.eCycle[i] = SWAP32p(&psxRegs.eCycle[i]);
-		}
+		}*/
 	}
 #endif
 

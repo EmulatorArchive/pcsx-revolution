@@ -194,17 +194,5 @@ enum {
 #include "Decode_XA.h"
 #include "Misc.h"
 #include "Gte.h"
-/*
-extern int  SysInit();							// Init mem and plugins
-extern void SysReset();						// Resets mem
-extern void SysPrintf(char *fmt, ...);			// Printf used by bios syscalls
-extern void SysMessage(char *fmt, ...);		// Message used to print msg to users
-extern void *SysLoadLibrary(char *lib);		// Loads Library
-extern void *SysLoadSym(void *lib, char *sym);	// Loads Symbol from Library
-extern const char *SysLibError();				// Gets previous error loading sysbols
-extern void SysCloseLibrary(void *lib);		// Closes Library
-extern void SysUpdate();						// Called on VBlank (to update i.e. pads)
-extern void SysRunGui();						// Returns to the Gui
-extern void SysClose();						// Close mem and plugins
-*/
+
 #endif /* __PSXCOMMON_H__ */

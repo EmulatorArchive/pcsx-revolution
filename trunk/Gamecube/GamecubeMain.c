@@ -109,7 +109,7 @@ static inline void VideoInit()
 }
 
 static void Initialise (void){
-	InitDVD();
+	//InitDVD();
 	VIDEO_Init();
 	PAD_Init();
 

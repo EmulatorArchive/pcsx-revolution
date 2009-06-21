@@ -30,7 +30,7 @@
 typedef struct {
 	u32 time;
 	void (*Execute)();
-	u8 isEnabled;
+	u8 Enabled;
 } int_timer;
 
 int_timer events[PsxEvt_CountAll];
@@ -97,6 +97,9 @@ void psxReset()
 	psxRegs.pc = 0xbfc00000; // Start in bootstrap
 	psxRegs.CP0.r[12] = 0x10900000; // COP0 enabled | BEV = 1 | TS = 1
 	psxRegs.CP0.r[15] = 0x00000002; // PRevID = Revision ID, same as R3000A
+	
+	psxRegs.NextBranchCycle = psxRegs.cycle + 4;
+	
 	psxHwReset();
 	ResetEvents();
 	psxBiosInit();
@@ -120,7 +123,8 @@ void psxShutdown()
 
 void psxException(u32 code, u32 bd) {
 	// Set the Cause
-	psxRegs.CP0.n.Cause = code;
+	psxRegs.CP0.n.Cause &= ~0x7f;
+	psxRegs.CP0.n.Cause |= code;
 
 	// Set the EPC & PC
 	if (bd) {
@@ -150,7 +154,6 @@ __inline int psxSetNextBranch( u32 startCycle, s32 delta )
 	if( (int)(psxRegs.NextBranchCycle - startCycle) > delta )
 	{
 		psxRegs.NextBranchCycle = startCycle + delta;
-		//psxRegs.cycle = psxRegs.NextBranchCycle;
 	}
 }
 
@@ -160,7 +163,7 @@ __inline void psx_int_add( int n, s32 ecycle )
 	// It's usually indicative os something amiss in our emulation, so uncomment this
 	// code to help trap those sort of things.
 
-	events[n].isEnabled = 1;
+	events[n].Enabled = 1;
 	events[n].time = psxRegs.cycle + ecycle;
 
 	psxSetNextBranch( psxRegs.cycle, ecycle );
@@ -168,7 +171,7 @@ __inline void psx_int_add( int n, s32 ecycle )
 
 __inline void psx_int_remove( int n )
 {
-	events[n].isEnabled = 0;
+	events[n].Enabled = 0;
 }
 
 __inline int psxTestCycle( u32 startCycle, s32 delta )
@@ -184,13 +187,13 @@ __inline void _psxTestInterrupts()
 	int i;
 	for(i = 0; i < PsxEvt_CountAll; i++)
 	{
-		if(!events[i].isEnabled) continue;
+		if(!events[i].Enabled) continue;
 		if(psxRegs.cycle >= events[i].time)
 		{
-			psxRegs.cycle = events[i].time;
-			events[i].isEnabled = 0;
+			events[i].Enabled = 0;
 			events[i].Execute();
 		}
+		else psxSetNextBranch( psxRegs.cycle, events[i].time - psxRegs.cycle );
 	}
 }
 
@@ -210,6 +213,8 @@ void psxBranchTest() {
 	if( psxTestCycle( psxNextsCounter, psxNextCounter ) )
 		psxRcntUpdate();
 
+	psxRegs.NextBranchCycle = psxNextsCounter + psxNextCounter;
+
 	_psxTestInterrupts();
 
 	if (psxRegs.interrupt & 0x80000000) {
@@ -218,7 +223,7 @@ void psxBranchTest() {
 	}
 }
 
-void psxTestIntc()
+__inline void psxTestIntc()
 {
 	if( psxHu32(0x1078) == 0 ) return;
 	if( (psxHu32(0x1070) & psxHu32(0x1074)) == 0 ) return;
@@ -226,7 +231,7 @@ void psxTestIntc()
 	psx_int_add( PsxEvt_Exception, 1 );
 }
 
-void psxRaiseExtInt( uint irq )
+__inline void psxRaiseExtInt( uint irq )
 {
 	psxHu32ref(0x1070) |= SWAPu32(1 << irq);
 	psxTestIntc();

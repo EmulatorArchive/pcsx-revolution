@@ -135,7 +135,7 @@ typedef union {
 		long      zsf3, zsf4;
 		long      flag;
 	} n;
-	unsigned long r[32];
+	u32 r[32];
 } psxCP2Ctrl;
 
 typedef struct {
@@ -147,8 +147,7 @@ typedef struct {
     u32 code;			/* The instruction */
 	u32 cycle;
 	u32 interrupt;
-	s32 eCycle[32];
-	u32 sCycle[32];
+
 	u32 NextBranchCycle;		// Save many ints
 } psxRegisters;
 

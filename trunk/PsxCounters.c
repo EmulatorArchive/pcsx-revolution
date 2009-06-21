@@ -75,10 +75,8 @@ static void psxRcntSet() {
 
 		if (count < (s32)psxNextCounter) {
 			psxNextCounter = count;
-			psxSetNextBranch(psxRegs.cycle, psxNextCounter);
 		}
 	}
-	//psxSetNextBranch(psxRegs.cycle, psxNextCounter);
 }
 
 static void _rcntSet(int i) {
@@ -96,7 +94,6 @@ static void _rcntSet(int i) {
 	if (count < (s32)psxNextCounter) {
 		psxNextCounter = count;
 	}
-	psxSetNextBranch(psxRegs.cycle, psxNextCounter);
 }
 
 void psxRcntInit() {
