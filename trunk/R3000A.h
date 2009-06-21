@@ -237,7 +237,10 @@ void psxTestSWInts();
 void psxTestHWInts();
 int  psxTestLoadDelay(int reg, u32 tmp);
 void psxJumpTest();
-void PSX_INT( int  n, s32 ecycle );
-void psxTestIntc();
+
+void psx_int_add(int n, s32 ecycle);
+void psx_int_remove(int n);
+int psxSetNextBranch( u32 startCycle, s32 delta );
+void psxRaiseExtInt( uint irq );
 
 #endif /* __R3000A_H__ */

@@ -31,7 +31,8 @@ typedef struct users_pad {
 	int num;		// 0 - first; 	 1 - second.
 	int analog;		// 4 - standart; 7 - analog.
 } struct_pad;
-struct_pad pads[2];
+
+extern struct_pad pads[2];
 
 void init_default_pads();
 void init_gc_pad(struct_pad *pad);

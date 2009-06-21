@@ -38,8 +38,10 @@
 #include "gui/guimenu.h"
 #else
 #include "ui/textmenu.h"
-#include "ui/wiifat.h"
 #endif
+
+#include "storage/wiifat.h"
+//#include "storage/wiidvd.h"
 
 /* function prototypes */
 int  SysInit();							// Init mem and plugins
@@ -107,6 +109,7 @@ static inline void VideoInit()
 }
 
 static void Initialise (void){
+	InitDVD();
 	VIDEO_Init();
 	PAD_Init();
 

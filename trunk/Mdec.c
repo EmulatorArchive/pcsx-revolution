@@ -237,8 +237,8 @@ void psxDma0(u32 adr, u32 bcr, u32 chcr) {
 
 	size = (bcr>>16)*(bcr&0xffff);
 
-	if (cmd==0x60000000) {
-	} else
+	//if (cmd==0x60000000) {
+	//} else
 	if (cmd==0x40000001) {
 		u8 *p = (u8*)PSXM(adr);
 		iqtab_init(iq_y,p);
@@ -246,8 +246,6 @@ void psxDma0(u32 adr, u32 bcr, u32 chcr) {
 	} else
 	if ((cmd&0xf5ff0000)==0x30000000) {
 		mdec.rl = (u16*)PSXM(adr);
-	}
-	else {
 	}
 
 	HW_DMA0_CHCR &= SWAP32(~0x01000000);

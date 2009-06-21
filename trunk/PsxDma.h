@@ -19,14 +19,13 @@
 #ifndef __PSXDMA_H__
 #define __PSXDMA_H__
 
-#define MDECOUTDMA_INT(eCycle) PSX_INT(PsxEvt_MDEC, eCycle)
-#define GPUDMA_INT(eCycle) PSX_INT(PsxEvt_GPU, eCycle)
+#define MDECOUTDMA_INT(eCycle) psx_int_add(PsxEvt_MDEC, eCycle)
+#define GPUDMA_INT(eCycle) psx_int_add(PsxEvt_GPU, eCycle)
 
 void psxDma2(u32 madr, u32 bcr, u32 chcr);
 void psxDma3(u32 madr, u32 bcr, u32 chcr);
 void psxDma4(u32 madr, u32 bcr, u32 chcr);
 void psxDma6(u32 madr, u32 bcr, u32 chcr);
 void gpuInterrupt();
-void psxIntcIrq(unsigned int irqType);
 
 #endif /* __PSXDMA_H__ */

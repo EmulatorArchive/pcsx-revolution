@@ -65,13 +65,43 @@ enum PSXCountRegs
 	PSX_T2_TARGET = 0x1f801128,
 };
 
-enum PsxEventId
+enum PsxEventType
 {
-	PsxEvt_Cdrom = 2
-,	PsxEvt_SIO = 7
-,	PsxEvt_CdromRead = 18
-,	PsxEvt_GPU = 27
-,	PsxEvt_MDEC = 29
+	PsxEvt_Counter0 = 0,
+	PsxEvt_Counter1,
+	PsxEvt_Counter2,
+	PsxEvt_Counter3,
+	PsxEvt_Counter4,
+	PsxEvt_Counter5,
+	PsxEvt_Exception,
+	PsxEvt_SIO,
+	PsxEvt_GPU,
+	PsxEvt_MDEC,
+
+	PsxEvt_Cdrom,
+	PsxEvt_CdromRead,
+	PsxEvt_SPU,		// SPU command/event processor
+
+	PsxEvt_CountNonIdle,
+
+	// Idle state, no events scheduled.  Placed at -1 since it has no actual
+	// entry in the Event System's event schedule table.
+	PsxEvt_Idle = PsxEvt_CountNonIdle,
+
+	PsxEvt_CountAll		// total number of schedulable event types in the Psx
+};
+
+enum PsxInterrupts
+{
+	PsxInt_VBlank = 0
+,	PsxInt_GM
+,	PsxInt_CDROM
+,	PsxInt_DMA
+
+,	PsxInt_SIO
+,	PsxInt_SPU
+
+,	PsxInt_VBlankEnd
 };
 
 void psxHwReset();

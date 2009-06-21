@@ -48,9 +48,8 @@ _sio sio;
 
 // clk cycle byte
 // 4us * 8bits = ((PSXCLK / 1000000) * 32) / BIAS; (linuzappz)
-//#define SIO_INT() PSX_INT(PsxEvt_SIO, 200 );
 
-#define SIO_INT() PSX_INT(PsxEvt_SIO, 540 );
+#define SIO_INT() psx_int_add(PsxEvt_SIO, 540 );
 
 void sioInit()
 {
@@ -308,7 +307,7 @@ void sioWriteCtrl16(unsigned short value) {
 	if ((sio.CtrlReg & SIO_RESET) || (!sio.CtrlReg)) {
 		sio.padst = 0; sio.mcdst = 0; sio.parp = 0;
 		sio.StatReg = TX_RDY | TX_EMPTY;
-		psxRegs.interrupt &= ~(1<<PsxEvt_SIO);
+		psx_int_remove(PsxEvt_SIO);
 	}
 }
 

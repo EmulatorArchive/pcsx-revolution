@@ -44,25 +44,25 @@ static void psxRcntReset(unsigned long index) {
 //	SysPrintf("psxRcntReset %x (mode=%x)\n", index, psxCounters[index].mode);
 	psxCounters[index].count = 0;
 	psxRcntUpd(index);
-
+//printf("counter = %d, int = %d\n", index, SWAPu32(psxCounters[index].interrupt));
 //	if (index == 2) SysPrintf("rcnt2 %x\n", psxCounters[index].mode);
+
+	//psxRaiseExtInt(psxCounters[index].interrupt);
+	//psxExceptionTest();
 	psxHu32ref(0x1070)|= SWAPu32(psxCounters[index].interrupt);
+	psxRegs.interrupt|= 0x80000000;
 	if (!(psxCounters[index].mode & 0x40)) { // Only 1 interrupt
 		psxCounters[index].Cycle = 0xffffffff;
 	} // else Continuos interrupt mode
-	//psxExceptionTest();
-	psxRegs.interrupt|= 0x80000000;
+	psxCounters[index].count = 0;
+	psxCounters[index].mode&= ~0x18301C00;
+	psxCounters[index].sCycle = psxRegs.cycle;
 }
 
 static void psxRcntSet() {
-	//u32 cycle = psxCurrentCycle;
-	//s32 next = 0x7fffffff;
 	int i;
 
-	psxNextCounter = 0x7fffffff;
-	psxNextsCounter = psxRegs.cycle;
-
-	for (i=0; i<cnts; i++) {
+	for (i = 0; i < cnts; i++) {
 		s32 count;
 
 		if (psxCounters[i].Cycle == 0xffffffff) continue;
@@ -75,8 +75,28 @@ static void psxRcntSet() {
 
 		if (count < (s32)psxNextCounter) {
 			psxNextCounter = count;
+			psxSetNextBranch(psxRegs.cycle, psxNextCounter);
 		}
 	}
+	//psxSetNextBranch(psxRegs.cycle, psxNextCounter);
+}
+
+static void _rcntSet(int i) {
+	s32 count;
+
+	if (psxCounters[i].Cycle == 0xffffffff) return;
+
+	count = psxCounters[i].Cycle - (psxRegs.cycle - psxCounters[i].sCycle);
+
+	if (count < 0) {
+		psxNextCounter = 0;
+		return;
+	}
+
+	if (count < (s32)psxNextCounter) {
+		psxNextCounter = count;
+	}
+	psxSetNextBranch(psxRegs.cycle, psxNextCounter);
 }
 
 void psxRcntInit() {
@@ -121,9 +141,13 @@ void psxUpdateVSyncRateEnd() {
 }
 
 void psxRcntUpdate() {
-	if ((psxRegs.cycle - psxCounters[3].sCycle) >= psxCounters[3].Cycle) {
+	int n;
+	psxNextCounter = 0x7fffffff;
+	psxNextsCounter = psxRegs.cycle;
+
+	if( psxTestCycle( psxCounters[3].sCycle, psxCounters[3].Cycle ) ) {
 		if (psxCounters[3].mode & 0x10000) { // VSync End (22 hsyncs)
-			psxCounters[3].mode&=~0x10000;
+			psxCounters[3].mode &=~ 0x10000;
 			psxUpdateVSyncRate();
 			psxRcntUpd(3);
 			GPU_updateLace(); // updateGPU
@@ -133,33 +157,27 @@ void psxRcntUpdate() {
 			GTE_LOG("VSync\n");
 #endif
 		} else { // VSync Start (240 hsyncs) 
-			psxCounters[3].mode|= 0x10000;
+			psxCounters[3].mode |= 0x10000;
 			psxUpdateVSyncRateEnd();
 			psxRcntUpd(3);
-			psxHu32ref(0x1070)|= SWAPu32(1);
-			//psxExceptionTest();
+			psxHu32ref(0x1070) |= SWAPu32(1);
 			psxRegs.interrupt|= 0x80000000;
 		}
 	}
 
-	if ((psxRegs.cycle - psxCounters[0].sCycle) >= psxCounters[0].Cycle) {
-		psxRcntReset(0);
-	}
-
-	if ((psxRegs.cycle - psxCounters[1].sCycle) >= psxCounters[1].Cycle) {
-		psxRcntReset(1);
-	}
-
-	if ((psxRegs.cycle - psxCounters[2].sCycle) >= psxCounters[2].Cycle) {
-		psxRcntReset(2);
+	for(n = 0; n < 3; n++){
+		if( psxTestCycle( psxCounters[n].sCycle, psxCounters[n].Cycle ) ) {
+			psxRcntReset(n);
+		}
 	}
 
 	if (cnts >= 5) {
-		if ((psxRegs.cycle - psxCounters[4].sCycle) >= psxCounters[4].Cycle) {
+		if( psxTestCycle( psxCounters[4].sCycle, psxCounters[4].Cycle ) ) {
 			SPU_async((psxRegs.cycle - psxCounters[4].sCycle) * BIAS);
 			psxRcntReset(4);
 		}
 	}
+
 	psxRcntSet();
 }
 
@@ -168,7 +186,7 @@ void psxRcntWcount(u32 index, u32 value) {
 //	PSXCPU_LOG("writeCcount[%d] = %x\n", index, value);
 	psxCounters[index].count = value;
 	psxRcntUpd(index);
-	psxRcntSet();
+	_rcntSet(index);
 }
 
 void psxRcntWmode(u32 index, u32 value)  {
@@ -205,14 +223,14 @@ void psxRcntWmode(u32 index, u32 value)  {
 
 	// Need to set a rate and target
 	psxRcntUpd(index);
-	psxRcntSet();
+	_rcntSet(index);
 }
 
 void psxRcntWtarget(u32 index, u32 value) {
 //	SysPrintf("writeCtarget[%ld] = %lx\n", index, value);
 	psxCounters[index].target = value;
 	psxRcntUpd(index);
-	psxRcntSet();
+	_rcntSet(index);
 }
 
 u32 psxRcntRcount(u32 index) {

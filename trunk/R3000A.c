@@ -25,9 +25,23 @@
 #include "Cheat.h"
 #include "R3000A.h"
 
-//#include "PsxCommon.h"
+#include "PsxHw.h"
 
-//R3000Acpu *psxCpu;
+typedef struct {
+	u32 time;
+	void (*Execute)();
+	u8 isEnabled;
+} int_timer;
+
+int_timer events[PsxEvt_CountAll];
+
+typedef struct {
+	int_timer *next;
+	int_timer *this;
+} int_timer_list;
+
+int_timer_list *active_events;		// TODO Add all events to list.
+
 psxRegisters psxRegs;
 
 int psxInit() {
@@ -36,7 +50,7 @@ int psxInit() {
 #if defined(__i386__) || defined(__sh__) || defined(__ppc__)
 	if (!Config.Cpu) psxCpu = &psxRec;
 #endif
-	Log=0; // GP
+	Log = 0; // GP
 
 	if (psxMemInit() == -1) {
 		SysMessage("Failed to allocate memory for emulation\n Please restart the emulator and try again.");
@@ -44,6 +58,35 @@ int psxInit() {
 	}
 	
 	return psxCpu->Init();
+}
+
+static void _evthandler_Exception()
+{
+	// Note: Re-test conditions here under the assumption that something else might have
+	// cleared the condition masks between the time the exception was raised and the time
+	// it's being handled here.
+
+	if( psxHu32(0x1078) == 0 ) return;
+	if( (psxHu32(0x1070) & psxHu32(0x1074)) == 0 ) return;
+
+	if ((psxRegs.CP0.n.Status & 0xFE01) >= 0x401)
+	{
+		psxException( 0, 0 );
+		psxRegs.pc += 4;
+	}
+}
+
+static void ResetEvents()
+{
+	memset(&events, 0, sizeof(int_timer) * PsxEvt_CountAll);
+
+	events[PsxEvt_Exception].Execute	= _evthandler_Exception;
+	events[PsxEvt_SIO].Execute			= sioInterrupt;
+	events[PsxEvt_Cdrom].Execute		= cdrInterrupt;
+	events[PsxEvt_CdromRead].Execute	= cdrReadInterrupt;
+	events[PsxEvt_MDEC].Execute 		= mdec1Interrupt; 
+	events[PsxEvt_GPU].Execute 			= gpuInterrupt; 
+
 }
 
 void psxReset() 
@@ -55,6 +98,7 @@ void psxReset()
 	psxRegs.CP0.r[12] = 0x10900000; // COP0 enabled | BEV = 1 | TS = 1
 	psxRegs.CP0.r[15] = 0x00000002; // PRevID = Revision ID, same as R3000A
 	psxHwReset();
+	ResetEvents();
 	psxBiosInit();
 	if (!Config.HLE)
 		psxExecuteBios();
@@ -94,40 +138,37 @@ void psxException(u32 code, u32 bd) {
 	// Set the Status
 	psxRegs.CP0.n.Status = (psxRegs.CP0.n.Status &~0x3f) |
 						  ((psxRegs.CP0.n.Status & 0xf) << 2);
-/*
-	if (!Config.HLE && (((PSXMu32(psxRegs.CP0.n.EPC) >> 24) & 0xfe) == 0x4a)) {
-		// "hokuto no ken" / "Crash Bandicot 2" ... fix
-		PSXMu32ref(psxRegs.CP0.n.EPC)&= SWAPu32(~0x02000000);
-	}
-*/
+
 	if (Config.HLE) psxBiosException();
 }
 
-static __inline int psxSetNextBranch( u32 startCycle, s32 delta )
+__inline int psxSetNextBranch( u32 startCycle, s32 delta )
 {
 	// typecast the conditional to signed so that things don't explode
 	// if the startCycle is ahead of our current cpu cycle.
 
 	if( (int)(psxRegs.NextBranchCycle - startCycle) > delta )
+	{
 		psxRegs.NextBranchCycle = startCycle + delta;
+		//psxRegs.cycle = psxRegs.NextBranchCycle;
+	}
 }
 
-__inline void PSX_INT( int  n, s32 ecycle )
+__inline void psx_int_add( int n, s32 ecycle )
 {
 	// Generally speaking games shouldn't throw ints that haven't been cleared yet.
 	// It's usually indicative os something amiss in our emulation, so uncomment this
 	// code to help trap those sort of things.
 
-	// Exception: IRQ16 - SIO - it drops ints like crazy when handling PAD stuff.
-	//if( /*n!=16 &&*/ iopRegs.interrupt & (1<<n) )
-	//	SysPrintf( "***** IOP > Twice-thrown int on IRQ %d\n", n );
-
-	psxRegs.interrupt |= 1 << n;
-
-	psxRegs.sCycle[n] = psxRegs.cycle;
-	psxRegs.eCycle[n] = ecycle;
+	events[n].isEnabled = 1;
+	events[n].time = psxRegs.cycle + ecycle;
 
 	psxSetNextBranch( psxRegs.cycle, ecycle );
+}
+
+__inline void psx_int_remove( int n )
+{
+	events[n].isEnabled = 0;
 }
 
 __inline int psxTestCycle( u32 startCycle, s32 delta )
@@ -138,33 +179,30 @@ __inline int psxTestCycle( u32 startCycle, s32 delta )
 	return (int)(psxRegs.cycle - startCycle) >= delta;
 }
 
-static __inline void PsxTestEvent( unsigned int n, void (*callback)() )
-{
-	if( !(psxRegs.interrupt & (1 << n)) ) return;
-
-	if( psxTestCycle( psxRegs.sCycle[n], psxRegs.eCycle[n] ) )
-	{
-		psxRegs.interrupt &= ~(1 << n);
-		callback();
-	}
-	else
-		psxSetNextBranch( psxRegs.sCycle[n], psxRegs.eCycle[n] );
-}
-
 __inline void _psxTestInterrupts()
 {
-	PsxTestEvent(PsxEvt_SIO,		sioInterrupt);
-	PsxTestEvent(PsxEvt_Cdrom,		cdrInterrupt);
-
-	// Profile-guided Optimization (sorta)
-	// The following ints are rarely called.  Encasing them in a conditional
-	// as follows helps speed up most games.
-
-	if( psxRegs.interrupt & ( (1ul<<18) | (3ul<<27) | (3ul<<29) ) )
+	int i;
+	for(i = 0; i < PsxEvt_CountAll; i++)
 	{
-		PsxTestEvent(PsxEvt_MDEC,		mdec1Interrupt);
-		PsxTestEvent(PsxEvt_GPU,		gpuInterrupt);
-		PsxTestEvent(PsxEvt_CdromRead,	cdrReadInterrupt);
+		if(!events[i].isEnabled) continue;
+		if(psxRegs.cycle >= events[i].time)
+		{
+			psxRegs.cycle = events[i].time;
+			events[i].isEnabled = 0;
+			events[i].Execute();
+		}
+	}
+}
+
+static void psxExceptionTest()
+{
+	if( psxHu32(0x1078) == 0 ) return;
+	if( (psxHu32(0x1070) & psxHu32(0x1074)) == 0 ) return;
+
+	if ((psxRegs.CP0.n.Status & 0xFE01) >= 0x401)
+	{
+		psxException(0, 0);
+		psxRegs.pc += 4;
 	}
 }
 
@@ -172,27 +210,12 @@ void psxBranchTest() {
 	if( psxTestCycle( psxNextsCounter, psxNextCounter ) )
 		psxRcntUpdate();
 
-	psxRegs.NextBranchCycle = psxNextsCounter + psxNextCounter;
-
-	if (psxRegs.interrupt)
-	{
-		_psxTestInterrupts();
-	}
+	_psxTestInterrupts();
 
 	if (psxRegs.interrupt & 0x80000000) {
 		psxRegs.interrupt&=~0x80000000;
 		psxTestHWInts();
 	}
-
-	if( psxHu32(0x1078) == 0 ) return;
-	if( (psxHu32(0x1070) & psxHu32(0x1074)) == 0 ) return;
-
-	if ((psxRegs.CP0.n.Status & 0xFE01) >= 0x401)
-	{
-		//PSXCPU_LOG("Interrupt: %x  %x", psxHu32(0x1070), psxHu32(0x1074));
-		psxException(0, 0);
-	}
-//	if (psxRegs.cycle > 0xd29c6500) Log=1;
 }
 
 void psxTestIntc()
@@ -200,7 +223,13 @@ void psxTestIntc()
 	if( psxHu32(0x1078) == 0 ) return;
 	if( (psxHu32(0x1070) & psxHu32(0x1074)) == 0 ) return;
 
-	psxSetNextBranch( psxRegs.cycle, 2 );
+	psx_int_add( PsxEvt_Exception, 1 );
+}
+
+void psxRaiseExtInt( uint irq )
+{
+	psxHu32ref(0x1070) |= SWAPu32(1 << irq);
+	psxTestIntc();
 }
 
 void psxTestHWInts() {

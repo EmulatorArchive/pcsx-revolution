@@ -1,5 +1,6 @@
 #include "textmenu.h"
 #include "../Config.h"
+#include "../pad.h"
 
 static void ConfigurePAD(struct_pad *pad);
 static void ConfigureSPU();
@@ -7,7 +8,7 @@ static void ConfigureGPU();
 
 static u32 set_button(char msg[15], int type, int pad_num);
 
-extern struct_pad pads[2];
+//extern struct_pad pads[2];
 
 void Config_menu()
 {
@@ -17,15 +18,13 @@ void Config_menu()
 	while(1)
 	{	
 		CHECK_POWER_BUTTONS();
-		if(GetHeld(UP, UP, UP))
+		if(GetInput(UP, UP, UP))
 		{
 			if(index) index--;
-			usleep(100000);
 		}
-		if(GetHeld(DOWN, DOWN, DOWN))
+		if(GetInput(DOWN, DOWN, DOWN))
 		{
 			if(index < 4) index++;
-			usleep(100000);
 		}
 			
 		if(GetInput(A, A, A)) 
@@ -105,15 +104,13 @@ static void ConfigurePAD(struct_pad *pad)
 		if(data->exp.type == WPAD_EXP_NUNCHUK) thirddevice = "Wiimote + nunchak";
 		if(data->exp.type == WPAD_EXP_CLASSIC) thirddevice = "Classic controller";
 #endif
-		if(GetHeld(UP, UP, UP))
+		if(GetInput(UP, UP, UP))
 		{
 			if(index) index--;
-			usleep(100000);
 		}
-		if(GetHeld(DOWN, DOWN, DOWN))
+		if(GetInput(DOWN, DOWN, DOWN))
 		{
 			if(index < 3) index++;
-			usleep(100000);
 		}
 		if(GetInput(RIGHT, RIGHT, RIGHT))
 		{
@@ -255,16 +252,14 @@ static void ConfigureGPU()
 	{
 		CHECK_POWER_BUTTONS();
 		
-		if(GetHeld(UP, UP, UP))
+		if(GetInput(UP, UP, UP))
 		{
 			if(index) index--;
-			usleep(100000);
 		}
 
-		if(GetHeld(DOWN, DOWN, DOWN))
+		if(GetInput(DOWN, DOWN, DOWN))
 		{
 			if(index < 4) index++;
-			usleep(100000);
 		}
 
 		if(GetInput(A, A, A)) 
@@ -345,16 +340,14 @@ static void ConfigureSPU()
 	{
 		CHECK_POWER_BUTTONS();
 		
-		if(GetHeld(UP, UP, UP))
+		if(GetInput(UP, UP, UP))
 		{
 			if(index) index--;
-			usleep(100000);
 		}
 
-		if(GetHeld(DOWN, DOWN, DOWN))
+		if(GetInput(DOWN, DOWN, DOWN))
 		{
 			if(index < 8) index++;
-			usleep(100000);
 		}
 
 		if(GetInput(A, A, A)) 

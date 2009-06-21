@@ -123,10 +123,3 @@ void psxDma6(u32 madr, u32 bcr, u32 chcr) {
 	HW_DMA6_CHCR &= SWAP32(~0x01000000);
 	psxDmaInterrupt(6);
 }
-
-void psxIntcIrq(unsigned int irqType)
-{
-	psxHu32ref(0x1070) |= SWAP32(1 << irqType);
-	psxTestIntc();
-}
-

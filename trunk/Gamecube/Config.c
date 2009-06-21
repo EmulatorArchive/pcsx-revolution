@@ -24,6 +24,7 @@
 
 #include "PsxCommon.h"
 #include "Config.h"
+#include "pad.h"
 
 #define DEVICE(x) x ? "usb:/" : "sd:/"
 

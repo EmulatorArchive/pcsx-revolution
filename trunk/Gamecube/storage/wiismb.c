@@ -2,12 +2,13 @@
 #include <network.h>
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "wiismb.h"
 #include "../Config.h"
 
-static int ShareConnected;
-static int NetworkConnected;
+static u8 ShareConnected;
+static u8 NetworkConnected;
 
 static void CloseShare();
 static void NetworkInit();
@@ -51,7 +52,7 @@ int ConnectShare ()
 	if( SMBReadConfig() == -1 )
 	{
 		printf("Config not found");
-		usleep(5000000);
+		//usleep(5000000);
 		return -1;
 	}
 	int chkU = (strlen(Settings.smb.user) > 0) ? 0:1;
@@ -75,7 +76,7 @@ int ConnectShare ()
 		else if(chkI)
 			sprintf(msg, "Share IP is blank.");
 			printf("Invalid network settings - %s", msg);
-			usleep(5000000);
+			//usleep(5000000);
 		return -1;
 	}
 
@@ -89,14 +90,12 @@ int ConnectShare ()
 	{
 		if(!ShareConnected)
 		{
-			if( ret = smbInit(Settings.smb.user, Settings.smb.pwd,
-					Settings.smb.share, Settings.smb.ip) == 0 )
+			if( smbInit(Settings.smb.user, Settings.smb.pwd,
+					Settings.smb.share, Settings.smb.ip) == true )
 			{
 				ShareConnected = 1;
 			}
 		}
 	}
-	return ret;
+	return ShareConnected;
 } 
-
-

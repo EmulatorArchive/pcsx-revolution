@@ -249,7 +249,6 @@ int OpenPlugins() {
 
 	while ((ret = _OpenPlugins()) == -2) {
 		ReleasePlugins();
-		//LoadMcds();
 		if (LoadPlugins() == -1) return -1;
 	}
 	return ret;	

@@ -20,22 +20,16 @@
 #include "Mdec.h"
 #include "CdRom.h"
 
-//#include "PsxCommon.h"
-
-#ifdef _MSC_VER_
-#pragma warning(disable:4244)
-#endif
-
 void psxHwReset() {
-	if (Config.Sio) psxHu32ref(0x1070) |= SWAP32(0x80);
-    if (Config.SpuIrq) psxHu32ref(0x1070) |= SWAP32(0x200);
-	
+    //if (Config.Sio) psxHu32ref(0x1070) |= SWAP32(0x80);
+    //if (Config.SpuIrq) psxHu32ref(0x1070) |= SWAP32(0x200);
+
 	memset(psxH, 0, 0x10000);
 
 	mdecInit(); //intialize mdec decoder
 	cdrReset();
-	psxRcntInit();
 	sioInit();
+	psxRcntInit();
 }
 
 u8 psxHwRead8(u32 add) {
@@ -238,7 +232,7 @@ u32 psxHwRead32(u32 add) {
 			PSXHW_LOG("ICTRL 32bit read %x", psxHu32(0x1078));
 #endif
 			hard = psxHu32(0x1078);
-			psxHu32ref(0x1078) = 0;
+			psxHu32ref(0x1078) = SWAPu32(0);
 			return hard;
 
 		case 0x1f801810:
@@ -470,8 +464,8 @@ void psxHwWrite16(u32 add, u16 value) {
 #ifdef PSXHW_LOG
 			PSXHW_LOG("IREG 16bit write %x\n", value);
 #endif
-			if (Config.Sio) psxHu16ref(0x1070) |= SWAPu16(0x80);
-			if (Config.SpuIrq) psxHu16ref(0x1070) |= SWAPu16(0x200);
+			//if (Config.Sio) psxHu16ref(0x1070) |= SWAPu16(0x80);
+			//if (Config.SpuIrq) psxHu16ref(0x1070) |= SWAPu16(0x200);
 			psxHu16ref(0x1070) &= SWAPu16(value);
 			return;
 
@@ -480,7 +474,6 @@ void psxHwWrite16(u32 add, u16 value) {
 			PSXHW_LOG("IMASK 16bit write %x\n", value);
 #endif
 			psxHu16ref(0x1074) = SWAPu16(value);
-			//psxRegs.interrupt |= 0x80000000;
 			psxTestIntc();
 			return;
 
@@ -580,18 +573,18 @@ void psxHwWrite16(u32 add, u16 value) {
 }
 
 #define DmaExec(n) { \
-	if (SWAPu32(HW_DMA##n##_CHCR) & 0x01000000 && \
-		SWAPu32(HW_DMA_PCR) & (8 << (n * 4))) { \
+	if (HW_DMA##n##_CHCR & SWAPu32(0x01000000) && \
+		HW_DMA_PCR & SWAPu32(8 << (n * 4))) { \
 		psxDma##n(SWAPu32(HW_DMA##n##_MADR), SWAPu32(HW_DMA##n##_BCR), SWAPu32(HW_DMA##n##_CHCR)); \
 	} \
 }
 
 void psxDmaInterrupt(int n) {
-	if (SWAPu32(HW_DMA_ICR) & (1 << (16 + n)))
+	if (HW_DMA_ICR & SWAPu32(1 << (16 + n)))
 	{
 		HW_DMA_ICR|= SWAP32((1 << (24 + n)));
 		psxRegs.CP0.n.Cause |= 1 << (9 + n);
-		psxIntcIrq( 3 );
+		psxRaiseExtInt( PsxInt_DMA );
 	}
 }
 
@@ -619,8 +612,8 @@ void psxHwWrite32(u32 add, u32 value) {
 #ifdef PSXHW_LOG
 			PSXHW_LOG("IREG 32bit write %lx\n", value);
 #endif
-			if (Config.Sio) psxHu32ref(0x1070) |= SWAPu32(0x80);
-			if (Config.SpuIrq) psxHu32ref(0x1070) |= SWAPu32(0x200);
+			//if (Config.Sio) psxHu32ref(0x1070) |= SWAPu32(0x80);
+			//if (Config.SpuIrq) psxHu32ref(0x1070) |= SWAPu32(0x200);
 			psxHu32ref(0x1070) &= SWAPu32(value);
 			return;
 		case 0x1f801074:
@@ -628,7 +621,6 @@ void psxHwWrite32(u32 add, u32 value) {
 			PSXHW_LOG("IMASK 32bit write %lx\n", value);
 #endif
 			psxHu32ref(0x1074) = SWAPu32(value);
-			//psxRegs.interrupt|= 0x80000000;
 			psxTestIntc();
 			return;
 
@@ -637,7 +629,6 @@ void psxHwWrite32(u32 add, u32 value) {
 			PSXHW_LOG("ICTRL 32bit write %lx", value);
 #endif
 			psxHu32ref(0x1078) = SWAPu32(value); //1;	//According to pSXAuthor this always becomes 1 on write, but MHPB won't boot if value is not writen ;p
-			//psxRegs.interrupt|= 0x80000000;
 			psxTestIntc();
 			return;
 

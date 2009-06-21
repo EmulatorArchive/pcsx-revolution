@@ -1,5 +1,7 @@
 #include "pad.h"
-#include "gcMisc.h"
+//#include "gcMisc.h"
+
+struct_pad pads[2];
 
 void init_gc_pad(struct_pad *pad)
 {
@@ -26,14 +28,17 @@ void init_gc_pad(struct_pad *pad)
 
 void init_default_pads()
 {
-	// Default GC Pad
+	// Default Wiimote
 	int i = 0;
 	for(; i < 2; i++)
 	{
+#ifdef HW_RVL
+		init_wiimote(&pads[i]);
+#else
 		init_gc_pad(&pads[i]);
-		
+#endif 
 		pads[i].analog 		= 4;
-		pads[i].type 		= 0;
+		pads[i].type 		= 1;
 		pads[i].num 		= i;
 	}
 }

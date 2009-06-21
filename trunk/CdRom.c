@@ -95,8 +95,8 @@ unsigned char Test23[] = { 0x43, 0x58, 0x44, 0x32, 0x39 ,0x34, 0x30, 0x51 };
 static struct CdrStat stat;
 static struct SubQ *subq;
 
-#define CDR_INT(eCycle)    PSX_INT(PsxEvt_Cdrom, eCycle)
-#define CDREAD_INT(eCycle) PSX_INT(PsxEvt_CdromRead, eCycle)
+#define CDR_INT(eCycle)    psx_int_add(PsxEvt_Cdrom, eCycle)
+#define CDREAD_INT(eCycle) psx_int_add(PsxEvt_CdromRead, eCycle)
 
 static void AddIrqQueue(unsigned char irq, unsigned long ecycle) {
 	cdr.Irq = irq;
@@ -117,7 +117,7 @@ static __inline void StartReading(type) {
 static __inline void StopReading() {
 	if (cdr.Reading) {
 		cdr.Reading = 0;
-		psxRegs.interrupt &= ~(1<<PsxEvt_CdromRead);
+		psx_int_remove(PsxEvt_CdromRead);
 	}
 }
 
@@ -126,13 +126,13 @@ static __inline void StopCdda() {
 		if (!Config.Cdda) CDR_stop();
 		cdr.StatP &= ~0x80;
 		cdr.Play = 0;
-	} \
+	}
 }
 
-static __inline void SetResultSize(size) { \
-    cdr.ResultP = 0; \
-	cdr.ResultC = size; \
-	cdr.ResultReady = 1; \
+static __inline void SetResultSize(size) {
+    cdr.ResultP = 0;
+	cdr.ResultC = size;
+	cdr.ResultReady = 1;
 }
 
 static void ReadTrack() {
@@ -527,7 +527,7 @@ void cdrInterrupt() {
 	}
 
 	if (cdr.Stat != NoIntr && cdr.Reg2 != 0x18)
-		psxIntcIrq(2);
+		psxRaiseExtInt(PsxInt_CDROM);
 
 #ifdef CDR_LOG
 	CDR_LOG("cdrInterrupt() Log: CDR Interrupt IRQ %x\n", Irq);
@@ -614,7 +614,7 @@ void cdrReadInterrupt() {
 		ReadTrack();
 		CDREAD_INT((cdr.Mode & 0x80) ? (cdReadTime / 2) : cdReadTime);
 	}
-	psxIntcIrq(2);
+	psxRaiseExtInt(PsxInt_CDROM);
 }
 
 /*
@@ -920,7 +920,7 @@ void cdrWrite1(unsigned char rt) {
 			return;
     }
 	if (cdr.Stat != NoIntr)
-		psxIntcIrq(2);
+		psxRaiseExtInt(PsxInt_CDROM);
 }
 
 unsigned char cdrRead2(void) {

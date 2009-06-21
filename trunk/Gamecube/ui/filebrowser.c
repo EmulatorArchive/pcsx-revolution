@@ -1,10 +1,35 @@
 #include "textmenu.h"
 #include <sys/dir.h>
+#include "../storage/wiismb.h"
+#include "../storage/wiifat.h"
+#include "../storage/mount.h"
 
 #define TYPE_FILTER(x)	(strstr(x, ".bin")   \
 						|| strstr(x, ".iso") \
 						|| strstr(x, ".mdf") \
 						|| strstr(x, ".img"))
+
+#ifdef HW_RVL
+
+#define DEVICES			3
+
+char *device[DEVICES] = {
+	"sd:/"
+,	"usb:/"
+,	"smb:/"
+};
+
+#else	//!HW_RVL
+
+#define DEVICES			2
+
+char *device[DEVICES] = {
+	"carda:/"
+,	"cardb:/"
+}
+
+#endif	//HW_RVL
+
 
 typedef struct {
 	char name[255];
@@ -14,7 +39,7 @@ typedef struct {
 
 static int const per_page = 20;
 
-int textFileBrowser(char* directory){
+static int textFileBrowser(char* directory){
 	// Set everything up to read
 	DIR_ITER* dp = diropen(directory);
 	if(!dp){ return -1; }
@@ -53,14 +78,14 @@ int textFileBrowser(char* directory){
 		if(GetHeld(UP, UP, UP))
 		{
 			if(index) index--;
-			usleep(100000);
+			usleep(150000);
 			draw = 1;
 		}
 		
 		if(GetHeld(DOWN, DOWN, DOWN))
 		{
 			if(index < num_entries - 1) index++;
-			usleep(100000);
+			usleep(150000);
 			draw = 1;
 		}
 
@@ -128,4 +153,31 @@ int textFileBrowser(char* directory){
 		}
 		VIDEO_WaitVSync();
 	}
-} 
+}
+
+int OpenBrowser()
+{
+	switch(Settings.device)
+	{
+		case DEVICE_SD:
+		case DEVICE_USB:
+			if(MountFAT(Settings.device) == -1) 
+				return -1;
+			break;
+		case DEVICE_SMB:
+			if(ConnectShare() == -1)
+				return -1;
+			break;
+		case DEVICE_DVD:
+			if(MountDVD() == -1)
+				return -1;
+			break;
+	}
+	sprintf(Settings.filename, "%s%s", device[Settings.device], "wiisx/games");
+	if(textFileBrowser(Settings.filename) == -1)
+	{
+		sprintf(Settings.filename, "%s", device[Settings.device]);
+		return textFileBrowser(Settings.filename);
+	}
+	return 0;
+}

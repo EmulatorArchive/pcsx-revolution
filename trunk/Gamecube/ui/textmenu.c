@@ -1,17 +1,8 @@
 #include "textmenu.h"
-#include "wiismb.h"
-#include "wiifat.h"
-#include "mount.h"
 
 #ifdef HW_RVL
 
 #define DEVICES			3
-
-char *device[DEVICES] = {
-	"sd:/"
-,	"usb:/"
-,	"smb:/"
-};
 
 char *devicename[DEVICES] = {
 	"Front SD"
@@ -23,11 +14,6 @@ char *devicename[DEVICES] = {
 
 #define DEVICES			2
 
-char *device[DEVICES] = {
-	"carda:/"
-,	"cardb:/"
-}
-
 char *devicename[DEVICES] = {
 	"Memcard A"
 ,	"Memcard B"
@@ -37,28 +23,6 @@ char *devicename[DEVICES] = {
 
 static int NeedReset = 0;
 extern int Running;
-
-static int OpenBrowser()
-{
-	switch(Settings.device)
-	{
-		case DEVICE_SD:
-		case DEVICE_USB:
-			if(MountFAT(Settings.device) == -1) 
-				return -1;
-			break;
-		case DEVICE_SMB:
-			if(ConnectShare != 0)
-				return -1;
-	}
-	sprintf(Settings.filename, "%s%s", device[Settings.device], "wiisx/games");
-	if(textFileBrowser(Settings.filename) == -1)
-	{
-		sprintf(Settings.filename, "%s", device[Settings.device]);
-		return textFileBrowser(Settings.filename);
-	}
-	return 0;
-}
 
 static int RunEmu()
 {
@@ -110,14 +74,14 @@ void Main_menu()
 		if(GetHeld(UP, UP, UP))
 		{
 			if(index) index--;
-			usleep(100000);
+			usleep(150000);
 			draw = 1;
 		}
 
 		if(GetHeld(DOWN, DOWN, DOWN))
 		{
-			if(index < 5) index++;
-			usleep(100000);
+			if(index < 4) index++;
+			usleep(150000);
 			draw = 1;
 		}
 
@@ -171,7 +135,6 @@ void Main_menu()
 					break;
 
 				case 2:
-				case 3: 
 					NeedReset = 1;
 
 					msg = NULL;
@@ -184,13 +147,13 @@ void Main_menu()
 					draw = 1;
 					break;
 					
-				case 4:
+				case 3:
 					Config_menu();
 					clrscr();
 					draw = 1;
 					break;
 
-				case 5: 
+				case 4: 
 					to_loader();
 					break;
 			}
@@ -211,15 +174,12 @@ void Main_menu()
 			printf("\tReset\n");
 
 			printf("\x1b[%um", (index == 2) ? 32 : 37);
-			printf("\tSelect source: %s\n", devicename[Settings.device]);
+			printf("\tSource: %s\n", devicename[Settings.device]);
 
 			printf("\x1b[%um", (index == 3) ? 32 : 37);
-			printf("\tSelect file\n");
-
-			printf("\x1b[%um", (index == 4) ? 32 : 37);
 			printf("\tConfig\n");
 
-			printf("\x1b[%um", (index == 5) ? 32 : 37);
+			printf("\x1b[%um", (index == 4) ? 32 : 37);
 			printf("\tExit to HBC\n\n");
 
 			if(msg)

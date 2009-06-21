@@ -5,6 +5,7 @@ enum {
 	DEVICE_SD = 0
 ,	DEVICE_USB
 ,	DEVICE_SMB
+,	DEVICE_DVD
 };
 
 #endif

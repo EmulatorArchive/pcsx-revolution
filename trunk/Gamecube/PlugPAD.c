@@ -5,33 +5,29 @@
 	TODO: Rumble?
 */
 
-#include <ogc/pad.h>
 #include "plugins.h"
-#include "PsxCommon.h"
-//#include "PSEmu_Plugin_Defs.h"
 
 #include "pad.h"
 #include "gcMisc.h"
 
 /* Button Bits */
-#define PSX_BUTTON_TRIANGLE ~(1 << 12)
-#define PSX_BUTTON_SQUARE 	~(1 << 15)
-#define PSX_BUTTON_CROSS	~(1 << 14)
-#define PSX_BUTTON_CIRCLE	~(1 << 13)
-#define PSX_BUTTON_L2		~(1 << 8)
-#define PSX_BUTTON_R2		~(1 << 9)
-#define PSX_BUTTON_L1		~(1 << 10)
-#define PSX_BUTTON_R1		~(1 << 11)
-#define PSX_BUTTON_SELECT	~(1 << 0)
-#define PSX_BUTTON_START	~(1 << 3)
-#define PSX_BUTTON_DUP		~(1 << 4)
-#define PSX_BUTTON_DRIGHT	~(1 << 5)
-#define PSX_BUTTON_DDOWN	~(1 << 6)
-#define PSX_BUTTON_DLEFT	~(1 << 7)
 
-#define PAD_PORT() \
-		if(pads[0].type != pads[1].type && (pads[0].type == 0 !| pads[1].type == 0)) 0 \
-		else 1
+static enum {
+	PSX_BUTTON_TRIANGLE = ~(1 << 12)
+,	PSX_BUTTON_SQUARE	= ~(1 << 15)
+, 	PSX_BUTTON_CROSS	= ~(1 << 14)
+, 	PSX_BUTTON_CIRCLE	= ~(1 << 13)
+, 	PSX_BUTTON_L2		= ~(1 << 8)
+, 	PSX_BUTTON_R2		= ~(1 << 9)
+, 	PSX_BUTTON_L1		= ~(1 << 10)
+, 	PSX_BUTTON_R1		= ~(1 << 11)
+, 	PSX_BUTTON_SELECT	= ~(1 << 0)
+, 	PSX_BUTTON_START	= ~(1 << 3)
+, 	PSX_BUTTON_DUP		= ~(1 << 4)
+, 	PSX_BUTTON_DRIGHT	= ~(1 << 5)
+, 	PSX_BUTTON_DDOWN	= ~(1 << 6)
+, 	PSX_BUTTON_DLEFT	= ~(1 << 7)
+} PadButtons;
 
 long PadFlags = 0;
 
@@ -55,15 +51,16 @@ long PAD__close(void) {
 	return PSE_PAD_ERR_SUCCESS;
 }
 
-extern struct_pad pads[2];
+u32 prev_bt;
+uint16_t prev_pad_status;
 
-static long read_keys(int port, PadDataS* pad)
+static s32 read_keys(u8 port, PadDataS* pad)
 {
 	CHECK_POWER_BUTTONS();
 	u32 b;
 	uint16_t pad_status = 0xFFFF;				//bit pointless why is this done this way?
 	struct_pad *cpad 	= &pads[port];
-	int wii_port = cpad->num;
+	u8 wii_port = cpad->num;
 #ifdef HW_RVL
 	WPADData *data;
 
@@ -77,29 +74,35 @@ static long read_keys(int port, PadDataS* pad)
 	else
 #endif	
 		b = PAD_ButtonsHeld(wii_port);
-	
-	if (b & cpad->START)
-		pad_status &= PSX_BUTTON_START;
-	if (b & cpad->SELECT)
-		pad_status &= PSX_BUTTON_SELECT;
-	if (b & cpad->CROSS)
-		pad_status &= PSX_BUTTON_CROSS;
-	if (b & cpad->CIRCLE)
-		pad_status &= PSX_BUTTON_CIRCLE;
-	if (b & cpad->SQUARE)
-		pad_status &= PSX_BUTTON_SQUARE;
-	if (b & cpad->TRIANGLE)
-		pad_status &= PSX_BUTTON_TRIANGLE;
-		
-	if (b & cpad->R2)
-		pad_status &= PSX_BUTTON_R2;
-	if (b & cpad->L2)
-		pad_status &= PSX_BUTTON_L2;
-	if (b & cpad->R1)
-		pad_status &= PSX_BUTTON_R1;
-	if (b & cpad->L1)
-		pad_status &= PSX_BUTTON_L1;
 
+	if(b == prev_bt)				// Don't check all if nothing change
+		pad_status = prev_pad_status;
+	else
+	{
+		if (b & cpad->START)
+			pad_status &= PSX_BUTTON_START;
+		if (b & cpad->SELECT)
+			pad_status &= PSX_BUTTON_SELECT;
+		if (b & cpad->CROSS)
+			pad_status &= PSX_BUTTON_CROSS;
+		if (b & cpad->CIRCLE)
+			pad_status &= PSX_BUTTON_CIRCLE;
+		if (b & cpad->SQUARE)
+			pad_status &= PSX_BUTTON_SQUARE;
+		if (b & cpad->TRIANGLE)
+			pad_status &= PSX_BUTTON_TRIANGLE;
+
+		if (b & cpad->R2)
+			pad_status &= PSX_BUTTON_R2;
+		if (b & cpad->L2)
+			pad_status &= PSX_BUTTON_L2;
+		if (b & cpad->R1)
+			pad_status &= PSX_BUTTON_R1;
+		if (b & cpad->L1)
+			pad_status &= PSX_BUTTON_L1;
+		
+		prev_bt = b;
+	}
 #ifdef HW_RVL
 	if(data->exp.type == WPAD_EXP_NUNCHUK && cpad->analog == 4)
 	{
@@ -130,8 +133,7 @@ static long read_keys(int port, PadDataS* pad)
 		ClosePlugins();
 		SysRunGui();
 	}
-					
-	
+
 	if(cpad->analog == 7)
 	{
 		switch(cpad->type)
@@ -143,10 +145,6 @@ static long read_keys(int port, PadDataS* pad)
 				pad->rightJoyY = (u8)(PAD_SubStickY(wii_port)+128);
 				break;
 #ifdef HW_RVL			
-			case 1:														// Wiimote
-				pad->controllerType = 4;								// Standart Pad
-				break;
-
 			case 2:
 				if(data->exp.type == WPAD_EXP_NUNCHUK)
 				{
@@ -171,6 +169,7 @@ static long read_keys(int port, PadDataS* pad)
 	}
 	pad->controllerType = cpad->analog;
 	pad->buttonStatus = pad_status;									// Copy Buttons
+	prev_pad_status = pad_status;
 	return PSE_PAD_ERR_SUCCESS;
 }
 

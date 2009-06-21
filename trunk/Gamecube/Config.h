@@ -1,8 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include "pad.h"
-
 void SaveConfig();
 int LoadConfig();
 
