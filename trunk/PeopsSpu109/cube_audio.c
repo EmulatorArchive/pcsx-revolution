@@ -21,26 +21,30 @@
 #include <gccore.h>
 #include <malloc.h>
 
-static u8 audio_buffer[2][4000] ATTRIBUTE_ALIGN(32);
+static u8 audio_buffer[2][3840] ATTRIBUTE_ALIGN(32);
 static u8 *mixbuffer;
-static int IsPlaying = 0;
+static u8 IsPlaying = 0;
 static u32 BufLen;
-static int whichab = 0;
+static u8 whichab = 0;
+
+static u32 buffer_size;
 
 static void AudioSwitchBuffers()
 {
-	memset(audio_buffer[whichab], 0, BufLen);
+	//memset(audio_buffer[whichab], 0, BufLen);
 	memcpy(audio_buffer[whichab], mixbuffer, BufLen);
 
-	AUDIO_InitDMA((u32)audio_buffer[whichab], BufLen);
 	DCFlushRange(audio_buffer[whichab], BufLen);
-	AUDIO_StartDMA();
+	AUDIO_InitDMA((u32)audio_buffer[whichab], BufLen);
+
 	whichab ^= 1;
-	IsPlaying = 1;
+	if(!IsPlaying)
+	{
+		AUDIO_StartDMA();
+		IsPlaying = 1;
+	}
 }
 
-////////////////////////////////////////////////////////////////////////
-// SETUP SOUND
 ////////////////////////////////////////////////////////////////////////
 
 void SetupSound(void)
@@ -48,12 +52,10 @@ void SetupSound(void)
 	AUDIO_Init(NULL);
 	AUDIO_SetDSPSampleRate(AI_SAMPLERATE_48KHZ);
 	AUDIO_RegisterDMACallback (AudioSwitchBuffers);
-	memset(audio_buffer, 0, 4000*2);
+	memset(audio_buffer, 0, 3840 * 2);
 	DEBUG_print("SetupSound called",12);
 }
 
-////////////////////////////////////////////////////////////////////////
-// REMOVE SOUND
 ////////////////////////////////////////////////////////////////////////
 
 void RemoveSound(void)
@@ -65,20 +67,22 @@ void RemoveSound(void)
 }
 
 ////////////////////////////////////////////////////////////////////////
-// GET BYTES BUFFERED
-////////////////////////////////////////////////////////////////////////
 
-unsigned long SoundGetBytesBuffered(void)
+u32 SoundGetBytesBuffered(void)
 {
+	u32 l = AUDIO_GetDMABytesLeft();
 #ifdef PEOPS_SDLOG
- 	sprintf(txtbuffer,"SoundGetBytesBuffered returns approx: %d bytes",AUDIO_GetDMABytesLeft());
- 	DEBUG_print(txtbuffer,12);
+ 	sprintf(txtbuffer,"SoundGetBytesBuffered returns approx: %d bytes", l);
+ 	DEBUG_print(txtbuffer, 12);
 #endif
-	return AUDIO_GetDMABytesLeft();
+	if( l < 0 ) return 0;
+	if( l < AUDIO_GetDMALength() / 2 )
+		l = SOUNDSIZE;
+	else
+		l = 0;
+	return l;
 }
 
-////////////////////////////////////////////////////////////////////////
-// FEED SOUND DATA
 ////////////////////////////////////////////////////////////////////////
 void SoundFeedStreamData( unsigned char *pSound, long lBytes)
 {
@@ -90,5 +94,4 @@ void SoundFeedStreamData( unsigned char *pSound, long lBytes)
 //	SysPrintf(txtbuffer);
 	DEBUG_print(txtbuffer,13);
 #endif
-	
 }
