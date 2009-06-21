@@ -13,7 +13,7 @@
 
 #define DEVICES			3
 
-char *device[DEVICES] = {
+static const char *device[DEVICES] = {
 	"sd:/"
 ,	"usb:/"
 ,	"smb:/"
@@ -23,10 +23,10 @@ char *device[DEVICES] = {
 
 #define DEVICES			2
 
-char *device[DEVICES] = {
+static const char *device[DEVICES] = {
 	"carda:/"
 ,	"cardb:/"
-}
+};
 
 #endif	//HW_RVL
 

@@ -3,10 +3,14 @@
 #include "mount.h"
 #include <stdio.h>
 #include <fat.h>
-#include <sdcard/wiisd_io.h>
-#include <sdcard/gcsd.h>
-#include <ogc/usbstorage.h>
 
+#ifdef HW_RVL
+#include <sdcard/wiisd_io.h>
+#include <ogc/system.h>
+#include <ogc/usbstorage.h>
+#else
+#include <sdcard/gcsd.h>
+#endif
 static int isMounted[2] = {-1, -1};
 
 #ifdef HW_RVL
@@ -59,23 +63,10 @@ int MountFAT(int method)
 		default:
 			return -1; // unknown device
 	}
-
-	//sprintf(Settings.filename, "%s:/", name);
-/*
-	if(unmountRequired[method])
-	{
-		unmountRequired[method] = 0;
-		fatUnmount(Settings.filename);
-		disc->shutdown();
-		isMounted[method] = 0;
-	}*/
 	if(isMounted[method] == -1)
 	{
-		//if(disc->isInserted())
-		{
-			if(!disc->startup() || !fatMountSimple(name, disc))
-				mounted = -1;
-		}
+		if(!disc->startup() || !fatMountSimple(name, disc))
+			mounted = -1;
 	}
 
 	isMounted[method] = mounted;

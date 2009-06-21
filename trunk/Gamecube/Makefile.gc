@@ -7,7 +7,7 @@ ifeq ($(strip $(DEVKITPPC)),)
 $(error "Please set DEVKITPPC in your environment. export DEVKITPPC=<path to>devkitPPC")
 endif
 
-include $(DEVKITPPC)/wii_rules
+include $(DEVKITPPC)/gamecube_rules
 
 #---------------------------------------------------------------------------------
 # TARGET is the name of the output
@@ -15,7 +15,7 @@ include $(DEVKITPPC)/wii_rules
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-TARGET		:=	pcsx
+TARGET		:=	CubeSX
 BUILD		:=	build
 SOURCES		:=	source . ./ui ./storage .. ../ppc/ ../PeopsSoftGPU/ ../PeopsSpu109/
 DATA		:=	data  
@@ -26,8 +26,7 @@ INCLUDES	:=	.. ../ppc/ ../PeopsSpu109/
 #---------------------------------------------------------------------------------
 
 CFLAGS	= -g -mcpu=750 $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
-		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -DNOTHREADLIB \
-		  -DHW_RVL
+		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -DNOTHREADLIB
 
 ifneq ($(BUILD),debug)
 CFLAGS	+= -O2 -pipe -fno-strict-aliasing \
@@ -36,7 +35,7 @@ CFLAGS	+= -O2 -pipe -fno-strict-aliasing \
 else
 CFLAGS	+= -DSHOW_DEBUG
 endif
-		  
+
 CXXFLAGS	=	$(CFLAGS)
 
 LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map -Wl,--cref
@@ -44,7 +43,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map -Wl,--cref
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	-lwiiuse -lbte -lm -lfat -logc  -ltinysmb -ldi -liso9660
+LIBS	:=	-lm -lfat -logc 
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -95,14 +94,14 @@ export INCLUDE	:=	$(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
 					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
 					-I$(CURDIR)/$(BUILD) \
 					-I$(LIBOGC_INC) \
-					-I$(DEVKITPRO)/libfat/libogc/include
+					-I$(DEVKITPRO)/libogc/include, -I$(DEVKITPRO)/libfat/libogc/include
 
 #---------------------------------------------------------------------------------
 # build a list of library paths
 #---------------------------------------------------------------------------------
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
 					-L$(LIBOGC_LIB) \
-					-L$(DEVKITPRO)/libogc/lib/wii, -L$(DEVKITPRO)/libfat/libogc/lib/wii
+					-L$(DEVKITPRO)/libogc/lib/cube, -L$(DEVKITPRO)/libfat/libogc/lib/cube
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 .PHONY: $(BUILD) clean
@@ -110,16 +109,12 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 #---------------------------------------------------------------------------------
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.Wii
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
-	@rm -fr *.*~
-
-all:
-	@echo error...
 
 #---------------------------------------------------------------------------------
 else

@@ -4,7 +4,7 @@
 
 #define DEVICES			3
 
-char *devicename[DEVICES] = {
+static const char *devicename[DEVICES] = {
 	"Front SD"
 ,	"USB Storage"
 ,	"SMB"
@@ -14,10 +14,10 @@ char *devicename[DEVICES] = {
 
 #define DEVICES			2
 
-char *devicename[DEVICES] = {
+static const char *devicename[DEVICES] = {
 	"Memcard A"
 ,	"Memcard B"
-}
+};
 
 #endif	//HW_RVL
 
