@@ -97,7 +97,7 @@
 #define _IN_SPU
                                
 #include "externals.h"
-#include "cfg.h"
+#include "spucfg.h"
 #include "dsoundoss.h"
 #include "regs.h"
 #include "debug.h"
@@ -106,6 +106,7 @@
 
 #ifdef __GAMECUBE__
 #include <gccore.h>
+#include <ogc/lwp.h>
 #include "../Gamecube/DEBUG.h"
 #endif
 ////////////////////////////////////////////////////////////////////////
@@ -175,6 +176,8 @@ HWND    hWMain=0;                                      // window handle
 HWND    hWDebug=0;
 HWND    hWRecord=0;
 static HANDLE   hMainThread;                           
+#elif defined(__GAMECUBE__)
+static lwp_t thread = LWP_THREAD_NULL;					// thread id (Wii)
 #else
 // 2003/06/07 - Pete
 #ifndef NOTHREADLIB
@@ -542,7 +545,7 @@ static void *MAINThread(void *arg)
  int bIRQReturn=0;SPUCHAN * pChannel;
                             
  //while(!bEndThread)                                    // until we are shutting down
- // {
+ //{
 //    SysPrintf("MAINThread called\n");
    //--------------------------------------------------//
    // ok, at the beginning we are looking if there is
@@ -854,23 +857,28 @@ ENDX:   ;
   // Also note: we abuse the channel 0-3 irq debug display for those irqs
   // (since that's the easiest way to display such irqs in debug mode :))
 
-  if(pMixIrq && irqCallback)                           // pMixIRQ will only be set, if the config option is active
-   {
-    for(ns=0;ns<NSSIZE;ns++)
-     {
-      if((spuCtrl&0x40) && pSpuIrq && pSpuIrq<spuMemC+0x1000)                 
-       {
-        for(ch=0;ch<4;ch++)
-         {
-          if(pSpuIrq>=pMixIrq+(ch*0x400) && pSpuIrq<pMixIrq+(ch*0x400)+2)
-           {irqCallback();s_chan[ch].iIrqDone=1;}
-         }
-       }
-      pMixIrq+=2;if(pMixIrq>spuMemC+0x3ff) pMixIrq=spuMemC;
-     }
-   }
+	if(pMixIrq && irqCallback)                           // pMixIRQ will only be set, if the config option is active
+	{
+		for(ns = 0; ns < NSSIZE; ns++)
+		{
+			if((spuCtrl & 0x40) && pSpuIrq && pSpuIrq < spuMemC + 0x1000)                 
+			{
+				for(ch = 0; ch < 4; ch++)
+				{
+					if(pSpuIrq >= pMixIrq + (ch * 0x400) && pSpuIrq < pMixIrq + (ch * 0x400) + 2)
+					{
+						irqCallback();
+						s_chan[ch].iIrqDone = 1;
+					}
+				}
+			}
+			pMixIrq+=2;
+			if(pMixIrq > spuMemC + 0x3ff) 
+				pMixIrq = spuMemC;
+		}
+	}
 
-  InitREVERB();
+	InitREVERB();
 
   //////////////////////////////////////////////////////                   
   // feed the sound
@@ -935,13 +943,12 @@ DWORD WINAPI MAINThreadEx(LPVOID lpParameter)
 
 void CALLBACK PEOPS_SPUasync(unsigned long cycle)
 {
-
- if(iSpuAsyncWait)
-  {
-   iSpuAsyncWait++;
-   if(iSpuAsyncWait<=64) return;
-   iSpuAsyncWait=0;
-  }
+	if(iSpuAsyncWait)
+	{
+		iSpuAsyncWait++;
+		if(iSpuAsyncWait <= 64) return;
+		iSpuAsyncWait = 0;
+	}
 
 #ifdef _WINDOWS
  if(iSPUDebugMode==2)
@@ -956,17 +963,16 @@ void CALLBACK PEOPS_SPUasync(unsigned long cycle)
   }
 #endif
 
- if(iUseTimer==2)                                      // special mode, only used in Linux by this spu (or if you enable the experimental Windows mode)
-  {
-   if(!bSpuInit) return;                               // -> no init, no call
+	if(iUseTimer==2)                                      // special mode, only used in Linux by this spu (or if you enable the experimental Windows mode)
+	{
+		if(!bSpuInit) return;                               // -> no init, no call
 
 #ifdef _WINDOWS
-   MAINProc(0,0,0,0,0);                                // -> experimental win mode... not really tested... don't like the drawbacks
+		MAINProc(0,0,0,0,0);                                // -> experimental win mode... not really tested... don't like the drawbacks
 #else
-   MAINThread(0);                                      // -> linux high-compat mode
+		MAINThread(0);                                      // -> linux high-compat mode
 #endif
-  }
-
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1055,14 +1061,18 @@ void SetupTimer(void)
                      //THREAD_PRIORITY_TIME_CRITICAL);
                      THREAD_PRIORITY_HIGHEST);
   }
-
+#elif defined(__GAMECUBE__)
+	if(!iUseTimer)                                        // Wii: use thread
+	{
+		LWP_CreateThread(&thread, MAINThread, NULL, NULL, 0, LWP_PRIO_HIGHEST);
+	}
 #else
 
 #ifndef NOTHREADLIB
- if(!iUseTimer)                                        // linux: use thread
-  {
-   pthread_create(&thread, NULL, MAINThread, NULL);
-  }
+	if(!iUseTimer)                                        // linux: use thread
+	{
+		pthread_create(&thread, NULL, MAINThread, NULL);
+	}
 #endif
 
 #endif
@@ -1085,15 +1095,36 @@ void RemoveTimer(void)
   }
  if(iUseTimer==1) timeEndPeriod(1);                    // windows timer? stop it
 
+#elif defined(__GAMECUBE__)
+
+	if(!iUseTimer)                                        // Wii tread?
+	{
+		int i = 0;
+		while(!bThreadEnded && i < 2000) {	 			// -> wait until thread has ended
+			usleep(1000L);
+			i++;
+		}
+		if(thread != LWP_ALLREADY_SUSPENDED) {								// -> cancel thread anyway
+			LWP_SuspendThread(thread);
+			thread = LWP_THREAD_NULL;
+		}
+	}
+
 #else
 
 #ifndef NOTHREADLIB
- if(!iUseTimer)                                        // linux tread?
-  {
-   int i=0;
-   while(!bThreadEnded && i<2000) {usleep(1000L);i++;} // -> wait until thread has ended
-   if(thread!=-1) {pthread_cancel(thread);thread=-1;}  // -> cancel thread anyway
-  }
+	if(!iUseTimer)                                        // linux tread?
+	{
+		int i = 0;
+		while(!bThreadEnded && i < 2000) {	 			// -> wait until thread has ended
+			usleep(1000L);
+			i++;
+		}
+		if(thread != -1) {								// -> cancel thread anyway
+			pthread_cancel(thread);
+			thread = -1;
+		}
+	}
 #endif
 
 #endif
@@ -1199,7 +1230,7 @@ long PEOPS_SPUopen(void)
  hWMain = hW;                                          // store hwnd
 #endif
 
- ReadConfig();                                         // read user stuff
+ SPU_ReadConfig();                                         // read user stuff
  
  SetupSound();                                         // setup sound (before init!)
 

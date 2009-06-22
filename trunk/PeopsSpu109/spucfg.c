@@ -87,7 +87,7 @@ BOOL CALLBACK AboutDlgProc(HWND hW, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #define MAXMODE 2
 //#define MAXMODE 1
 
-void ReadConfig(void)
+void SPU_ReadConfig(void)
 {
  HKEY myKey;
  DWORD temp;
@@ -203,7 +203,7 @@ BOOL OnInitDSoundDialog(HWND hW)
 {
  HWND hWC;
 
- ReadConfig();
+ SPU_ReadConfig();
                 
  if(iUseXA)      CheckDlgButton(hW,IDC_ENABXA,TRUE);
 
@@ -335,7 +335,7 @@ BOOL CALLBACK DSoundDlgProc(HWND hW, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 #else
             
-char * pConfigFile=NULL;
+static char * pConfigFile=NULL;
 
 #include <unistd.h>
 
@@ -390,7 +390,7 @@ void StartCfgTool(char * pCmdLine)
 // READ LINUX CONFIG FILE
 /////////////////////////////////////////////////////////
 
-void ReadConfigFile(void)
+static void ReadConfigFile(void)
 {
  FILE *in;char t[256];int len;
  char * pB, * p;
@@ -420,6 +420,13 @@ void ReadConfigFile(void)
   } 
 #else
 	strcpy(t, "sd:/wiisx/audio.ini");
+	in = fopen(t,"rb"); 
+	if(!in) 
+	{
+		strcpy(t, "usb:/wiisx/audio.ini");
+		in = fopen(t,"rb"); 
+		if(!in) return;
+	}
 #endif
  pB=(char *)malloc(32767);
  memset(pB,0,32767);
@@ -450,7 +457,7 @@ void ReadConfigFile(void)
  if(iUseTimer)   iUseTimer=2; 
 
 #ifdef NOTHREADLIB
- iUseTimer=2; 
+	iUseTimer=2; 
 #endif
 
  strcpy(t,"\nSPUIRQWait");p=strstr(pB,t);if(p) {p=strstr(p,"=");len=1;} 
@@ -485,7 +492,7 @@ void ReadConfigFile(void)
 // READ CONFIG called by spu funcs
 /////////////////////////////////////////////////////////
 
-void ReadConfig(void)             
+void SPU_ReadConfig(void)             
 {
  iVolume=3; 
  iUseXA=1; 

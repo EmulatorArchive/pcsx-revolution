@@ -18,16 +18,13 @@
 ////////////////////////////////////////////////////////////////////////
 #include "../Gamecube/DEBUG.h"
 #include <ogc/audio.h>
-#include <gccore.h>
 #include <malloc.h>
 
-static u8 audio_buffer[2][3840] ATTRIBUTE_ALIGN(32);
+static u8 audio_buffer[2][3840] __attribute__((aligned(32)));
 static u8 *mixbuffer;
 static u8 IsPlaying = 0;
-static u32 BufLen;
+static s32 BufLen;
 static u8 whichab = 0;
-
-static u32 buffer_size;
 
 static void AudioSwitchBuffers()
 {
@@ -35,7 +32,7 @@ static void AudioSwitchBuffers()
 	memcpy(audio_buffer[whichab], mixbuffer, BufLen);
 
 	DCFlushRange(audio_buffer[whichab], BufLen);
-	AUDIO_InitDMA((u32)audio_buffer[whichab], BufLen);
+	AUDIO_InitDMA((u32)audio_buffer[whichab], (u32)BufLen);
 
 	whichab ^= 1;
 	if(!IsPlaying)
@@ -75,8 +72,8 @@ u32 SoundGetBytesBuffered(void)
  	sprintf(txtbuffer,"SoundGetBytesBuffered returns approx: %d bytes", l);
  	DEBUG_print(txtbuffer, 12);
 #endif
-	if( l < 0 ) return 0;
-	if( l < AUDIO_GetDMALength() / 2 )
+	if( l <= 0 ) return 0;
+	if( l < BufLen / 2 )
 		l = SOUNDSIZE;
 	else
 		l = 0;
