@@ -33,7 +33,7 @@ void psxHwReset() {
 }
 
 u8 psxHwRead8(u32 add) {
-	unsigned char hard;
+	u8 hard;
 
 	switch (add) {
 		case 0x1f801040: hard = sioRead8();break; 
@@ -58,7 +58,7 @@ u8 psxHwRead8(u32 add) {
 }
 
 u16 psxHwRead16(u32 add) {
-	unsigned short hard;
+	u16 hard;
 
 	switch (add) {
 		case 0x1f801070: 
@@ -176,7 +176,7 @@ u16 psxHwRead16(u32 add) {
 		//case 0x1f802040: hard =//dip switches...??
 
 		default:
-			if (add>=0x1f801c00 && add<0x1f801e00) {
+			if (add >= 0x1F8010C0 && add < 0x1f801e00) {
             	hard = SPU_readRegister(add);
 			} else {
 				hard = psxHu16(add); 

@@ -27,6 +27,7 @@
 
 #include "PsxHw.h"
 
+// TODO Add all events to list.
 typedef struct {
 	u32 time;
 	void (*Execute)();
@@ -34,13 +35,6 @@ typedef struct {
 } int_timer;
 
 int_timer events[PsxEvt_CountAll];
-
-typedef struct {
-	int_timer *next;
-	int_timer *this;
-} int_timer_list;
-
-int_timer_list *active_events;		// TODO Add all events to list.
 
 psxRegisters psxRegs;
 
@@ -85,8 +79,25 @@ static void ResetEvents()
 	events[PsxEvt_Cdrom].Execute		= cdrInterrupt;
 	events[PsxEvt_CdromRead].Execute	= cdrReadInterrupt;
 	events[PsxEvt_MDEC].Execute 		= mdec1Interrupt; 
-	events[PsxEvt_GPU].Execute 			= gpuInterrupt; 
+	events[PsxEvt_GPU].Execute 			= gpuInterrupt;
+	events[PsxEvt_SPU].Execute 			= spuInterrupt;
 
+	// Set counters
+#ifdef _NEW_COUNTER_
+	events[PsxEvt_Counter0].Execute 	= psxRcntUpdate0;
+	events[PsxEvt_Counter1].Execute 	= psxRcntUpdate1;
+	events[PsxEvt_Counter2].Execute 	= psxRcntUpdate2;
+	events[PsxEvt_Counter3].Execute 	= psxRcntUpdate3;
+	events[PsxEvt_Counter4].Execute 	= psxRcntUpdate4;
+	psx_int_add(PsxEvt_Counter0, 3);
+	psx_int_add(PsxEvt_Counter1, 3);
+	psx_int_add(PsxEvt_Counter2, 3);
+	psx_int_add(PsxEvt_Counter3, 1);
+	psx_int_add(PsxEvt_Counter4, 3);
+#else
+	events[PsxEvt_Counter0].Execute 	= psxRcntUpdate;
+	psx_int_add(PsxEvt_Counter0, 1);
+#endif
 }
 
 void psxReset() 
@@ -162,6 +173,8 @@ __inline void psx_int_add( int n, s32 ecycle )
 	// Generally speaking games shouldn't throw ints that haven't been cleared yet.
 	// It's usually indicative os something amiss in our emulation, so uncomment this
 	// code to help trap those sort of things.
+	//if(events[n].Enabled)
+	//	printf("Event: %d\t Cycle: %d\n", n, psxRegs.cycle);
 
 	events[n].Enabled = 1;
 	events[n].time = psxRegs.cycle + ecycle;
@@ -174,16 +187,9 @@ __inline void psx_int_remove( int n )
 	events[n].Enabled = 0;
 }
 
-__inline int psxTestCycle( u32 startCycle, s32 delta )
-{
-	// typecast the conditional to signed so that things don't explode
-	// if the startCycle is ahead of our current cpu cycle.
-
-	return (int)(psxRegs.cycle - startCycle) >= delta;
-}
-
-__inline void _psxTestInterrupts()
-{
+void psxBranchTest() {
+	psxRegs.NextBranchCycle = psxRegs.cycle + 0x7fffffff;
+	
 	int i;
 	for(i = 0; i < PsxEvt_CountAll; i++)
 	{
@@ -195,31 +201,14 @@ __inline void _psxTestInterrupts()
 		}
 		else psxSetNextBranch( psxRegs.cycle, events[i].time - psxRegs.cycle );
 	}
-}
-
-static void psxExceptionTest()
-{
-	if( psxHu32(0x1078) == 0 ) return;
-	if( (psxHu32(0x1070) & psxHu32(0x1074)) == 0 ) return;
-
-	if ((psxRegs.CP0.n.Status & 0xFE01) >= 0x401)
-	{
-		psxException(0, 0);
-		psxRegs.pc += 4;
-	}
-}
-
-void psxBranchTest() {
-	if( psxTestCycle( psxNextsCounter, psxNextCounter ) )
-		psxRcntUpdate();
-
-	psxRegs.NextBranchCycle = psxNextsCounter + psxNextCounter;
-
-	_psxTestInterrupts();
-
-	if (psxRegs.interrupt & 0x80000000) {
-		psxRegs.interrupt&=~0x80000000;
-		psxTestHWInts();
+	
+	if (psxHu32(0x1070) & psxHu32(0x1074)) {
+		if ((psxRegs.CP0.n.Status & 0x401) == 0x401) {
+#ifdef PSXCPU_LOG
+			PSXCPU_LOG("Interrupt: %x %x\n", psxHu32(0x1070), psxHu32(0x1074));
+#endif
+			psxException(0x400, 0);
+		}
 	}
 }
 
@@ -228,7 +217,7 @@ __inline void psxTestIntc()
 	if( psxHu32(0x1078) == 0 ) return;
 	if( (psxHu32(0x1070) & psxHu32(0x1074)) == 0 ) return;
 
-	psx_int_add( PsxEvt_Exception, 1 );
+	psx_int_add( PsxEvt_Exception, 0 );
 }
 
 __inline void psxRaiseExtInt( uint irq )
@@ -237,17 +226,6 @@ __inline void psxRaiseExtInt( uint irq )
 	psxTestIntc();
 }
 
-void psxTestHWInts() {
-	if (psxHu32(0x1070) & psxHu32(0x1074)) {
-		if ((psxRegs.CP0.n.Status & 0x401) == 0x401) {
-#ifdef PSXCPU_LOG
-			PSXCPU_LOG("Interrupt: %x %x\n", psxHu32(0x1070), psxHu32(0x1074));
-#endif
-//			SysPrintf("Interrupt (%x): %x %x\n", psxRegs.cycle, psxHu32(0x1070), psxHu32(0x1074));
-			psxException(0x400, 0);
-		}
-	}
-}
 
 void psxJumpTest() {
 #ifndef __GAMECUBE__

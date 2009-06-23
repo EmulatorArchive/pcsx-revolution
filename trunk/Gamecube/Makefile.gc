@@ -26,10 +26,10 @@ INCLUDES	:=	.. ../ppc/ ../PeopsSpu109/
 #---------------------------------------------------------------------------------
 
 CFLAGS	= -g -mcpu=750 $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
-		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -DNOTHREADLIB
+		  -D__GX__ -D_SDL -DEMBEDDED_FONTS
 
 ifneq ($(BUILD),debug)
-CFLAGS	+= -O2 -pipe -fno-strict-aliasing \
+CFLAGS	+= -mogc -O2 -pipe -fno-strict-aliasing \
 		  -fomit-frame-pointer \
 		  -Wno-unused-parameter -Wno-strict-aliasing
 else
@@ -114,7 +114,7 @@ $(BUILD):
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol
+	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol release debug
 
 #---------------------------------------------------------------------------------
 else

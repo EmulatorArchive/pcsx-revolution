@@ -193,14 +193,10 @@ int psxTestLoadDelay(int reg, u32 tmp) {
 		case 0x10: // COP0
 			switch (_tFunct_) {
 				case 0x00: // MFC0
-					if (_tRt_ == reg) return 3;
-					break;
 				case 0x02: // CFC0
 					if (_tRt_ == reg) return 3;
 					break;
 				case 0x04: // MTC0
-					if (_tRt_ == reg) return 2;
-					break;
 				case 0x06: // CTC0
 					if (_tRt_ == reg) return 2;
 					break;
@@ -213,14 +209,10 @@ int psxTestLoadDelay(int reg, u32 tmp) {
 				case 0x00: 
 					switch (_tRs_) {
 						case 0x00: // MFC2
-							if (_tRt_ == reg) return 3;
-							break;
 						case 0x02: // CFC2
 							if (_tRt_ == reg) return 3;
 							break;
 						case 0x04: // MTC2
-							if (_tRt_ == reg) return 2;
-							break;
 						case 0x06: // CTC2
 							if (_tRt_ == reg) return 2;
 							break;

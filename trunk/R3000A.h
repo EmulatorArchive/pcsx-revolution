@@ -233,11 +233,10 @@ void psxBranchTest();
 void psxExecuteBios();
 void psxDelayTest(int reg, u32 bpc);
 void psxTestSWInts();
-void psxTestHWInts();
 int  psxTestLoadDelay(int reg, u32 tmp);
 void psxJumpTest();
 
-void psx_int_add(int n, s32 ecycle);
+__inline void psx_int_add( int n, s32 ecycle );
 void psx_int_remove(int n);
 int psxSetNextBranch( u32 startCycle, s32 delta );
 void psxRaiseExtInt( uint irq );

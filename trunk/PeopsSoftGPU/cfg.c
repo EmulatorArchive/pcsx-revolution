@@ -30,7 +30,7 @@
 
 #include <sys/stat.h>
 
-char * pConfigFile = NULL;
+static char * pConfigFile = NULL;
 
 // some helper macros:
 
@@ -80,7 +80,7 @@ char * pConfigFile = NULL;
   size+=sprintf(pB+size, "%s = %.1f\n", name, (double)var); \
  }
 
-void ReadConfigFile()
+static void ReadConfigFile()
 {
 	struct stat buf;
 	FILE *in;char t[256];int len, size;

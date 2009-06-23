@@ -26,7 +26,6 @@
 // Dma3   in CdRom.c
 
 void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
-	u32 *ptr;
 	const u32 size = (bcr >> 16) * (bcr & 0xFFFF);
 
 	switch(chcr) {
@@ -34,14 +33,7 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 #ifdef PSXDMA_LOG
 			PSXDMA_LOG("*** DMA2 GPU - vram2mem *** %lx addr = %lx size = %lx\n", chcr, madr, bcr);
 #endif
-			ptr = (u32 *)PSXM(madr);
-			if (ptr == NULL) {
-#ifdef CPU_LOG
-				CPU_LOG("*** DMA2 GPU - mem2vram *** NULL Pointer!!!\n");
-#endif
-				break;
-			}
-			GPU_readDataMem(ptr, size);
+			GPU_readDataMem((u32 *)PSXM(madr), size);
 			psxCpu->Clear(madr, size);
 			break;
 
@@ -49,17 +41,8 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 #ifdef PSXDMA_LOG
 			PSXDMA_LOG("*** DMA 2 - GPU mem2vram *** %lx addr = %lx size = %lx\n", chcr, madr, bcr);
 #endif
-			ptr = (u32 *)PSXM(madr);
-			if (ptr == NULL) {
-#ifdef CPU_LOG
-				CPU_LOG("*** DMA2 GPU - mem2vram *** NULL Pointer!!!\n");
-#endif
-				break;
-			}
-			GPU_writeDataMem(ptr, size);
-			GPUDMA_INT((size / 4) / BIAS);
-			return;
-//			break;
+			GPU_writeDataMem((u32 *)PSXM(madr), size);
+			break;
 
 		case 0x01000401: // dma chain
 #ifdef PSXDMA_LOG
@@ -74,32 +57,16 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 			break;
 #endif
 	}
-
-	HW_DMA2_CHCR &= SWAP32(~0x01000000);
-	psxDmaInterrupt(2);
+	psx_int_add(PsxEvt_GPU, (size / 4) / BIAS);
 }
 
 void psxDma4(u32 madr, u32 bcr, u32 chcr) { // SPU
-//	u16 *ptr;
 	const int size = (bcr >> 16) * (bcr & 0xFFFF);
 
 	if (SPU_async)
 	{
 		SPU_async(psxRegs.cycle - psxCounters[4].sCycle);	
-		//Console::Status("cycles sent to SPU2 %x\n", iopRegs.cycle - psxCounters[6].sCycleT);
-
-		psxCounters[4].sCycle = psxRegs.cycle;
-		psxCounters[4].Cycle = size * 3;
-
-		psxNextCounter -= (psxRegs.cycle-psxNextsCounter);
-		psxNextsCounter = psxRegs.cycle;
-		if(psxCounters[4].Cycle < psxNextCounter)
-			psxNextCounter = psxCounters[4].Cycle;
-
-		if( (psxRegs.NextBranchCycle - psxNextsCounter) > (u32)psxNextCounter)
-		{
-			psxRegs.NextBranchCycle = psxNextsCounter + psxNextCounter;
-		}
+		psx_int_add(PsxEvt_SPU, size * 3);
 	}
 
 	switch (chcr) {
@@ -124,14 +91,16 @@ void psxDma4(u32 madr, u32 bcr, u32 chcr) { // SPU
 			break;
 #endif
 	}
-
-	HW_DMA4_CHCR &= SWAP32(~0x01000000);
-	psxDmaInterrupt(4);
 }
 
 void gpuInterrupt() {
 	HW_DMA2_CHCR &= SWAP32(~0x01000000);
 	psxDmaInterrupt(2);
+}
+
+void spuInterrupt() {
+	HW_DMA4_CHCR &= SWAP32(~0x01000000);
+	psxDmaInterrupt(4);
 }
 
 void psxDma6(u32 madr, u32 bcr, u32 chcr) {

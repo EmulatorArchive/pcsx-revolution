@@ -67,6 +67,7 @@ void RemoveSound(void)
 
 u32 SoundGetBytesBuffered(void)
 {
+	return 0;/*
 	u32 l = AUDIO_GetDMABytesLeft();
 #ifdef PEOPS_SDLOG
  	sprintf(txtbuffer,"SoundGetBytesBuffered returns approx: %d bytes", l);
@@ -77,7 +78,7 @@ u32 SoundGetBytesBuffered(void)
 		l = SOUNDSIZE;
 	else
 		l = 0;
-	return l;
+	return l;*/
 }
 
 ////////////////////////////////////////////////////////////////////////
