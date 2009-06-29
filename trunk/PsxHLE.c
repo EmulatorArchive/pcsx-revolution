@@ -22,29 +22,30 @@
 #include "plugins.h"
 #include "PsxHLE.h"
 
+#define TEST_BRANCH() \
+	if (psxRegs.evtCycleCountdown <= 0) \
+		psxBranchTest();
+
 static void hleDummy() {
 	psxRegs.pc = psxRegs.GPR.n.ra;
-	s32 woot = psxRegs.NextBranchCycle - psxRegs.cycle;
-	if( woot <= 0 )
-		psxBranchTest();
+
+	TEST_BRANCH();
 }
 
 static void hleA0() {
 	u32 call = psxRegs.GPR.n.t1 & 0xff;
 
 	if (biosA0[call]) biosA0[call]();
-	s32 woot = psxRegs.NextBranchCycle - psxRegs.cycle;
-	if( woot <= 0 )
-		psxBranchTest();
+
+	TEST_BRANCH();
 }
 
 static void hleB0() {
 	u32 call = psxRegs.GPR.n.t1 & 0xff;
 
 	if (biosB0[call]) biosB0[call]();
-	s32 woot = psxRegs.NextBranchCycle - psxRegs.cycle;
-	if( woot <= 0 )
-		psxBranchTest();
+
+	TEST_BRANCH();
 }
 
 static void hleC0() {
@@ -52,9 +53,7 @@ static void hleC0() {
 
 	if (biosC0[call]) biosC0[call]();
 
-	s32 woot = psxRegs.NextBranchCycle - psxRegs.cycle;
-	if( woot <= 0 )
-		psxBranchTest();
+	TEST_BRANCH();
 }
 
 static void hleBootstrap() { // 0xbfc00000

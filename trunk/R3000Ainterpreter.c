@@ -33,7 +33,7 @@ static int branch2 = 0;
 static u32 branchPC;
 
 #define TEST_BRANCH() \
-	if (psxRegs.NextBranchCycle <= psxRegs.cycle) \
+	if (psxRegs.evtCycleCountdown <= 0) \
 		psxBranchTest();
 
 // These macros are used to assemble the repassembler functions
@@ -44,8 +44,10 @@ static u32 branchPC;
 #define debugI()
 #endif
 
-inline void execI();
-
+static inline void execI();
+#ifndef __GAMECUBE__
+static inline void execIDbg();
+#endif
 // Subsets
 void (*psxBSC[64])();
 void (*psxSPC[64])();
@@ -53,6 +55,21 @@ void (*psxREG[32])();
 void (*psxCP0[32])();
 void (*psxCP2[64])();
 void (*psxCP2BSC[32])();
+
+static u32 DivStall;
+
+static __inline void DivUnitStall( u32 newStall )
+{
+	if( newStall == 0 ) return;		// instruction doesn't use the DivUnit?
+
+	// anything zero or less means the DivUnit is empty
+	if( psxRegs.DivUnitCycles > 0 )
+	{
+		psxRegs.evtCycleCountdown -= psxRegs.DivUnitCycles;
+
+	}
+	psxRegs.DivUnitCycles = newStall;
+}
 
 static void delayRead(int reg, u32 bpc) {
 	u32 rold, rnew;
@@ -279,12 +296,11 @@ __inline void doBranch(u32 tar) {
 	branchPC = tar;
 
 	code = (u32 *)PSXM(psxRegs.pc);
-
 	//psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
 	if(code == NULL)
 	{
 		psxRegs.pc += 4;
-		psxRegs.cycle++;
+		AddCycles( 1 );
 		code = (u32 *)PSXM(psxRegs.pc);
 		psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
 	}
@@ -293,7 +309,8 @@ __inline void doBranch(u32 tar) {
 	debugI();
 
 	psxRegs.pc += 4;
-	psxRegs.cycle++;
+	AddCycles( 1 );
+	DivUnitStall( DivStall );
 
 	// check for load delay
 	tmp = psxRegs.code >> 26;
@@ -341,9 +358,8 @@ __inline void doBranch(u32 tar) {
 * Arithmetic with immediate operand                      *
 * Format:  OP rt, rs, immediate                          *
 *********************************************************/
-
 __inline void psxADDI() 	{ 		// Rt = Rs + Im 	(Exception on Integer Overflow)
-	if (!_Rt_) return; _i32(_rRt_) = _i32(_rRs_) + _Imm_ ; 
+ if (!_Rt_) return; _i32(_rRt_) = _i32(_rRs_) + _Imm_ ; 
 }
 __inline void psxADDIU()	{ if (!_Rt_) return; _i32(_rRt_) = _i32(_rRs_) + _Imm_ ; }		// Rt = Rs + Im
 __inline void psxANDI() 	{ if (!_Rt_) return; _rRt_ = _u32(_rRs_) & _ImmU_; }		// Rt = Rs And Im
@@ -378,6 +394,8 @@ __inline void psxSLTU() { if (!_Rd_) return; _rRd_ = _u32(_rRs_) < _u32(_rRt_); 
 * Format:  OP rs, rt                                     *
 *********************************************************/
 __inline void psxDIV() {
+	DivStall = 35;
+	
 	const s32 Rt = _i32(_rRt_);
 	const s32 Rs = _i32(_rRs_);
 
@@ -398,9 +416,11 @@ __inline void psxDIV() {
 	}
 	_i32(_rHi_) = Rs % Rt;
 	_i32(_rLo_) = Rs / Rt;
+
 }
 
 __inline void psxDIVU() {
+	DivStall = 35;
 	const u32 Rt = _rRt_;
 	const u32 Rs = _rRs_;
 
@@ -418,6 +438,7 @@ __inline void MultHelper( u64 result )
 {
 	_rHi_ = (u32)(result >> 32);
 	_rLo_ = (u32)result;
+	DivStall = 11;
 }
 
 __inline void psxMULT()
@@ -480,8 +501,8 @@ __inline void psxLUI() { if (!_Rt_) return; _i32(_rRt_) = _Imm_ << 16; } // Uppe
 * Move from HI/LO to GPR                                 *
 * Format:  OP rd                                         *
 *********************************************************/
-__inline void psxMFHI() { if (!_Rd_) return; _rRd_ = _rHi_; } // Rd = Hi
-__inline void psxMFLO() { if (!_Rd_) return; _rRd_ = _rLo_; } // Rd = Lo
+__inline void psxMFHI() { DivStall = 1; if (!_Rd_) return; _rRd_ = _rHi_; } // Rd = Hi
+__inline void psxMFLO() { DivStall = 1; if (!_Rd_) return; _rRd_ = _rLo_; } // Rd = Lo
 
 /*********************************************************
 * Move to GPR to HI/LO & Register jump                   *
@@ -683,7 +704,16 @@ __inline void psxSWR() {
 
 __inline void psxMFC0() { if (!_Rt_) return; _rRt_ = _rFs_; }
 __inline void psxCFC0() { if (!_Rt_) return; _rRt_ = _rFs_; }
-
+#ifndef __GAMECUBE__
+void psxTestSWInts() {
+	// the next code is untested, if u know please
+	// tell me if it works ok or not (linuzappz)
+	if (psxRegs.CP0.n.Cause & psxRegs.CP0.n.Status & 0x0300 &&
+		psxRegs.CP0.n.Status & 0x1) {
+		psxException(psxRegs.CP0.n.Cause, branch);
+	}
+}
+#endif
 __inline void psxMTC0()
 {
 	psxRegs.CP0.r[_Rd_] = _rRt_;
@@ -799,21 +829,21 @@ static void intExecute() {
 		execI();
 }
 
-static void intExecuteDbg() {
-	for (;;) 
-		execIDbg();
-}
-
 static void intExecuteBlock() {
 	branch2 = 0;
 	while (!branch2) execI();
+}
+#ifndef __GAMECUBE__
+static void intExecuteDbg() {
+	for (;;) 
+		execIDbg();
 }
 
 static void intExecuteBlockDbg() {
 	branch2 = 0;
 	while (!branch2) execIDbg();
 }
-
+#endif
 static void intClear(u32 Addr, u32 Size) {
 }
 
@@ -821,12 +851,12 @@ static void intShutdown() {
 }
 
 // interpreter execution
-inline void execI() { 
+static inline void execI() { 
 	u32 *code = (u32 *)PSXM(psxRegs.pc); 
 	if(code == NULL)
 	{
 		psxRegs.pc += 4;
-		psxRegs.cycle++;
+		AddCycles( 1 );
 		code = (u32 *)PSXM(psxRegs.pc);
 		psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
 	}
@@ -835,7 +865,8 @@ inline void execI() {
 	debugI();
 
 	psxRegs.pc += 4;
-	psxRegs.cycle++;
+	AddCycles( 1 );
+	DivUnitStall( DivStall );
 
 	psxBSC[psxRegs.code >> 26]();
 }
@@ -848,3 +879,49 @@ R3000Acpu psxInt = {
 	intClear,
 	intShutdown
 };
+
+#ifndef __GAMECUBE__
+/* debugger version */
+static inline void execIDbg() { 
+	u32 *code = (u32 *)PSXM(psxRegs.pc);
+	psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
+
+	// dump opcode when LOG_CPU is enabled
+	debugI();
+
+	// normal execution
+	if (!hdb_pause) {
+		psxRegs.pc += 4;
+		AddCycles( 1 );
+		DivUnitStall( DivStall );
+		psxBSC[psxRegs.code >> 26]();
+	}
+
+	// trace one instruction
+	if(hdb_pause == 2) {
+		psxRegs.pc += 4;
+		AddCycles( 1 );
+		DivUnitStall( DivStall );
+		psxBSC[psxRegs.code >> 26]();
+		hdb_pause = 1;
+	}
+	
+	// wait for breakpoint
+	if(hdb_pause == 3) {
+		psxRegs.pc+= 4; 
+		AddCycles( 1 );
+		DivUnitStall( DivStall );
+		psxBSC[psxRegs.code >> 26]();
+		if(psxRegs.pc == hdb_break) hdb_pause = 1;
+	}
+}
+
+R3000Acpu psxIntDbg = {
+	intInit,
+	intReset,
+	intExecuteDbg,
+	intExecuteBlockDbg,
+	intClear,
+	intShutdown
+};
+#endif

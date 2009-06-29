@@ -65,25 +65,22 @@ enum PSXCountRegs
 	PSX_T2_TARGET = 0x1f801128,
 };
 
-#define _NEW_COUNTER_
-
 enum PsxEventType
 {
 	PsxEvt_Counter0 = 0,
-#ifdef _NEW_COUNTER_
+
 	PsxEvt_Counter1,
 	PsxEvt_Counter2,
 	PsxEvt_Counter3,
 	PsxEvt_Counter4,
-#endif
-	PsxEvt_Exception,
-	PsxEvt_SIO,
-	PsxEvt_GPU,
-	PsxEvt_MDEC,
 
-	PsxEvt_Cdrom,
-	PsxEvt_CdromRead,
-	PsxEvt_SPU,
+	PsxEvt_Exception,		// 5
+	PsxEvt_SIO,				// 6
+	PsxEvt_GPU,				// 7
+
+	PsxEvt_Cdrom,			// 8
+	PsxEvt_CdromRead,		// 9
+	PsxEvt_SPU,				// 10
 
 	PsxEvt_CountNonIdle,
 

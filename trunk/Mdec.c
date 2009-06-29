@@ -45,6 +45,15 @@
 #define	DCTSIZE	8
 #define	DCTSIZE2	64
 
+// mdec status:
+#define MDEC_BUSY	0x20000000
+#define MDEC_DREQ	0x18000000
+#define MDEC_FIFO	0xc0000000
+#define MDEC_RGB24	0x02000000
+#define MDEC_STP	0x00800000
+
+static u8 mdec_flag = 0;		// Hacky way
+
 static void idct1(int *block)
 {
 	int val = RANGE(DESCALE(block[0], PASS1_BITS+3));
@@ -163,10 +172,10 @@ void idct(int *block,int k)
   }
 }
 
-unsigned short* rl2blk(int *blk,unsigned short *mdec_rl);
-void iqtab_init(int *iqtab,unsigned char *iq_y);
-void yuv2rgb24(int *blk,unsigned char *image);
-void yuv2rgb15(int *blk,unsigned short *image);
+static unsigned short* rl2blk(int *blk,unsigned short *mdec_rl);
+static void iqtab_init(int *iqtab,unsigned char *iq_y);
+static void yuv2rgb24(int *blk,unsigned char *image);
+static void yuv2rgb15(int *blk,unsigned short *image);
 
 struct {
 	u32 command;
@@ -198,9 +207,10 @@ void mdecWrite1(u32 data) {
 #ifdef CDR_LOG
 	CDR_LOG("mdec1 write %lx\n", data);
 #endif
-	if (data&0x80000000) { // mdec reset
+	if (data & 0x80000000) { // mdec reset
 		mdec.command = 0;
 		mdec.status = 0;
+		mdec_flag = 0;
 	}
 }
 
@@ -211,17 +221,15 @@ u32 mdecRead0(void) {
 	return mdec.command;
 }
 
-// mdec status:
-#define MDEC_BUSY	0x20000000
-#define MDEC_DREQ	0x18000000
-#define MDEC_FIFO	0xc0000000
-#define MDEC_RGB24	0x02000000
-#define MDEC_STP	0x00800000
-
 u32 mdecRead1(void) {
 #ifdef CDR_LOG
 	CDR_LOG("mdec1 read %lx\n", mdec.status);
 #endif
+	//	All games call mdecRead1() before psxDma0(). If mdec.status = MDEC_BUSY, they wait and call it again while mdec.status != 0. 
+	//	FF9 make extra calls before psxDma1() and if mdec.status == 0, then it call psxDma1() instead psxDma0() -> crash. (Firnis)
+	if(mdec_flag)
+		mdec.status &= ~MDEC_BUSY;
+	mdec_flag = 1;
 	return mdec.status;
 }
 
@@ -232,64 +240,50 @@ void psxDma0(u32 adr, u32 bcr, u32 chcr) {
 #ifdef CDR_LOG
 	CDR_LOG("DMA0 %lx %lx %lx\n", adr, bcr, chcr);
 #endif
-
+mdec_flag = 0;
 	if (chcr!=0x01000201) return;
-
 	size = (bcr>>16)*(bcr&0xffff);
-
-	//if (cmd==0x60000000) {
-	//} else
+	if (cmd==0x60000000) {
+	} else
 	if (cmd==0x40000001) {
 		u8 *p = (u8*)PSXM(adr);
 		iqtab_init(iq_y,p);
 		iqtab_init(iq_uv,p+64);
 	} else
 	if ((cmd&0xf5ff0000)==0x30000000) {
+		mdec.status|= MDEC_BUSY;
 		mdec.rl = (u16*)PSXM(adr);
 	}
-
 	HW_DMA0_CHCR &= SWAP32(~0x01000000);
 	psxDmaInterrupt(0);
 }
 
 void psxDma1(u32 adr, u32 bcr, u32 chcr) {
 	int blk[DCTSIZE2*6];
-	unsigned short *image;
+	u16 *image;
 	int size;
-
+mdec_flag = 0;
 #ifdef CDR_LOG
 	CDR_LOG("DMA1 %lx %lx %lx (cmd = %lx)\n", adr, bcr, chcr, mdec.command);
 #endif
-
-	if (chcr != 0x01000200) return;
-
-	size = (bcr >> 16) * (bcr & 0xffff);
-
+	if (chcr!=0x01000200) return;
+	size = (bcr>>16)*(bcr&0xffff);
 	image = (u16*)PSXM(adr);
-	MDECOUTDMA_INT(PSXCLK / 50);		// Working well. And no extra ints from IRQ29
-	if (mdec.command & 0x08000000) {
-		size = size / ((16 * 16) / 2);
-		for ( ; size > 0; size--, image += (16 * 16) ) {
-			mdec.rl = rl2blk( blk, mdec.rl );
-			yuv2rgb15( blk, image );
+	if (mdec.command&0x08000000) {
+		size = size / ((16*16)/2);
+		for (;size>0;size--,image+=(16*16)) {
+			mdec.rl = rl2blk(blk,mdec.rl);
+			yuv2rgb15(blk,image);
 		}
 	} else {
-		size = size / ((24 * 16) / 2);
-		for ( ; size > 0; size--, image += (24 * 16) ) {
-			mdec.rl = rl2blk( blk, mdec.rl );
-			yuv2rgb24( blk, (u8 *)image );
+		size = size / ((24*16)/2);
+		for (;size>0;size--,image+=(24*16)) {
+			mdec.rl = rl2blk(blk,mdec.rl);
+			yuv2rgb24(blk,(u8 *)image);
 		}
 	}
-	mdec.status |= MDEC_BUSY;
-	HW_DMA1_CHCR &= SWAP32(~0x01000000);
+	HW_DMA1_CHCR&= SWAP32(~0x01000000);
 	psxDmaInterrupt(1);
-}
-
-void mdec1Interrupt() {
-#ifdef CDR_LOG
-	CDR_LOG("mdec1Interrupt\n");
-#endif
-	mdec.status &= ~MDEC_BUSY;
 }
 
 #define	RUNOF(a)	((a)>>10)
@@ -317,7 +311,7 @@ static int aanscales[DCTSIZE2] = {
 	   4520,  6270,  5906,  5315,  4520,  3552,  2446,  1247
 };
 
-void iqtab_init(int *iqtab,unsigned char *iq_y) {
+static void iqtab_init(int *iqtab,unsigned char *iq_y) {
 #define CONST_BITS14 14
 #define	IFAST_SCALE_BITS 2
 	int i;
@@ -328,7 +322,7 @@ void iqtab_init(int *iqtab,unsigned char *iq_y) {
 }
 
 #define	NOP	0xfe00
-unsigned short* rl2blk(int *blk,unsigned short *mdec_rl) {
+static unsigned short* rl2blk(int *blk,unsigned short *mdec_rl) {
 	int i,k,q_scale,rl;
 	int *iqtab;
 
@@ -381,7 +375,7 @@ unsigned short* rl2blk(int *blk,unsigned short *mdec_rl) {
 	image[n+1] = ROUND(Y); \
 	image[n+0] = ROUND(Y);
 
-void yuv2rgb15(int *blk,unsigned short *image) {
+static void yuv2rgb15(int *blk,unsigned short *image) {
 	int x,y;
 	int *Yblk = blk+DCTSIZE2*2;
 	int Cb,Cr,R,G,B;
@@ -431,7 +425,7 @@ void yuv2rgb15(int *blk,unsigned short *image) {
 	}
 }
 
-void yuv2rgb24(int *blk,unsigned char *image) {
+static void yuv2rgb24(int *blk,unsigned char *image) {
 	int x,y;
 	int *Yblk = blk+DCTSIZE2*2;
 	int Cb,Cr,R,G,B;

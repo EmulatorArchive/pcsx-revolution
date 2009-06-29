@@ -32,7 +32,10 @@ typedef struct {
 
 R3000Acpu *psxCpu;
 extern R3000Acpu psxInt;
-#if defined(__i386__) || defined(__sh__) || defined(__ppc__)
+#ifndef __GAMECUBE__
+extern R3000Acpu psxIntDbg;
+#endif
+#if (defined(__x86_64__) || defined(__i386__) || defined(__sh__) || defined(__ppc__)) && !defined(NOPSXREC)
 extern R3000Acpu psxRec;
 #define PSXREC
 #endif
@@ -146,13 +149,26 @@ typedef struct {
     u32 pc;				/* Program counter */
     u32 code;			/* The instruction */
 	u32 cycle;
-	u32 interrupt;
 
-	u32 NextBranchCycle;		// Save many ints
+	// marks the original duration of time for the current pending event.  This is
+	// typically used to determine the amount of time passed since the last update
+	// to psxRegs.cycle:
+	//  currentcycle = cycle + ( evtCycleDuration - evtCycleCountdown );
+	s32 evtCycleDuration;
+
+	// marks the *current* duration of time until the current pending event. In
+	// other words: counts down from evtCycleDuration to 0; event is raised when 0
+	// is reached.
+	s32 evtCycleCountdown;
+
+	// number of cycles pending on the current div unit instruction (mult and div both run in the same
+	// unit).  Any zero-or-negative values mean the unit is free and no stalls incurred for executing
+	// a new instruction on the pipeline.  Negative values are flushed to 0 during PendingEvent executions.
+	// (faster than flushing to zero on every cycle update).
+	s32 DivUnitCycles;
 } psxRegisters;
 
 extern psxRegisters psxRegs;
-
 
 #if defined(__MACOSX__) || defined(__GAMECUBE__)
 
@@ -183,15 +199,14 @@ extern psxRegisters psxRegs;
 
 #define _fOp_(code)		((code >> 26)       )  // The opcode part of the instruction register 
 #define _fFunct_(code)	((code      ) & 0x3F)  // The funct part of the instruction register 
+#define _fSa_(code)		((code >>  6) & 0x1F)  // The sa part of the instruction register
 #define _fRd_(code)		((code >> 11) & 0x1F)  // The rd part of the instruction register 
 #define _fRt_(code)		((code >> 16) & 0x1F)  // The rt part of the instruction register 
 #define _fRs_(code)		((code >> 21) & 0x1F)  // The rs part of the instruction register 
-#define _fSa_(code)		((code >>  6) & 0x1F)  // The sa part of the instruction register
 #define _fIm_(code)		((u16)code)            // The immediate part of the instruction register
 #define _fTarget_(code)	(code & 0x03ffffff)    // The target part of the instruction register
 
 #define _fImm_(code)	((s16)code)            // sign-extended immediate
-//#define _fImmU_(code)	(code&0xffff)          // zero-extended immediate
 #define _fImmU_(code)	((u16)code)          // zero-extended immediate
 
 #define _Op_     _fOp_(psxRegs.code)
@@ -220,8 +235,8 @@ extern psxRegisters psxRegs;
 #define _rHi_   psxRegs.GPR.n.hi   // The HI register
 #define _rLo_   psxRegs.GPR.n.lo   // The LO register
 
-#define _JumpTarget_    ((_Target_ * 4) + (_PC_ & 0xf0000000))   // Calculates the target during a jump instruction
-#define _BranchTarget_  ((s16)_Im_ * 4 + _PC_)                 // Calculates the target during a branch instruction
+#define _JumpTarget_    ((_Target_ << 2) + ((_PC_+4) & 0xf0000000))   // Calculates the target during a jump instruction
+#define _BranchTarget_  (_Imm_ * 4 + _PC_)                 // Calculates the target during a branch instruction
 
 #define _SetLink(x)     psxRegs.GPR.r[x] = _PC_ + 4;       // Sets the return address in the link register
 
@@ -236,9 +251,11 @@ void psxTestSWInts();
 int  psxTestLoadDelay(int reg, u32 tmp);
 void psxJumpTest();
 
-__inline void psx_int_add( int n, s32 ecycle );
+u32 psxGetCycle();
+void AddCycles( int amount );
+
+void psx_int_add(int n, s32 ecycle);
 void psx_int_remove(int n);
-int psxSetNextBranch( u32 startCycle, s32 delta );
 void psxRaiseExtInt( uint irq );
 
 #endif /* __R3000A_H__ */

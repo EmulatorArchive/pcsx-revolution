@@ -29,15 +29,11 @@ typedef struct {
 extern psxCounter psxCounters[5];
 
 void psxRcntInit();
-#ifdef _NEW_COUNTER_
 void __inline psxRcntUpdate0();
 void __inline psxRcntUpdate1();
 void __inline psxRcntUpdate2();
 void __inline psxRcntUpdate3();
 void __inline psxRcntUpdate4();
-#else
-void psxRcntUpdate();
-#endif
 void psxRcntWcount(u32 index, u32 value);
 void psxRcntWmode(u32 index, u32 value);
 void psxRcntWtarget(u32 index, u32 value);

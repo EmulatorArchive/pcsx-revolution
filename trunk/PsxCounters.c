@@ -78,43 +78,35 @@ static __inline void _rcntTestTarget( int i )
 	} else psxCounters[i].target |= PSXCNT_FUTURE_TARGET;
 }
 
-static void psxRcntUpd(int index) {
-	psxCounters[index].sCycle = psxRegs.cycle;
-	if (((!(psxCounters[index].mode & 1)) || (index!=2)) &&
-		psxCounters[index].mode & 0x30) {
-		if (psxCounters[index].mode & 0x10) { // Interrupt on target
-			psxCounters[index].Cycle = ((psxCounters[index].target - psxCounters[index].count) * psxCounters[index].rate) / BIAS;//  - (psxRegs.cycle - psxCounters[index].sCycle);
-		} else { // Interrupt on 0xffff
-			psxCounters[index].Cycle = ((0xffff - psxCounters[index].count) * psxCounters[index].rate) / BIAS;// - (psxRegs.cycle - psxCounters[index].sCycle);
-		}
-	} else psxCounters[index].Cycle = 0xffffffff;
-//	if (index == 2) SysPrintf("Cycle %x\n", psxCounters[index].Cycle);
-}
-
 static __inline void _rcntSet(int i) {
-	s32 count;
-	
-	if (psxCounters[i].Cycle == 0xffffffff) return;
-	
+	const s32 cycle = psxGetCycle();
+	const psxCounter *counter = &psxCounters[i];
+	if (counter->Cycle == 0xffffffff) return;
+
 	u64 overflowCap = (i >= 3) ? 0x100000000ULL : 0x10000;
 
-	if( psxCounters[i].count > overflowCap || psxCounters[i].count > psxCounters[i].target )
+	if( counter->count > overflowCap || counter->count > counter->target )
 	{
-#ifdef _NEW_COUNTER_
-	psx_int_add(i, 4);
-#else
-	psx_int_add(0, 4);
-#endif
-		//printf("Counter %d\n", i);
+		psx_int_add(i, 4);
 		return;
 	}
 
-	count = psxCounters[i].Cycle - (psxRegs.cycle - psxCounters[i].sCycle);
-#ifdef _NEW_COUNTER_
-	psx_int_add(i, count);
-#else
-	psx_int_add(0, count);
-#endif
+	s32 count = counter->Cycle - (cycle - counter->sCycle);
+	if(count > 0)
+	{
+		psx_int_add(i, count);
+	}
+}
+
+static void psxRcntUpd(int index) {
+
+	u32 cycle = psxGetCycle();
+	psxCounters[index].sCycle = cycle;
+	psxCounters[index].Cycle = ((psxCounters[index].target - psxCounters[index].count) * psxCounters[index].rate) / BIAS;//  - (cycle - psxCounters[index].sCycle);
+	_rcntTestOverflow( index );
+	_rcntTestTarget( index );
+	_rcntSet(index);
+
 }
 
 void psxRcntInit() {
@@ -125,7 +117,7 @@ void psxRcntInit() {
 		psxCounters[i].rate = 1;
 		psxCounters[i].mode |= 0x0400;
 		psxCounters[i].target |= PSXCNT_FUTURE_TARGET;
-		psxCounters[i].sCycle = psxRegs.cycle;
+		psxCounters[i].sCycle = psxGetCycle();
 	}
 
 	psxCounters[0].interrupt = 0x10;
@@ -161,15 +153,15 @@ void psxUpdateVSyncRateEnd() {
 	psxCounters[3].rate = (psxCounters[3].rate / 262) * 22;
 	if (Config.VSyncWA) psxCounters[3].rate/= 2;
 }
-#ifdef _NEW_COUNTER_
+
 static void __inline _rcntUpdate(int i)
 {
-	s32 change = psxRegs.cycle - psxCounters[i].sCycle;
+	s32 cycle = psxGetCycle();
+	s32 change = cycle - psxCounters[i].sCycle;
 	if( change < 0 ) change = 0;
 	psxCounters[i].count += change / psxCounters[i].rate;
 	change -= (change / psxCounters[i].rate) * psxCounters[i].rate;
-	psxCounters[i].sCycle = psxRegs.cycle - change;
-	//if(psxCounters[i].Cycle == 0xffffffff) return;
+	psxCounters[i].sCycle = cycle - change;
 	_rcntTestTarget( i );
 	_rcntTestOverflow( i );
 	_rcntSet( i );
@@ -208,78 +200,25 @@ void __inline psxRcntUpdate3()
 		psxRcntUpd(3);
 		psxHu32ref(0x1070) |= SWAPu32(1);
 	}
-	_rcntSet( 3 );
 }
 
 void __inline psxRcntUpdate4()
 {
 	if (cnts >= 5) {
-		const s32 difference = psxRegs.cycle - psxCounters[4].sCycle;
+		const s32 cycle = psxGetCycle();
+		const s32 difference = cycle - psxCounters[4].sCycle;
 		s32 c = psxCounters[4].Cycle;
 		if(difference >= c) {
 			SPU_async(difference);
-			psxCounters[4].sCycle = psxRegs.cycle;
+			psxCounters[4].sCycle = cycle;
 			psxCounters[4].Cycle = psxCounters[4].rate;
 			psxHu32ref(0x1070) |= SWAPu32(psxCounters[4].interrupt);
 		}
 		else c -= difference;
-		psx_int_add(4, c);
-	}
-	_rcntSet( 4 );
-}
-#else
-void psxRcntUpdate() {
-	int i;
-
-	if( (int)(psxRegs.cycle - psxCounters[3].sCycle) > psxCounters[3].Cycle ) {
-		if (psxCounters[3].mode & 0x10000) { // VSync End (22 hsyncs)
-			psxCounters[3].mode &=~ 0x10000;
-			psxUpdateVSyncRate();
-			psxRcntUpd(3);
-			GPU_updateLace(); // updateGPU
-			SysUpdate();
-			ApplyCheats();
-#ifdef GTE_LOG
-			GTE_LOG("VSync\n");
-#endif
-		} else { // VSync Start (240 hsyncs) 
-			psxCounters[3].mode |= 0x10000;
-			psxUpdateVSyncRateEnd();
-			psxRcntUpd(3);
-			psxHu32ref(0x1070) |= SWAPu32(1);
-		}
-	}
-
-	for(i = 0; i < 3; i++){
-		s32 change = psxRegs.cycle - psxCounters[i].sCycle;
-
-		if( change < 0 ) change = 0;
-		psxCounters[i].count += change / psxCounters[i].rate;
-		change -= (change / psxCounters[i].rate) * psxCounters[i].rate;
-		psxCounters[i].sCycle = psxRegs.cycle - change;
-		//if(psxCounters[i].Cycle == 0xffffffff) continue;
-		_rcntTestTarget( i );
-		_rcntTestOverflow( i );
-	}
-
-	if (cnts >= 5) {
-		const s32 difference = psxRegs.cycle - psxCounters[4].sCycle;
-		s32 c = psxCounters[4].Cycle;
-		if(difference >= psxCounters[4].Cycle) {
-			SPU_async(difference);
-			psxCounters[4].sCycle = psxRegs.cycle;
-			psxCounters[4].Cycle = psxCounters[4].rate;
-			psxHu32ref(0x1070) |= SWAPu32(psxCounters[4].interrupt);
-		}
-		else c -= difference;
-		psx_int_add(PsxEvt_Counter0, c);
-	}
-	
-	for (i = 0; i < cnts; i++) {
-		_rcntSet( i );
+		psx_int_add(PsxEvt_Counter4, c);
 	}
 }
-#endif
+
 void psxRcntWcount(u32 index, u32 value) {
 //	SysPrintf("writeCcount[%d] = %x\n", index, value);
 //	PSXCPU_LOG("writeCcount[%d] = %x\n", index, value);
@@ -337,7 +276,7 @@ void psxRcntWmode(u32 index, u32 value)  {
 		psxCounters[index].target &= 0xffff;
 	else
 		psxCounters[index].target &= 0xffffffff;
-	psxCounters[index].sCycle = psxRegs.cycle;
+	psxCounters[index].sCycle = psxGetCycle();
 	psxRcntUpd(index);
 	_rcntSet(index);
 }
@@ -353,27 +292,9 @@ void psxRcntWtarget(u32 index, u32 value) {
 }
 
 u32 psxRcntRcount(u32 index) {
-	u32 ret;
-        
-//	if ((!(psxCounters[index].mode & 1)) || (index!=2)) {
-		if (psxCounters[index].mode & 0x08) { // Wrap at target
-			if (Config.RCntFix) { // Parasite Eve 2
-				ret = (psxCounters[index].count + /*BIAS **/ ((psxRegs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
-			} else {
-				ret = (psxCounters[index].count + BIAS * ((psxRegs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
-			}
-		} else { // Wrap at 0xffff
-			ret = (psxCounters[index].count + BIAS * (psxRegs.cycle / psxCounters[index].rate)) & 0xffff;
-			if (Config.RCntFix) { // Vandal Hearts 1/2
-				ret/= 16;
-			}
-		}
-//		return (psxCounters[index].count + BIAS * ((psxRegs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
-//	} else return 0;
-
-//	SysPrintf("readCcount[%ld] = %lx (mode %lx, target %lx, cycle %lx)\n", index, ret, psxCounters[index].mode, psxCounters[index].target, psxRegs.cycle);
-
-	return ret;
+	s32 cycle = psxGetCycle();
+	u32 retval = psxCounters[index].count + ((cycle - psxCounters[index].sCycle) / psxCounters[index].rate);
+	return retval;
 }
 
 int psxRcntFreeze(gzFile f, int Mode) {
