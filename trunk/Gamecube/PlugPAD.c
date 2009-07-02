@@ -51,60 +51,62 @@ long PAD__close(void) {
 	return PSE_PAD_ERR_SUCCESS;
 }
 
-u32 prev_bt;
-uint16_t prev_pad_status;
-
 static s32 read_keys(u8 port, PadDataS* pad)
 {
 	CHECK_POWER_BUTTONS();
 	u32 b;
 	uint16_t pad_status = 0xFFFF;				//bit pointless why is this done this way?
 	struct_pad *cpad 	= &pads[port];
-	u8 wii_port = cpad->num;
+	u8 pad_port = cpad->num;
 #ifdef HW_RVL
 	WPADData *data;
 
-	if(pads[0].type != pads[1].type && (pads[0].type == 0 || pads[1].type == 0)) wii_port = 0; // If Wii Remote and GC pad, then we must read from 0 on both.
-
-	if(cpad->type)
+	if(pads[0].type != pads[1].type 
+			&& (pads[0].type == GCPAD || pads[1].type == GCPAD))
 	{
-		data = WPAD_Data(wii_port);
-		b = WPAD_ButtonsHeld(wii_port);
+		pad_port = 0;							// If Wii Remote and GC pad, then we must read from 0 on both.
+	}
+	if(cpad->type != GCPAD)
+	{
+		data = WPAD_Data(pad_port);
+		b = WPAD_ButtonsHeld(pad_port);
 	}
 	else
 #endif	
-		b = PAD_ButtonsHeld(wii_port);
+		b = PAD_ButtonsHeld(pad_port);
 
-	if(b == prev_bt)				// Don't check all if nothing change
-		pad_status = prev_pad_status;
-	else
-	{
-		if (b & cpad->START)
-			pad_status &= PSX_BUTTON_START;
-		if (b & cpad->SELECT)
-			pad_status &= PSX_BUTTON_SELECT;
-		if (b & cpad->CROSS)
-			pad_status &= PSX_BUTTON_CROSS;
-		if (b & cpad->CIRCLE)
-			pad_status &= PSX_BUTTON_CIRCLE;
-		if (b & cpad->SQUARE)
-			pad_status &= PSX_BUTTON_SQUARE;
-		if (b & cpad->TRIANGLE)
-			pad_status &= PSX_BUTTON_TRIANGLE;
-
-		if (b & cpad->R2)
-			pad_status &= PSX_BUTTON_R2;
-		if (b & cpad->L2)
-			pad_status &= PSX_BUTTON_L2;
-		if (b & cpad->R1)
-			pad_status &= PSX_BUTTON_R1;
-		if (b & cpad->L1)
-			pad_status &= PSX_BUTTON_L1;
-		
-		prev_bt = b;
+	if (b & cpad->R2) {
+		pad_status &= PSX_BUTTON_R2;
+		//b &= ~(cpad->R2);
 	}
+	if (b & cpad->L2) {
+		pad_status &= PSX_BUTTON_L2;
+		//b &= ~(cpad->L2);
+	}
+	if (b & cpad->R1) {
+		pad_status &= PSX_BUTTON_R1;
+		//b &= ~(cpad->R1);
+	}
+	if (b & cpad->L1) {
+		pad_status &= PSX_BUTTON_L1;
+		//b &= ~(cpad->L1);
+	}
+
+	if (b & cpad->START)
+		pad_status &= PSX_BUTTON_START;
+	if (b & cpad->SELECT)
+		pad_status &= PSX_BUTTON_SELECT;
+	if (b & cpad->CROSS)
+		pad_status &= PSX_BUTTON_CROSS;
+	if (b & cpad->CIRCLE)
+		pad_status &= PSX_BUTTON_CIRCLE;
+	if (b & cpad->SQUARE)
+		pad_status &= PSX_BUTTON_SQUARE;
+	if (b & cpad->TRIANGLE)
+		pad_status &= PSX_BUTTON_TRIANGLE;
+
 #ifdef HW_RVL
-	if(data->exp.type == WPAD_EXP_NUNCHUK && cpad->analog == 4)
+	if(data->exp.type == WPAD_EXP_NUNCHUK && cpad->analog == PAD_STANDARD)
 	{
 		if(data->exp.nunchuk.js.pos.y > 140)
 			pad_status &= PSX_BUTTON_DUP;
@@ -134,23 +136,23 @@ static s32 read_keys(u8 port, PadDataS* pad)
 		SysRunGui();
 	}
 
-	if(cpad->analog == 7)
+	if(cpad->analog == PAD_ANALOG)
 	{
 		switch(cpad->type)
 		{
-			case 0:														// GC Pad
-				pad->leftJoyX  = (u8)(PAD_StickX(wii_port)+128);
-				pad->leftJoyY  = (u8)(PAD_StickY(wii_port)+128);
-				pad->rightJoyX = (u8)(PAD_SubStickX(wii_port)+128);
-				pad->rightJoyY = (u8)(PAD_SubStickY(wii_port)+128);
+			case GCPAD:
+				pad->leftJoyX  = (u8)(PAD_StickX(pad_port)+128);
+				pad->leftJoyY  = (u8)(PAD_StickY(pad_port)+128);
+				pad->rightJoyX = (u8)(PAD_SubStickX(pad_port)+128);
+				pad->rightJoyY = (u8)(PAD_SubStickY(pad_port)+128);
 				break;
 #ifdef HW_RVL			
-			case 2:
+			case NUNCHAK:	// or Classic
 				if(data->exp.type == WPAD_EXP_NUNCHUK)
 				{
 					//TODO: Check this
 					gforce_t gforce;
-					WPAD_GForce(wii_port, &gforce);
+					WPAD_GForce(pad_port, &gforce);
 					pad->leftJoyX 	= data->exp.nunchuk.js.pos.x;
 					pad->leftJoyY 	= data->exp.nunchuk.js.pos.y;
 					pad->rightJoyX 	= gforce.x;
@@ -169,7 +171,6 @@ static s32 read_keys(u8 port, PadDataS* pad)
 	}
 	pad->controllerType = cpad->analog;
 	pad->buttonStatus = pad_status;									// Copy Buttons
-	prev_pad_status = pad_status;
 	return PSE_PAD_ERR_SUCCESS;
 }
 

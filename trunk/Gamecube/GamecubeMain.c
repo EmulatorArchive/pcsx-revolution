@@ -24,8 +24,6 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
-//#include <time.h>
-//#include <fat.h>
 #include "System.h"
 #include "DEBUG.h"
 
@@ -73,8 +71,10 @@ static inline void VideoInit()
 		vmode->viWidth = 678;
 		vmode->viXOrigin = (VI_MAX_WIDTH_PAL - 678)/2;
 	}
+#else
+	if(VIDEO_HaveComponentCable())
+		vmode = &TVNtsc480Prog;
 #endif
-    
 	VIDEO_Configure (vmode);
 	xfb[0] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode)); //assume PAL largest
 	xfb[1] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode));	//fixme for progressive?
@@ -122,13 +122,12 @@ static void Initialise (void){
 #ifdef HW_RVL
 	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);
 	// Wii Power/Reset buttons
-	// See gcMisc,h
+	// gcMisc,h
 	WPAD_SetPowerButtonCallback((WPADShutdownCallback)ShutdownCB);
 	SYS_SetPowerCallback(ShutdownCB);
 	SYS_SetResetCallback(ResetCB);
 #endif
 
-	//fatInitDefault();
 	MountAllFAT();
 }
 
@@ -166,7 +165,7 @@ int main(int argc, char *argv[]) {
 
 		Config.Cpu 		= 1;	//interpreter = 1, dynarec = 0
 
-		Config.PsxOut 	= 1;
+		Config.PsxOut 	= 0;
 		Config.HLE 		= 1;
 		Config.Xa 		= 0;	//XA enabled
 		Config.Cdda 	= 0;

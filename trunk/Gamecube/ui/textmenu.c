@@ -132,6 +132,7 @@ void Main_menu()
 					
 				case 1:
 					NeedReset = 1;
+					index = 0;
 					break;
 
 				case 2:

@@ -6,6 +6,18 @@
 #endif
 #include <ogc/pad.h>
 
+enum {
+	PAD_STANDARD = 4,
+	PAD_ANALOG = 7
+} PsxPadType;
+
+enum {
+	GCPAD = 0
+,	REMOTE
+,	NUNCHAK		//  Remote+Nunchak / Classic.
+,	CLASSIC = NUNCHAK
+} WiiPadType;
+
 typedef struct users_pad {
 	u32 UP;
 	u32 DOWN;
@@ -27,9 +39,9 @@ typedef struct users_pad {
 	
 	u32 MENU;
 	
-	int type;		// 0 - pad; 	 1 - Remote; 	2 - Remote+Nunchak / Classic.
 	int num;		// 0 - first; 	 1 - second.
-	int analog;		// 4 - standart; 7 - analog.
+	int type;		// WiiPadType
+	int analog;		// PsxPadType
 } struct_pad;
 
 extern struct_pad pads[2];

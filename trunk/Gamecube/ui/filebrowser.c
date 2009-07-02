@@ -42,7 +42,8 @@ static int const per_page = 20;
 static int textFileBrowser(char* directory){
 	// Set everything up to read
 	DIR_ITER* dp = diropen(directory);
-	if(!dp){ return -1; }
+	if(!dp)
+		return -1;
 	struct stat fstat;
 	char filename[MAXPATHLEN];
 	int num_entries = 1, i = 0;
@@ -65,10 +66,10 @@ static int textFileBrowser(char* directory){
 	
 	dirclose(dp);
 	
-	int index	= (num_entries > 1) ? 2 : 1;
+	int index	= 0;
 	int temp	= 0;
 
-	unsigned short page, start, limit;
+	u8 page, start, limit;
 	short draw = 1;
 
 	clrscr();

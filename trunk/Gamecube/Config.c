@@ -26,8 +26,6 @@
 #include "Config.h"
 #include "pad.h"
 
-#define DEVICE(x) x ? "usb:/" : "sd:/"
-
 /////////////////////////////////////////////////////////
 
 #define GetValue(name, var) \
@@ -66,8 +64,6 @@
 /////////////////////////////////////////////////////////
 
 static void PADReadConfig();
-
-extern struct_pad pads[2];
 
 settings Settings;
 
@@ -378,7 +374,6 @@ static void PADReadConfig() {
 	GetValuel("R21", pads[1].R2);
 	GetValuel("type1", pads[1].type);
 	GetValuel("analog1", pads[1].analog);
-
 	free(data);
 
 	return;
@@ -498,8 +493,7 @@ int SMBReadConfig()
 	GetValue("user", Settings.smb.user);
 	GetValue("pwd", Settings.smb.pwd);
 	GetValue("share", Settings.smb.share);
-	printf("ip = %s\nuser = %s\npwd = %s\nshare = %s\n", Settings.smb.ip, Settings.smb.user, Settings.smb.pwd, Settings.smb.share);
-	usleep(10000000);
+
 	free(data);
 
 	return 0;

@@ -21,7 +21,6 @@
 // TODO: implement CDDA & subchannel support.
 
 #include "plugins.h"
-#include <stdlib.h>
 #include <sys/stat.h>
 #ifdef __GAMECUBE__
 #define STATIC 
@@ -36,10 +35,12 @@
 #define btoi(b)			((b) / 16 * 10 + (b) % 16) /* BCD to u_char */
 
 #define CD_FRAMESIZE_RAW	2352
+#define BUFFER_SIZE CD_FRAMESIZE_RAW * 10
 #define DATA_SIZE		(CD_FRAMESIZE_RAW - 12)
 
 FILE *cdHandle = NULL;
-static unsigned char cdbuffer[CD_FRAMESIZE_RAW * 10];
+
+static unsigned char cdbuffer[BUFFER_SIZE];		// 10 sectors
 
 char* CALLBACK CDR__getDriveLetter(void);
 #ifdef __GAMECUBE__
@@ -122,6 +123,7 @@ static int parsecue(const char* isofile)
 	char cuename[256];
 	char name[256];
 	char time[20];
+	char *tmp;
 	char linebuf[256], dummy[256];
 	unsigned int i, t;
 	strcpy(cuename, isofile);
@@ -169,7 +171,14 @@ static int parsecue(const char* isofile)
 
 		} 
 		if( !strcmp(token, "INDEX") ){
-			sscanf(linebuf, "    INDEX 01 %s", time);
+
+			tmp = strstr(linebuf, "INDEX");
+			if (tmp != NULL) {
+				tmp += strlen("INDEX") + 3;		// 3 - space + numeric index
+				while (*tmp == ' ') tmp++;
+				if (*tmp != '\n') sscanf(tmp, "%s", time);
+			}
+
 			SysPrintf(_("Track beginning at %s\n"), time);
 			tok2msf((char *)&time, (char *)&ti[numtracks].start);
 			// If we've already seen another track, this is its end
@@ -190,13 +199,6 @@ static int parsecue(const char* isofile)
 	// Fill out the last track's end based on size
 	unsigned int blocks = binInfo.st_size / 2352;
 	sec2msf(blocks, ti[numtracks].length);
-
-	// calculate the true start of each track
-	// start+datasize (+2 secs of silence ? I dunno...)
-	for(i = 2; i <= numtracks; i++) {
-		t = msf2sec(ti[1].start) + msf2sec(ti[1].length) + msf2sec(ti[i].start);
-		sec2msf(t, ti[i].start);
-	}
 
 	return 0;
 }

@@ -28,17 +28,17 @@ void init_gc_pad(struct_pad *pad)
 void init_default_pads()
 {
 	// Default Wiimote
-	int i = 0;
+	u8 i = 0;
 	for(; i < 2; i++)
 	{
 #ifdef HW_RVL
 		init_wiimote(&pads[i]);
-		pads[i].type 		= 1;
+		pads[i].type 		= REMOTE;
 #else
 		init_gc_pad(&pads[i]);
-		pads[i].type 		= 0;
+		pads[i].type 		= GCPAD;
 #endif 
-		pads[i].analog 		= 4;
+		pads[i].analog 		= PAD_STANDARD;
 		pads[i].num 		= i;
 	}
 }

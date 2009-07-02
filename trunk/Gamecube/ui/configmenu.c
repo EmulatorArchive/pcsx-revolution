@@ -8,8 +8,6 @@ static void ConfigureGPU();
 
 static u32 set_button(char msg[15], int type, int pad_num);
 
-//extern struct_pad pads[2];
-
 void Config_menu()
 {
 	int index 	= 0;
@@ -87,8 +85,8 @@ void Config_menu()
 
 static void ConfigurePAD(struct_pad *pad)
 {
-	int index 	= 0;
-	int device 	= pad->type ? pad->type : 0;
+	u8 index 	= 0;
+	u8 device 	= pad->type;
 	
 	char *thirddevice = NULL;
 
@@ -130,7 +128,7 @@ static void ConfigurePAD(struct_pad *pad)
 					break;
 
 				case 2: 
-					if(pad->analog == 4) pad->analog = 7;
+					if(pad->analog != PAD_ANALOG) pad->analog = PAD_ANALOG;
 			}
 		}
 		
@@ -145,7 +143,7 @@ static void ConfigurePAD(struct_pad *pad)
 					break;
 						
 				case 2: 
-					if(pad->analog == 7) pad->analog = 4;
+					if(pad->analog != PAD_STANDARD) pad->analog = PAD_STANDARD;
 			}
 		}
 			
@@ -154,7 +152,7 @@ static void ConfigurePAD(struct_pad *pad)
 			clrscr();
 
 			switch(index)
-			{								
+			{
 				case 1: 
 					if(!pad->type)									// GC Pad
 					{
@@ -170,17 +168,23 @@ static void ConfigurePAD(struct_pad *pad)
 						init_wiimote(pad);
 					}
 #endif
-					pad->START 		= set_button("Start", pad->type, pad->num);
-					pad->SELECT 	= set_button("Select", pad->type, pad->num);
-					pad->CROSS 		= set_button("Cross", pad->type, pad->num);
-					pad->SQUARE 	= set_button("Square", pad->type, pad->num);
-					pad->CIRCLE 	= set_button("Circle", pad->type, pad->num);
-					pad->TRIANGLE 	= set_button("Triangle", pad->type, pad->num);
-					pad->L1 		= set_button("L1", pad->type, pad->num);
-					pad->L2 		= set_button("L2", pad->type, pad->num);
-					pad->R1 		= set_button("R1", pad->type, pad->num);
-					pad->R2 		= set_button("R2", pad->type, pad->num);
-					pad->MENU 		= set_button("MENU", pad->type, pad->num);
+					u8 pad_port = pad->num;
+					if(pads[0].type != pads[1].type 
+						&& (pads[0].type == GCPAD || pads[1].type == GCPAD))
+					{
+						pad_port = 0;							// If Wii Remote and GC pad, then we must read from 0 on both.
+					}
+					pad->START 		= set_button("Start", pad->type, pad_port);
+					pad->SELECT 	= set_button("Select", pad->type, pad_port);
+					pad->CROSS 		= set_button("Cross", pad->type, pad_port);
+					pad->SQUARE 	= set_button("Square", pad->type, pad_port);
+					pad->CIRCLE 	= set_button("Circle", pad->type, pad_port);
+					pad->TRIANGLE 	= set_button("Triangle", pad->type, pad_port);
+					pad->L1 		= set_button("L1", pad->type, pad_port);
+					pad->L2 		= set_button("L2", pad->type, pad_port);
+					pad->R1 		= set_button("R1", pad->type, pad_port);
+					pad->R2 		= set_button("R2", pad->type, pad_port);
+					pad->MENU 		= set_button("MENU", pad->type, pad_port);
 					
 					clrscr();
 					break;
@@ -188,7 +192,6 @@ static void ConfigurePAD(struct_pad *pad)
 				case 3:
 					PADWriteConfig();
 					return;
-					break;
 			}
 		}
 		
@@ -207,15 +210,15 @@ static void ConfigurePAD(struct_pad *pad)
 
 		switch(device)
 		{
-			case 0: 
+			case GCPAD: 
 				printf("GC pad");
 				break;
-			
-			case 1:
+
+			case REMOTE:
 				printf("Wii Remote");
 				break;
-				
-			case 2:
+
+			case CLASSIC:
 				if(thirddevice != NULL)
 					printf("%s", thirddevice);
 				else device--;
@@ -226,17 +229,17 @@ static void ConfigurePAD(struct_pad *pad)
 		printf("\n\tConfigure buttons\n" );
 
 		printf("\x1b[%um", (index == 2) ? 32 : 37);
-		printf("\tType: %s\n", pad->analog == 7 ? "analog" : "standart");
+		printf("\tType: %s\n", pad->analog == PAD_ANALOG ? "analog" : "standard");
 
 		printf("\x1b[%um", (index == 3) ? 32 : 37);
-		printf("\tBack\n\n");
+		printf("\n\tBack\n\n");
 
-		if(pad->analog == 7)
+		if(pad->analog == PAD_ANALOG)
 		{
 			printf("\x1b[36m");
 			printf("\tInput may be broken in some games.");
 		}
-		
+
 		printf("\x1b[37m");								// Reset Color
 
 		VIDEO_WaitVSync();
