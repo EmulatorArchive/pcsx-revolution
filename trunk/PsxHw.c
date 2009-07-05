@@ -70,11 +70,11 @@ u16 psxHwRead16(u32 add) {
 #endif
 			return psxHu16(0x1070);
 			
-		case 0x1f8010702: 
+		case 0x1f801072: 
 #ifdef PSXHW_LOG
-			PSXHW_LOG("IREG 16bit read %x\n", psxHu16(0x1070));
+			PSXHW_LOG("IREG 16bit read %x\n", psxHu16(0x1072));
 #endif
-			return psxHu16(0x1070);
+			return psxHu16(0x1072);
 
 		case 0x1f801074: 
 #ifdef PSXHW_LOG
@@ -194,7 +194,7 @@ u16 psxHwRead16(u32 add) {
 			if (add >= 0x1F8010C0 && add < 0x1f801e00) {
             	hard = SPU_readRegister(add);
 			} else {
-				//if(add > 0x1F801000) \
+				if(add > 0x1F801000) \
 					printf("*Unkwnown 16bit read at address %lx\n", add);
 				hard = psxHu16(add); 
 #ifdef PSXHW_LOG
@@ -862,7 +862,7 @@ void psxHwWrite32(u32 add, u32 value) {
 #endif
 		{
 			u32 tmp = (~value) & SWAPu32(HW_DMA_ICR);
-			psxHu32ref(add) = SWAPu32(((tmp ^ value) & 0xffffff) ^ tmp);
+			HW_DMA_ICR = SWAPu32(((tmp ^ value) & 0xffffff) ^ tmp);
 			return;
 		}
 		

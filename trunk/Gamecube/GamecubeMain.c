@@ -156,10 +156,10 @@ int main(int argc, char *argv[]) {
 	if (LoadConfig() == -1)
 	{
 		strcpy(Config.Bios, "SCPH1001.BIN"); // Use actual BIOS
-		strcpy(Config.BiosDir, "sd:/wiisx/bios/");
+		strcpy(Config.BiosDir, "sd:/pcsx-r/bios/");
 
-		strcpy(Config.Mcd[0].Filename, "sd:/wiisx/memcards/Mcd001.mcr");
-		strcpy(Config.Mcd[1].Filename, "sd:/wiisx/memcards/Mcd002.mcr");
+		strcpy(Config.Mcd[0].Filename, "sd:/pcsx-r/memcards/Mcd001.mcr");
+		strcpy(Config.Mcd[1].Filename, "sd:/pcsx-r/memcards/Mcd002.mcr");
 		Config.Mcd[0].Enabled = 1;
 		Config.Mcd[1].Enabled = 1;
 

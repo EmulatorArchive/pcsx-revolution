@@ -105,11 +105,11 @@ static void ReadConfigFile()
 			fclose(in);
 	}
 #else
-	strcpy(t, "sd:/wiisx/video.ini");
+	strcpy(t, "sd:/pcsx-r/video.ini");
 	in = fopen(t,"rb");
 	if (!in)
 	{
-		strcpy(t, "usb:/wiisx/video.ini");
+		strcpy(t, "usb:/pcsx-r/video.ini");
 		in = fopen(t,"rb");
 	}
 	if(in) fclose(in);

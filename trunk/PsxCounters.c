@@ -48,7 +48,7 @@ static __inline void _rcntTestOverflow( int i )
 	// Count wraps around back to zero, while the target is restored (if needed).
 	// (high bit of the target gets set by rcntWtarget when the target is behind
 	// the counter value, and thus should not be flagged until after an overflow)
-	
+       
 	psxCounters[i].count &= maxTarget;
 	psxCounters[i].target &= maxTarget;
 }
@@ -66,7 +66,7 @@ static __inline void _rcntTestTarget( int i )
 
 		psxHu32ref(0x1070) |= SWAPu32(psxCounters[i].interrupt);
 	}
-	
+       
 	if (psxCounters[i].mode & 0x08)
 	{
 		// Reset on target
@@ -79,9 +79,9 @@ static __inline void _rcntTestTarget( int i )
 }
 
 static __inline void _rcntSet(int i) {
-	const s32 cycle = psxGetCycle();
+	const s32 cycle = psxRegs.cycle;
 	const psxCounter *counter = &psxCounters[i];
-	if (counter->Cycle == 0xffffffff) return;
+	if (counter->mode_st.Disabled) return;
 
 	u64 overflowCap = (i >= 3) ? 0x100000000ULL : 0x10000;
 
@@ -100,7 +100,7 @@ static __inline void _rcntSet(int i) {
 
 static void psxRcntUpd(int index) {
 
-	u32 cycle = psxGetCycle();
+	u32 cycle = psxRegs.cycle;
 	psxCounters[index].sCycle = cycle;
 	psxCounters[index].Cycle = ((psxCounters[index].target - psxCounters[index].count) * psxCounters[index].rate) / BIAS;//  - (cycle - psxCounters[index].sCycle);
 	_rcntTestOverflow( index );
@@ -117,7 +117,7 @@ void psxRcntInit() {
 		psxCounters[i].rate = 1;
 		psxCounters[i].mode |= 0x0400;
 		psxCounters[i].target |= PSXCNT_FUTURE_TARGET;
-		psxCounters[i].sCycle = psxGetCycle();
+		psxCounters[i].sCycle = psxRegs.cycle;
 	}
 
 	psxCounters[0].interrupt = 0x10;
@@ -140,8 +140,8 @@ void psxRcntInit() {
 
 void psxUpdateVSyncRate() {
 	if (Config.PsxType) // ntsc - 0 | pal - 1
-	     psxCounters[3].rate = (PSXCLK / 50);// / BIAS;		// Dr.Hell's doc	674399.5367
-	else psxCounters[3].rate = (PSXCLK / 60);// / BIAS;		//					566107.5005
+	     psxCounters[3].rate = (PSXCLK / 50);// / BIAS;	     // Dr.Hell's doc  674399.5367
+	else psxCounters[3].rate = (PSXCLK / 60);// / BIAS;	     //                 566107.5005
 	psxCounters[3].rate-= (psxCounters[3].rate / 262) * 22;
 	if (Config.VSyncWA) psxCounters[3].rate/= 2;
 }
@@ -156,7 +156,7 @@ void psxUpdateVSyncRateEnd() {
 
 static void __inline _rcntUpdate(int i)
 {
-	s32 cycle = psxGetCycle();
+	s32 cycle = psxRegs.cycle;
 	s32 change = cycle - psxCounters[i].sCycle;
 	if( change < 0 ) change = 0;
 	psxCounters[i].count += change / psxCounters[i].rate;
@@ -194,7 +194,7 @@ void __inline psxRcntUpdate3()
 #ifdef GTE_LOG
 		GTE_LOG("VSync\n");
 #endif
-	} else { // VSync Start (240 hsyncs) 
+	} else { // VSync Start (240 hsyncs)
 		psxCounters[3].mode |= 0x10000;
 		psxUpdateVSyncRateEnd();
 		psxRcntUpd(3);
@@ -202,10 +202,11 @@ void __inline psxRcntUpdate3()
 	}
 }
 
+
 void __inline psxRcntUpdate4()
 {
 	if (cnts >= 5) {
-		const s32 cycle = psxGetCycle();
+		const s32 cycle = psxRegs.cycle;
 		const s32 difference = cycle - psxCounters[4].sCycle;
 		s32 c = psxCounters[4].Cycle;
 		if(difference >= c) {
@@ -219,9 +220,17 @@ void __inline psxRcntUpdate4()
 	}
 }
 
+static __inline u32 rcntCycle(int index)
+{
+	if ((!psxCounters[index].mode_st.Disabled) && (psxCounters[index].mode_st.ClockSource != 0x3)) 
+		return psxCounters[index].count + ((psxRegs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate);
+	else 
+		return psxCounters[index].count;
+}
+
 void psxRcntWcount(u32 index, u32 value) {
-//	SysPrintf("writeCcount[%d] = %x\n", index, value);
-//	PSXCPU_LOG("writeCcount[%d] = %x\n", index, value);
+//      SysPrintf("writeCcount[%d] = %x\n", index, value);
+//      PSXCPU_LOG("writeCcount[%d] = %x\n", index, value);
 
 	if(index < 3)
 	{
@@ -238,7 +247,7 @@ void psxRcntWcount(u32 index, u32 value) {
 }
 
 void psxRcntWmode(u32 index, u32 value)  {
-//	SysPrintf("writeCmode[%ld] = %lx\n", index, value);
+//      SysPrintf("writeCmode[%ld] = %lx\n", index, value);
 	psxCounters[index].mode = value;
 	psxCounters[index].mode |= 0x0400;
 
@@ -276,32 +285,36 @@ void psxRcntWmode(u32 index, u32 value)  {
 		psxCounters[index].target &= 0xffff;
 	else
 		psxCounters[index].target &= 0xffffffff;
-	psxCounters[index].sCycle = psxGetCycle();
+	psxCounters[index].sCycle = psxRegs.cycle;
 	psxRcntUpd(index);
 	_rcntSet(index);
 }
 
 void psxRcntWtarget(u32 index, u32 value) {
-//	SysPrintf("writeCtarget[%ld] = %lx\n", index, value);
-	if(index < 3)
-		psxCounters[index].target = value & 0xffff;
-	else
-		psxCounters[index].target = value;
+//      SysPrintf("writeCtarget[%ld] = %lx\n", index, value);
+	psxCounters[index].target = value & 0xffff;
+
+	if( psxCounters[index].target <= rcntCycle(index) )
+		psxCounters[index].target |= PSXCNT_FUTURE_TARGET;
+
 	psxRcntUpd(index);
 	_rcntSet(index);
 }
 
 u32 psxRcntRcount(u32 index) {
-	s32 cycle = psxGetCycle();
-	u32 retval = psxCounters[index].count + ((cycle - psxCounters[index].sCycle) / psxCounters[index].rate);
-	return retval;
+	u32 ret = psxCounters[index].count;
+	if (!psxCounters[index].mode_st.Disabled && (psxCounters[index].mode_st.ClockSource != 0x3))
+		ret += ((psxRegs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate);
+
+	return ret;
 }
 
 int psxRcntFreeze(gzFile f, int Mode) {
 	char Unused[4096 - sizeof(psxCounter)];
-	
+       
 	gzfreezel(psxCounters);
 	gzfreezel(Unused);
 
 	return 0;
 }
+

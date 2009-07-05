@@ -68,7 +68,6 @@ enum PSXCountRegs
 enum PsxEventType
 {
 	PsxEvt_Counter0 = 0,
-
 	PsxEvt_Counter1,
 	PsxEvt_Counter2,
 	PsxEvt_Counter3,
@@ -78,7 +77,7 @@ enum PsxEventType
 	PsxEvt_SIO,				// 6
 	PsxEvt_GPU,				// 7
 
-	PsxEvt_Cdrom,			// 8
+	PsxEvt_Cdrom,			// 8	
 	PsxEvt_CdromRead,		// 9
 	PsxEvt_SPU,				// 10
 
@@ -88,8 +87,9 @@ enum PsxEventType
 	// entry in the Event System's event schedule table.
 	PsxEvt_Idle = PsxEvt_CountNonIdle,
 
-	PsxEvt_CountAll		// total number of schedulable event types in the Psx
+	PsxEvt_CountAll         // total number of schedulable event types in the Psx
 };
+
 
 enum PsxInterrupts
 {

@@ -179,10 +179,10 @@ void Main_menu()
 
 			printf("\x1b[%um", (index == 3) ? 32 : 37);
 			printf("\tConfig\n");
-
+#ifdef HW_RVL
 			printf("\x1b[%um", (index == 4) ? 32 : 37);
 			printf("\tExit to HBC\n\n");
-
+#endif
 			if(msg)
 			{
 				printf("\x1b[36m");

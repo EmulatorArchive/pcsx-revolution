@@ -419,11 +419,11 @@ static void ReadConfigFile(void)
     }
   } 
 #else
-	strcpy(t, "sd:/wiisx/audio.ini");
+	strcpy(t, "sd:/pcsx-r/audio.ini");
 	in = fopen(t,"rb"); 
 	if(!in) 
 	{
-		strcpy(t, "usb:/wiisx/audio.ini");
+		strcpy(t, "usb:/pcsx-r/audio.ini");
 		in = fopen(t,"rb"); 
 		if(!in) return;
 	}

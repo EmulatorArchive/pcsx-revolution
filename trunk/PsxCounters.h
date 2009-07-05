@@ -21,7 +21,45 @@
 
 #include "PsxCommon.h"
 
+struct PSXCNT_MODE
+{
+	// General count enable/status.  If 0, no counting happens.
+	// This flag is set/unset by the gates.
+	u32 Disabled:1;
+
+	// Unused / Gates status?
+	u32 unused:2;
+
+	//Set both for IRQ on target reached.
+	u32 IRQ1:2;
+	u32 IRQ2:2;
+
+	// Enables target interrupts.
+	u32 TargetInterrupt:1;
+
+	// 0 - System clock (it seems)
+	// 1 - Pixel clock (counter 0)
+	//     Horizontal retrace (counter 1)
+	u32 ClockSource:1;
+
+	// 0 - System clock (it seems)
+	// 1 - 1/8 * System clock (counter 2)
+	u32 Div:1;
+
+/*
+	When Clc and Div of the counters are zero, they all run at the
+		same speed. This speed seems to be about 8 times the normal
+		speed of root counter 2, which is specified as 1/8 the system
+		clock.
+*/
+};
+
+
 typedef struct {
+	union {
+		u32 mode;
+		struct PSXCNT_MODE mode_st;
+	};
 	unsigned long count, mode, target;
 	unsigned long sCycle, Cycle, rate, interrupt;
 } psxCounter;

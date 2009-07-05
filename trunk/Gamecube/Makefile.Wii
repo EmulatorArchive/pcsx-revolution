@@ -25,9 +25,8 @@ INCLUDES	:=	.. ../ppc/ ../PeopsSpu109/
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -mcpu=750 $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
+CFLAGS	= -g $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
 		  -D__GX__ -D_SDL -DEMBEDDED_FONTS \
-		  -DHW_RVL
 
 ifneq ($(BUILD),debug)
 CFLAGS	+= -mrvl -O2 -pipe -fno-strict-aliasing \

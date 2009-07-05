@@ -61,7 +61,7 @@ static void idct1(int *block)
 	for(i=0;i<DCTSIZE2;i++) block[i]=val;
 }
 
-void idct(int *block,int k)
+static void idct(int *block,int k)
 {
   int tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
   int z5, z10, z11, z12, z13;
@@ -184,12 +184,13 @@ struct {
 	int rlsize;
 } mdec;
 
-int iq_y[DCTSIZE2],iq_uv[DCTSIZE2];
+static int iq_y[DCTSIZE2],iq_uv[DCTSIZE2];
 
 void mdecInit(void) {
 	mdec.rl = (u16*)&psxM[0x100000];
 	mdec.command = 0;
 	mdec.status = 0;
+	mdec_flag = 0;
 }
 
 
@@ -225,8 +226,9 @@ u32 mdecRead1(void) {
 #ifdef CDR_LOG
 	CDR_LOG("mdec1 read %lx\n", mdec.status);
 #endif
-	//	All games call mdecRead1() before psxDma0(). If mdec.status = MDEC_BUSY, they wait and call it again while mdec.status != 0. 
-	//	FF9 make extra calls before psxDma1() and if mdec.status == 0, then it call psxDma1() instead psxDma0() -> crash. (Firnis)
+	// Most of games call mdecRead1() before psxDma0(). If mdec.status = MDEC_BUSY, they wait and call it again while mdec.status != 0.
+	// FF9 make extra calls before psxDma1() and reset Mdec before call psxDma0(). 
+	// If mdec.status == 0 after one of extra calls it start another drawing cycle without sending data to memory -> crash (Firnis)
 	if(mdec_flag)
 		mdec.status &= ~MDEC_BUSY;
 	mdec_flag = 1;
@@ -240,8 +242,10 @@ void psxDma0(u32 adr, u32 bcr, u32 chcr) {
 #ifdef CDR_LOG
 	CDR_LOG("DMA0 %lx %lx %lx\n", adr, bcr, chcr);
 #endif
-mdec_flag = 0;
+
 	if (chcr!=0x01000201) return;
+
+ 	mdec_flag = 0;
 	size = (bcr>>16)*(bcr&0xffff);
 	if (cmd==0x60000000) {
 	} else
@@ -262,18 +266,21 @@ void psxDma1(u32 adr, u32 bcr, u32 chcr) {
 	int blk[DCTSIZE2*6];
 	u16 *image;
 	int size;
-mdec_flag = 0;
+
 #ifdef CDR_LOG
 	CDR_LOG("DMA1 %lx %lx %lx (cmd = %lx)\n", adr, bcr, chcr, mdec.command);
 #endif
-	if (chcr!=0x01000200) return;
-	size = (bcr>>16)*(bcr&0xffff);
+	if (chcr != 0x01000200) return;
+ 	mdec_flag = 0;
+	size = (bcr >> 16) * (bcr & 0xffff);
+
 	image = (u16*)PSXM(adr);
-	if (mdec.command&0x08000000) {
-		size = size / ((16*16)/2);
-		for (;size>0;size--,image+=(16*16)) {
-			mdec.rl = rl2blk(blk,mdec.rl);
-			yuv2rgb15(blk,image);
+
+	if (mdec.command & 0x08000000) {
+		size = size / ((16 * 16) / 2);
+		for ( ; size > 0; size--, image += (16 * 16) ) {
+			mdec.rl = rl2blk( blk, mdec.rl );
+			yuv2rgb15( blk, image );
 		}
 	} else {
 		size = size / ((24*16)/2);

@@ -77,11 +77,11 @@ int LoadConfig()
 	char *data, *tmp;
 
 	char path[255];
-	strcpy(path, "sd:/wiisx/config.ini");
+	strcpy(path, "sd:/pcsx-r/config.ini");
 
 	if (stat(path, &buf) == -1)
 	{
-		strcpy(path, "usb:/wiisx/config.ini");
+		strcpy(path, "usb:/pcsx-r/config.ini");
 		if (stat(path, &buf) == -1)
 			return -1;
 	}
@@ -135,11 +135,11 @@ void SaveConfig() {
 	FILE *f;
 
 	char path[255];
-	strcpy(path, "sd:/wiisx/config.ini");
+	strcpy(path, "sd:/pcsx-r/config.ini");
 	f = fopen(path, "w");
 	if (f == NULL)
 	{
-		strcpy(path, "usb:/wiisx/config.ini");
+		strcpy(path, "usb:/pcsx-r/config.ini");
 		f = fopen(path, "w");
 		if (f == NULL)
 			return;
@@ -187,11 +187,11 @@ void GPUReadConfig()
 	Settings.GPU.FrameSkip = 0;
 
 	char path[255];
-	strcpy(path, "sd:/wiisx/video.ini");
+	strcpy(path, "sd:/pcsx-r/video.ini");
 
 	if (stat(path, &buf) == -1)
 	{
-		strcpy(path, "usb:/wiisx/video.ini");
+		strcpy(path, "usb:/pcsx-r/video.ini");
 		if (stat(path, &buf) == -1)
 			return;
 	}
@@ -236,11 +236,11 @@ void GPUWriteConfig()
 	FILE *f;
 
 	char path[255];
-	strcpy(path, "sd:/wiisx/video.ini");
+	strcpy(path, "sd:/pcsx-r/video.ini");
 	f = fopen(path, "w");
 	if (f == NULL)
 	{
-		strcpy(path, "usb:/wiisx/video.ini");
+		strcpy(path, "usb:/pcsx-r/video.ini");
 		f = fopen(path, "w");
 		if (f == NULL)
 			return;
@@ -260,11 +260,11 @@ void PADWriteConfig() {
 	FILE *f;
 
 	char path[255];
-	strcpy(path, "sd:/wiisx/pad.ini");
+	strcpy(path, "sd:/pcsx-r/pad.ini");
 	f = fopen(path, "w");
 	if (f == NULL)
 	{
-		strcpy(path, "usb:/wiisx/pad.ini");
+		strcpy(path, "usb:/pcsx-r/pad.ini");
 		f = fopen(path, "w");
 		if (f == NULL)
 			return;
@@ -320,11 +320,11 @@ static void PADReadConfig() {
 	char *data, *tmp;
 
 	char path[255];
-	strcpy(path, "sd:/wiisx/pad.ini");
+	strcpy(path, "sd:/pcsx-r/pad.ini");
 
 	if (stat(path, &buf) == -1)
 	{
-		strcpy(path, "usb:/wiisx/pad.ini");
+		strcpy(path, "usb:/pcsx-r/pad.ini");
 		if (stat(path, &buf) == -1)
 			return;
 	}
@@ -397,11 +397,11 @@ void SPUReadConfig() {
 	Settings.SPU.SingleChMode = 0;
 
 	char path[255];
-	strcpy(path, "sd:/wiisx/audio.ini");
+	strcpy(path, "sd:/pcsx-r/audio.ini");
 
 	if (stat(path, &buf) == -1)
 	{
-		strcpy(path, "usb:/wiisx/audio.ini");
+		strcpy(path, "usb:/pcsx-r/audio.ini");
 		if (stat(path, &buf) == -1)
 			return;
 	}
@@ -436,11 +436,11 @@ void SPUWriteConfig() {
 	FILE *f;
 
 	char path[255];
-	strcpy(path, "sd:/wiisx/audio.ini");
+	strcpy(path, "sd:/pcsx-r/audio.ini");
 	f = fopen(path, "w");
 	if (f == NULL)
 	{
-		strcpy(path, "usb:/wiisx/audio.ini");
+		strcpy(path, "usb:/pcsx-r/audio.ini");
 		f = fopen(path, "w");
 		if (f == NULL)
 			return;
@@ -470,11 +470,11 @@ int SMBReadConfig()
 	char *data, *tmp;
 
 	char path[255];
-	strcpy(path, "sd:/wiisx/smb.ini");
+	strcpy(path, "sd:/pcsx-r/smb.ini");
 
 	if (stat(path, &buf) == -1)
 	{
-		strcpy(path, "usb:/wiisx/smb.ini");
+		strcpy(path, "usb:/pcsx-r/smb.ini");
 		if (stat(path, &buf) == -1)
 			return -1;
 	}

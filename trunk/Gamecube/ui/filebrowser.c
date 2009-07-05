@@ -4,10 +4,10 @@
 #include "../storage/wiifat.h"
 #include "../storage/mount.h"
 
-#define TYPE_FILTER(x)	(strstr(x, ".bin")   \
-						|| strstr(x, ".iso") \
-						|| strstr(x, ".mdf") \
-						|| strstr(x, ".img"))
+#define TYPE_FILTER(x)	(strstr(x, ".bin") || strstr(x, ".BIN")   \
+						|| strstr(x, ".iso") || strstr(x, ".ISO") \
+						|| strstr(x, ".mdf") || strstr(x, ".MDF") \
+						|| strstr(x, ".img") || strstr(x, ".IMG"))
 
 #ifdef HW_RVL
 
@@ -122,7 +122,7 @@ static int textFileBrowser(char* directory){
 				sprintf(newDir, "%s/%s", directory, dir[index].name);
 				free(dir);
 				strcpy(Settings.filename, newDir);
-				return 1;
+				return 0;
 			}
 		}
 		
@@ -174,7 +174,7 @@ int OpenBrowser()
 				return -1;
 			break;
 	}
-	sprintf(Settings.filename, "%s%s", device[Settings.device], "wiisx/games");
+	sprintf(Settings.filename, "%s%s", device[Settings.device], "pcsx-r/games");
 	if(textFileBrowser(Settings.filename) == -1)
 	{
 		sprintf(Settings.filename, "%s", device[Settings.device]);

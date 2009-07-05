@@ -23,7 +23,7 @@
 #include "PsxHLE.h"
 
 #define TEST_BRANCH() \
-	if (psxRegs.evtCycleCountdown <= 0) \
+	if (psxRegs.NextBranchCycle <= psxRegs.cycle) \
 		psxBranchTest();
 
 static void hleDummy() {

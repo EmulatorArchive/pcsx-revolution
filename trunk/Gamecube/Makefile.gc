@@ -15,7 +15,7 @@ include $(DEVKITPPC)/gamecube_rules
 # SOURCES is a list of directories containing source code
 # INCLUDES is a list of directories containing extra header files
 #---------------------------------------------------------------------------------
-TARGET		:=	CubeSX
+TARGET		:=	Cube-pcsx
 BUILD		:=	build
 SOURCES		:=	source . ./ui ./storage .. ../ppc/ ../PeopsSoftGPU/ ../PeopsSpu109/
 DATA		:=	data  
@@ -25,10 +25,10 @@ INCLUDES	:=	.. ../ppc/ ../PeopsSpu109/
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g -mcpu=750 $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
+CFLAGS	= -g $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
 		  -D__GX__ -D_SDL -DEMBEDDED_FONTS
 
-ifneq ($(BUILD),debug)
+ifneq ($(BUILD),cube-debug)
 CFLAGS	+= -mogc -O2 -pipe -fno-strict-aliasing \
 		  -fomit-frame-pointer \
 		  -Wno-unused-parameter -Wno-strict-aliasing
@@ -109,12 +109,12 @@ export OUTPUT	:=	$(CURDIR)/$(TARGET)
 #---------------------------------------------------------------------------------
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
-	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile.gc
 
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol release debug
+	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).dol cude-release cude-debug
 
 #---------------------------------------------------------------------------------
 else

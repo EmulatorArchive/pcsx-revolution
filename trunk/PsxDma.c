@@ -65,7 +65,7 @@ void psxDma4(u32 madr, u32 bcr, u32 chcr) { // SPU
 
 	if (SPU_async)
 	{
-		SPU_async(psxGetCycle() - psxCounters[4].sCycle);	
+		SPU_async(psxRegs.cycle - psxCounters[4].sCycle);	
 		psx_int_add(PsxEvt_SPU, size * 3);
 	}
 
