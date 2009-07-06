@@ -6,7 +6,7 @@
    # Win: 
     * Download [http://tortoisesvn.net/downloads TortoiseSVN].
     * Create folder, right click on it -> TortoiseSVN -> checkout -> http://pcsx-revolution.googlecode.com/svn/trunk/
-    * Run Programmer's Notepad (installed with devkitPro)
+    * Run Programmer's Notepad (installed with devkitPro and libfat=libogc=r3635)
     * Find the Makefile.Wii from the source you downloaded. Click Tools > Make.
    # Unix: 
     * Install subversion.
@@ -19,27 +19,27 @@ File organisation:
 [sd:]&[usb:]
 |
 |-apps
-|  `-wiisx
+|  `-pcsx-r
 |    |-boot.dol
 |    |-meta.xml
 |    `-icon.png
 |
 [sd:]&[usb:]
 |
-|-wiisx
+|-pcsx-r
 |  |-bios
 |  |-memcards
 |  `-games
 |
 [smb:]
 |
-`-wiisx
+`-pcsx-r
    `games
 }}}
   * Put scph1001.bin in bios dir.
   * Memory cards will be created automaticaly on the first launch.
-  * Default folder for games is sd:/wiisx/games.
+  * Default folder for games is sd:/pcsx-r/games.
   * Supported types: iso, bin, bin+cue, bin+toc, img.
-  * All config files stored in sd:/wiisx.
+  * All config files stored in sd:/pcsx-r.
 
   * Don't forget to configure PAD, default is GCpad.
