@@ -26,6 +26,10 @@
 #include "R3000A.h"
 
 #include "PsxHw.h"
+#include "PsxDma.h"
+#include "Sio.h"
+
+psxRegisters psxRegs;
 
 typedef struct int_timer {
 	u32 time;
@@ -36,8 +40,6 @@ typedef struct int_timer {
 
 static int_timer_st events[PsxEvt_CountAll];
 static int_timer_st *event_list;
-
-psxRegisters psxRegs;
 
 int psxInit() {
 	//SysPrintf(_("Running PCSX Version %s (%s).\n"), PACKAGE_VERSION, __DATE__);
@@ -99,28 +101,41 @@ static void ResetEvents()
 	events[PsxEvt_CdromRead].Execute	= cdrReadInterrupt;
 	events[PsxEvt_GPU].Execute 			= gpuInterrupt;
 	events[PsxEvt_SPU].Execute 			= spuInterrupt;
-
+	
 	events[PsxEvt_Idle].Execute 		= _evthandler_Idle;
-	events[PsxEvt_Idle].time 			= psxRegs.cycle + 0x4000;
+	events[PsxEvt_Idle].time 		= 0x4000;
+	events[PsxEvt_Idle].cycle 		= 0x4000;
 	
 	event_list = &events[PsxEvt_Idle];
 
-	events[PsxEvt_Counter0].Execute 	= psxRcntUpdate0;
-	events[PsxEvt_Counter1].Execute 	= psxRcntUpdate1;
-	events[PsxEvt_Counter2].Execute 	= psxRcntUpdate2;
-	events[PsxEvt_Counter3].Execute 	= psxRcntUpdate3;
-	events[PsxEvt_Counter4].Execute 	= psxRcntUpdate4;
-	psx_int_add(PsxEvt_Counter3, 0);
+	events[PsxEvt_Counter0].Execute 	= psxRcntUpdate;
+	
+	//events[PsxEvt_Counter0].Execute 	= psxRcntUpdate0;
+	//events[PsxEvt_Counter1].Execute 	= psxRcntUpdate1;
+	//events[PsxEvt_Counter2].Execute 	= psxRcntUpdate2;
+	//events[PsxEvt_Counter3].Execute 	= psxRcntUpdate3;
+	//events[PsxEvt_Counter4].Execute 	= psxRcntUpdate4;
+	//psx_int_add(PsxEvt_Counter3, 0);
 	psx_int_add(PsxEvt_Counter0, 0);
-	psx_int_add(PsxEvt_Counter1, 0);
-	psx_int_add(PsxEvt_Counter2, 0);
-	psx_int_add(PsxEvt_Counter4, 0);
+	//psx_int_add(PsxEvt_Counter1, 0);
+	//psx_int_add(PsxEvt_Counter2, 0);
+	//psx_int_add(PsxEvt_Counter4, 0);
 }
 
 void AddCycles( int amount )
+	{
+		psxRegs.evtCycleCountdown	-= amount;
+		psxRegs.DivUnitCycles		-= amount;
+	}
+
+u32 __inline psxGetCycle()
 {
-	psxRegs.cycle			+= amount;
-	psxRegs.DivUnitCycles	-= amount;
+	return psxRegs.cycle + (psxRegs.evtCycleDuration - psxRegs.evtCycleCountdown);
+}
+
+static s32 GetPendingCycles()
+{
+	return psxRegs.evtCycleDuration - psxRegs.evtCycleCountdown;
 }
 
 void psxReset() {
@@ -135,7 +150,8 @@ void psxReset() {
 	psxRegs.CP0.r[12] = 0x10900000; // COP0 enabled | BEV = 1 | TS = 1
 	psxRegs.CP0.r[15] = 0x00000002; // PRevID = Revision ID, same as R3000A
 
-	psxRegs.NextBranchCycle = psxRegs.cycle + 4;
+	psxRegs.evtCycleDuration = 32;
+	psxRegs.evtCycleCountdown = 32;
 
 	psxHwReset();
 	ResetEvents();
@@ -143,6 +159,7 @@ void psxReset() {
 
 	if (!Config.HLE)
 		psxExecuteBios();
+
 #ifdef EMU_LOG
 	EMU_LOG("*BIOS END*\n");
 #endif
@@ -178,28 +195,30 @@ void psxException(u32 code, u32 bd) {
 
 	// Set the Status
 	psxRegs.CP0.n.Status = (psxRegs.CP0.n.Status &~0x3f) |
-						  ((psxRegs.CP0.n.Status & 0xf) << 2);
+				  ((psxRegs.CP0.n.Status & 0xf) << 2);
 
 	if (Config.HLE) psxBiosException();
 }
 
 static __inline void psx_event_add( int n, u32 time )
 {
-
-	events[n].time = psxRegs.cycle + time;
+	//events[n].time = time;
+	events[n].cycle = time;
 
 	// Find the sorted insertion point into the list of active events:
 	int_timer_st* curEvt = event_list;
 	int_timer_st* prevEvt = NULL;
+	s32 runningDelta = -GetPendingCycles();
 
 	while( 1 )
 	{
-
 		// Note: curEvt->next represents the Idle node, which should always be scheduled
 		// last .. so the following conditional checks for it and schedules in front of it.
-		if( (curEvt == &events[PsxEvt_Idle]) || (curEvt->time > events[n].time) )
+		if( (curEvt == &events[PsxEvt_Idle]) || (runningDelta+curEvt->time > time) )
 		{
 			events[n].next	= curEvt;
+			events[n].time	= time - runningDelta;
+			curEvt->time	-= events[n].time;
 
 			if( prevEvt == NULL )
 			{
@@ -207,27 +226,36 @@ static __inline void psx_event_add( int n, u32 time )
 
 				// Node is being inserted at the head of the list, so reschedule the PSX's
 				// master counters as needed.
-				psxRegs.NextBranchCycle		= events[n].time;
+
+				psxRegs.evtCycleDuration	= events[n].time;
+				psxRegs.evtCycleCountdown	= events[n].cycle;
 			}
 			else
 				prevEvt->next = &events[n];
 			break;
 		}
+		runningDelta += curEvt->time;
 		prevEvt = curEvt;
 		curEvt  = curEvt->next;
 	}
 
-	events[PsxEvt_Idle].time = psxRegs.cycle + 0x4000;
+	events[PsxEvt_Idle].time = 0x4000;
 }
 
 static __inline void psx_event_remove( int n )
 {
 	if( events[n].next == NULL ) return;		// not even scheduled.
+	events[n].next->time += events[n].time;
+
+	// Your Basic List Removal:
 
 	if( event_list == &events[n] )
 	{
 		event_list = events[n].next;
-		psxRegs.NextBranchCycle	= event_list->time;
+		
+		int psxPending 			= GetPendingCycles();
+		psxRegs.evtCycleDuration	= event_list->time;
+		psxRegs.evtCycleCountdown	= event_list->time - psxPending;
 	}
 	else
 	{
@@ -244,16 +272,14 @@ static __inline void psx_event_remove( int n )
 	}
 
 	events[n].next = NULL;
-	events[PsxEvt_Idle].time = psxRegs.cycle + 0x4000;
+	events[PsxEvt_Idle].time = 0x4000;
 }
-
 
 __inline void psx_int_add( int n, s32 ecycle )
 {
 	// Generally speaking games shouldn't throw ints that haven't been cleared yet.
 	// It's usually indicative os something amiss in our emulation, so uncomment this
 	// code to help trap those sort of things.
-
 	//if(events[n].next != NULL) \
 		printf("Event: %d\t Cycle: %d\tecycle: %d\ttime: %d\told time: %d\n", n, psxRegs.cycle, ecycle, psxRegs.cycle + ecycle, events[n].time);
 	psx_event_remove( n );
@@ -266,17 +292,24 @@ __inline void psx_int_remove( int n )
 }
 
 void psxBranchTest() {
-
 	while( 1 ) {
+		s32 oldtime = psxRegs.evtCycleCountdown;
 
+		psxRegs.evtCycleCountdown 	= 0;
+		psxRegs.cycle 				+= psxRegs.evtCycleDuration;
+		psxRegs.evtCycleDuration 	= 0;
+		
 		int_timer_st* exeEvt	= event_list;
 		event_list 				= exeEvt->next;
 		exeEvt->next			= NULL;
 		exeEvt->Execute();
 
-		psxRegs.NextBranchCycle		 = event_list->time;
-		if( psxRegs.NextBranchCycle - psxRegs.cycle > 0 ) break;
+		psxRegs.evtCycleDuration	 = event_list->time;
+		psxRegs.evtCycleCountdown	 = oldtime + event_list->time;
+		if( psxRegs.evtCycleCountdown > 0 ) break;
 	}
+
+// TODO: Get rid of this
 	if (psxHu32(0x1070) & psxHu32(0x1074)) {
 		if ((psxRegs.CP0.n.Status & 0x401) == 0x401) {
 #ifdef PSXCPU_LOG

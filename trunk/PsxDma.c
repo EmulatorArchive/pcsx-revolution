@@ -21,6 +21,7 @@
 #include "PsxHw.h"
 #include "PsxMem.h"
 #include "PsxDma.h"
+#include "PsxCounters.h"
 
 // Dma0/1 in Mdec.c
 // Dma3   in CdRom.c

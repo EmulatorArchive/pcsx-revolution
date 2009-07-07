@@ -26,6 +26,7 @@
 #include "R3000A.h"
 #include "PsxHw.h"
 #include "PsxDma.h"
+#include "PsxMem.h"
 
 #define CONST_BITS  8
 #define PASS1_BITS  2

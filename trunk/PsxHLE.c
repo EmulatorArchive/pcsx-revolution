@@ -17,13 +17,15 @@
  */
 
 
-#include "PsxCommon.h"
 #include "R3000A.h"
 #include "plugins.h"
 #include "PsxHLE.h"
+#include "PsxBios.h"
+#include "PsxMem.h"
+#include "Misc.h"
 
 #define TEST_BRANCH() \
-	if (psxRegs.NextBranchCycle <= psxRegs.cycle) \
+	if (psxRegs.evtCycleCountdown <= 0) \
 		psxBranchTest();
 
 static void hleDummy() {

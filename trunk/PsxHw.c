@@ -19,11 +19,12 @@
 #include "PsxHw.h"
 #include "Mdec.h"
 #include "CdRom.h"
+#include "Sio.h"
+#include "R3000A.h"
+#include "PsxCounters.h"
+#include "PsxMem.h"
 
 void psxHwReset() {
-    //if (Config.Sio) psxHu32ref(0x1070) |= SWAP32(0x80);
-    //if (Config.SpuIrq) psxHu32ref(0x1070) |= SWAP32(0x200);
-
 	memset(psxH, 0, 0x10000);
 
 	mdecInit(); //intialize mdec decoder
@@ -36,8 +37,8 @@ u8 psxHwRead8(u32 add) {
 	u8 hard;
 
 	switch (add) {
-		case 0x1F801000: hard = 0x10; // Dram 2M
 		case 0x1f801040: hard = sioRead8();break; 
+		case 0x1F801060: hard = 0x10; break; // Dram 2M
       //  case 0x1f801050: hard = serial_read8(); break;//for use of serial port ignore for now
 		case 0x1f801800: hard = cdrRead0(); break;
 		case 0x1f801801: hard = cdrRead1(); break;
@@ -194,7 +195,7 @@ u16 psxHwRead16(u32 add) {
 			if (add >= 0x1F8010C0 && add < 0x1f801e00) {
             	hard = SPU_readRegister(add);
 			} else {
-				if(add > 0x1F801000) \
+				//if(add > 0x1F801000) \
 					printf("*Unkwnown 16bit read at address %lx\n", add);
 				hard = psxHu16(add); 
 #ifdef PSXHW_LOG
@@ -873,7 +874,7 @@ void psxHwWrite32(u32 add, u32 value) {
 		{
 			const u32 val2 = (u32)value << 16;
 			const u32 tmp = (~val2) & SWAPu32(HW_DMA_ICR);
-			psxHu32ref(add) = SWAPu32((((tmp ^ val2) & 0xffffff) ^ tmp) >> 16);
+			HW_DMA_ICR = SWAPu32((((tmp ^ val2) & 0xffffff) ^ tmp) >> 16);
 			return;
 		}
 		break;

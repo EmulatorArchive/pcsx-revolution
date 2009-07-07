@@ -17,7 +17,7 @@
  *   Free Software Foundation, Inc.,                                       *
  *   51 Franklin Steet, Fifth Floor, Boston, MA 02111-1307 USA.            *
  ***************************************************************************/
-
+	
 /*
  * PSX assembly interpreter.
  */
@@ -27,13 +27,14 @@
 #include "R3000A.h"
 #include "Gte.h"
 #include "PsxHLE.h"
+#include "PsxMem.h"
 
 static int branch = 0;
 static int branch2 = 0;
 static u32 branchPC;
 
 #define TEST_BRANCH() \
-	if (psxRegs.NextBranchCycle <= psxRegs.cycle) \
+	if (psxRegs.evtCycleCountdown <= 0) \
 		psxBranchTest();
 
 // These macros are used to assemble the repassembler functions
@@ -205,6 +206,7 @@ int psxTestLoadDelay(int reg, u32 tmp) {
 			break;
 
 
+
 		case 0x12: // COP2
 			switch (_tFunct_) {
 				case 0x00:
@@ -285,7 +287,7 @@ __inline void doBranch(u32 tar) {
 	if(code == NULL)
 	{
 		psxRegs.pc += 4;
-		psxRegs.cycle++;
+		psxRegs.evtCycleCountdown--;
 		code = (u32 *)PSXM(psxRegs.pc);
 		psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
 	}
@@ -294,7 +296,7 @@ __inline void doBranch(u32 tar) {
 	debugI();
 
 	psxRegs.pc += 4;
-	psxRegs.cycle++;
+	psxRegs.evtCycleCountdown--;
 
 	// check for load delay
 	tmp = psxRegs.code >> 26;
@@ -338,46 +340,46 @@ __inline void doBranch(u32 tar) {
 	TEST_BRANCH();
 }
 
-/*********************************************************
-* Arithmetic with immediate operand		      *
-* Format:  OP rt, rs, immediate			  *
-*********************************************************/
+/*
+ * Arithmetic with immediate operand
+ * Format:  OP rt, rs, immediate
+ */
 
-__inline void psxADDI()	 {	       // Rt = Rs + Im	 (Exception on Integer Overflow)
+__inline void psxADDI()  {	     // Rt = Rs + Im   (Exception on Integer Overflow)
 	if (!_Rt_) return; _i32(_rRt_) = _i32(_rRs_) + _Imm_ ;
 }
-__inline void psxADDIU()	{ if (!_Rt_) return; _i32(_rRt_) = _i32(_rRs_) + _Imm_ ; }	      // Rt = Rs + Im
-__inline void psxANDI()	 { if (!_Rt_) return; _rRt_ = _u32(_rRs_) & _ImmU_; }	    // Rt = Rs And Im
-__inline void psxORI()	  { if (!_Rt_) return; _rRt_ = _u32(_rRs_) | _ImmU_; }	    // Rt = Rs Or  Im
-__inline void psxXORI()	 { if (!_Rt_) return; _rRt_ = _u32(_rRs_) ^ _ImmU_; }	    // Rt = Rs Xor Im
-__inline void psxSLTI()	 { if (!_Rt_) return; _i32(_rRt_) = _i32(_rRs_) < _Imm_ ; }	      // Rt = Rs < Im	 (Signed)
-__inline void psxSLTIU()	{ if (!_Rt_) return; _rRt_ = _u32(_rRs_) < ((u32)_Imm_); }	      // Rt = Rs < Im	 (Unsigned)
+__inline void psxADDIU() { if (!_Rt_) return; _i32(_rRt_) = _i32(_rRs_) + _Imm_ ; }          // Rt = Rs + Im
+__inline void psxANDI()  { if (!_Rt_) return; _rRt_ = _u32(_rRs_) & _ImmU_; }                // Rt = Rs And Im
+__inline void psxORI()   { if (!_Rt_) return; _rRt_ = _u32(_rRs_) | _ImmU_; }                // Rt = Rs Or  Im
+__inline void psxXORI()  { if (!_Rt_) return; _rRt_ = _u32(_rRs_) ^ _ImmU_; }                // Rt = Rs Xor Im
+__inline void psxSLTI()  { if (!_Rt_) return; _i32(_rRt_) = _i32(_rRs_) < _Imm_ ; }          // Rt = Rs < Im    (Signed)
+__inline void psxSLTIU() { if (!_Rt_) return; _rRt_ = _u32(_rRs_) < ((u32)_Imm_); }          // Rt = Rs < Im    (Unsigned)
 
-/*********************************************************
-* Register arithmetic				    *
-* Format:  OP rd, rs, rt				 *
-*********************************************************/
-__inline void psxADD()  {       // Rd = Rs + Rt	 (Exception on Integer Overflow)
+/*
+ * Register arithmetic
+ * Format:  OP rd, rs, rt
+ */
+__inline void psxADD()  {       // Rd = Rs + Rt  (Exception on Integer Overflow)
 	if (!_Rd_) return; _i32(_rRd_) = _i32(_rRs_) + _i32(_rRt_);
 }
 
-__inline void psxSUB()  {       // Rd = Rs - Rt	 (Exception on Integer Overflow)
+__inline void psxSUB()  {       // Rd = Rs - Rt  (Exception on Integer Overflow)
 	if (!_Rd_) return; _i32(_rRd_) = _i32(_rRs_) - _i32(_rRt_);
 }
 
-__inline void psxADDU() { if (!_Rd_) return; _i32(_rRd_) = _i32(_rRs_) + _i32(_rRt_); } // Rd = Rs + Rt
-__inline void psxSUBU() { if (!_Rd_) return; _i32(_rRd_) = _i32(_rRs_) - _i32(_rRt_); } // Rd = Rs - Rt
-__inline void psxAND()  { if (!_Rd_) return; _rRd_ = _u32(_rRs_) & _u32(_rRt_); }       // Rd = Rs And Rt
-__inline void psxOR()   { if (!_Rd_) return; _rRd_ = _u32(_rRs_) | _u32(_rRt_); }       // Rd = Rs Or  Rt
-__inline void psxXOR()  { if (!_Rd_) return; _rRd_ = _u32(_rRs_) ^ _u32(_rRt_); }       // Rd = Rs Xor Rt
-__inline void psxNOR()  { if (!_Rd_) return; _rRd_ =~(_u32(_rRs_) | _u32(_rRt_)); }// Rd = Rs Nor Rt
-__inline void psxSLT()  { if (!_Rd_) return; _rRd_ = _i32(_rRs_) < _i32(_rRt_); }       // Rd = Rs < Rt	 (Signed)
-__inline void psxSLTU() { if (!_Rd_) return; _rRd_ = _u32(_rRs_) < _u32(_rRt_); }       // Rd = Rs < Rt	 (Unsigned)
+__inline void psxADDU() { if (!_Rd_) return; _i32(_rRd_) = _i32(_rRs_) + _i32(_rRt_); }      // Rd = Rs + Rt
+__inline void psxSUBU() { if (!_Rd_) return; _i32(_rRd_) = _i32(_rRs_) - _i32(_rRt_); }      // Rd = Rs - Rt
+__inline void psxAND()  { if (!_Rd_) return; _rRd_ = _u32(_rRs_) & _u32(_rRt_); }            // Rd = Rs And Rt
+__inline void psxOR()   { if (!_Rd_) return; _rRd_ = _u32(_rRs_) | _u32(_rRt_); }            // Rd = Rs Or  Rt
+__inline void psxXOR()  { if (!_Rd_) return; _rRd_ = _u32(_rRs_) ^ _u32(_rRt_); }            // Rd = Rs Xor Rt
+__inline void psxNOR()  { if (!_Rd_) return; _rRd_ =~(_u32(_rRs_) | _u32(_rRt_)); }          // Rd = Rs Nor Rt
+__inline void psxSLT()  { if (!_Rd_) return; _rRd_ = _i32(_rRs_) < _i32(_rRt_); }            // Rd = Rs < Rt  (Signed)
+__inline void psxSLTU() { if (!_Rd_) return; _rRd_ = _u32(_rRs_) < _u32(_rRt_); }            // Rd = Rs < Rt  (Unsigned)
 
-/*********************************************************
-* Register mult/div & Register trap logic		*
-* Format:  OP rs, rt				     *
-*********************************************************/
+/*
+ * Register mult/div & Register trap logic
+ * Format:  OP rs, rt
+ */
 __inline void psxDIV() {
 	const s32 Rt = _i32(_rRt_);
 	const s32 Rs = _i32(_rRs_);
@@ -406,10 +408,11 @@ __inline void psxDIVU() {
 	const u32 Rs = _rRs_;
 
 
+
 	if( Rt == 0 )
 	{
 		_rHi_ = Rs;
-		_rLo_ = (u32)(-1);	      // unsigned div by zero always returns Rs, 0xffffffff
+		_rLo_ = (u32)(-1);	    // unsigned div by zero always returns Rs, 0xffffffff
 		return;
 	}
 	_rHi_ = Rs % Rt;
@@ -432,10 +435,10 @@ __inline void psxMULTU()
 	MultHelper( (u64)_u32(_rRs_) * _u32(_rRt_) );
 }
 
-/*********************************************************
-* Register branch logic				  *
-* Format:  OP rs, offset				 *
-*********************************************************/
+/*
+ * Register branch logic
+ * Format:  OP rs, offset
+ */
 #define RepZBranchi32(op)      if(_i32(_rRs_) op 0) doBranch(_BranchTarget_);
 #define RepZBranchLinki32(op)  if(_i32(_rRs_) op 0) { _SetLink(31); doBranch(_BranchTarget_); }
 
@@ -456,46 +459,46 @@ __inline void psxBLTZAL()       // Branch if Rs <  0 and link
 	psxBLTZ();
 }
 
-/*********************************************************
-* Shift arithmetic with constant shift		   *
-* Format:  OP rd, rt, sa				 *
-*********************************************************/
+/*
+ * Shift arithmetic with constant shift
+ * Format:  OP rd, rt, sa
+ */
 __inline void psxSLL() { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) << _Sa_; } // Rd = Rt << sa
 __inline void psxSRA() { if (!_Rd_) return; _i32(_rRd_) = _i32(_rRt_) >> _Sa_; } // Rd = Rt >> sa (arithmetic)
 __inline void psxSRL() { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) >> _Sa_; } // Rd = Rt >> sa (logical)
 
-/*********************************************************
-* Shift arithmetic with variant register shift	   *
-* Format:  OP rd, rt, rs				 *
-*********************************************************/
+/*
+ * Shift arithmetic with variant register shift
+ * Format:  OP rd, rt, rs
+ */
 __inline void psxSLLV() { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) << ((_u32(_rRs_)) & 0x1f); } // Rd = Rt << rs
 __inline void psxSRAV() { if (!_Rd_) return; _i32(_rRd_) = _i32(_rRt_) >> ((_u32(_rRs_)) & 0x1f); } // Rd = Rt >> rs (arithmetic)
 __inline void psxSRLV() { if (!_Rd_) return; _u32(_rRd_) = _u32(_rRt_) >> ((_u32(_rRs_)) & 0x1f); } // Rd = Rt >> rs (logical)
 
-/*********************************************************
-* Load higher 16 bits of the first word in GPR with imm  *
-* Format:  OP rt, immediate			      *
-*********************************************************/
+/*
+ * Load higher 16 bits of the first word in GPR with imm
+ * Format:  OP rt, immediate
+ */
 __inline void psxLUI() { if (!_Rt_) return; _i32(_rRt_) = _Imm_ << 16; } // Upper halfword of Rt = Im
 
-/*********************************************************
-* Move from HI/LO to GPR				 *
-* Format:  OP rd					 *
-*********************************************************/
+/*
+ * Move from HI/LO to GPR
+ * Format:  OP rd
+ */
 __inline void psxMFHI() { if (!_Rd_) return; _rRd_ = _rHi_; } // Rd = Hi
 __inline void psxMFLO() { if (!_Rd_) return; _rRd_ = _rLo_; } // Rd = Lo
 
-/*********************************************************
-* Move to GPR to HI/LO & Register jump		   *
-* Format:  OP rs					 *
-*********************************************************/
+/*
+ * Move to GPR to HI/LO & Register jump
+ * Format:  OP rs
+ */
 __inline void psxMTHI() { _rHi_ = _rRs_; } // Hi = Rs
 __inline void psxMTLO() { _rLo_ = _rRs_; } // Lo = Rs
 
-/*********************************************************
-* Special purpose instructions			   *
-* Format:  OP					    *
-*********************************************************/
+/*
+ * Special purpose instructions
+ * Format:  OP
+ */
 __inline void psxBREAK() {
 	// Break exception - psx rom doens't handles this
 }
@@ -511,26 +514,26 @@ __inline void psxRFE() {
 						  ((psxRegs.CP0.n.Status & 0x3c) >> 2);
 }
 
-/*********************************************************
-* Register branch logic				  *
-* Format:  OP rs, rt, offset			     *
-*********************************************************/
+/*
+ * Register branch logic
+ * Format:  OP rs, rt, offset
+ */
 #define RepBranchi32(op)      if(_i32(_rRs_) op _i32(_rRt_)) doBranch(_BranchTarget_);
 
 __inline void psxBEQ() {	RepBranchi32(==) }  // Branch if Rs == Rt
 __inline void psxBNE() {	RepBranchi32(!=) }  // Branch if Rs != Rt
 
-/*********************************************************
-* Jump to target					 *
-* Format:  OP target				     *
-*********************************************************/
+/*
+ * Jump to target
+ * Format:  OP target
+ */
 __inline void psxJ()   { doBranch(_JumpTarget_); }
 __inline void psxJAL() { _SetLink(31); psxJ(); }
 
-/*********************************************************
-* Register jump					  *
-* Format:  OP rs, rd				     *
-*********************************************************/
+/*
+ * Register jump
+ * Format:  OP rs, rd
+ */
 __inline void psxJR()   {
 	doBranch(_u32(_rRs_));
 	psxJumpTest();
@@ -541,10 +544,10 @@ __inline void psxJALR() {
 	psxJR();
 }
 
-/*********************************************************
-* Load and store for GPR				 *
-* Format:  OP rt, offset(base)			   *
-*********************************************************/
+/*
+ * Load and store for GPR
+ * Format:  OP rt, offset(base)
+ */
 
 #define _oB_ (_u32(_rRs_) + _Imm_)
 
@@ -608,6 +611,7 @@ __inline void psxLWL() {
 	3   1234   (mem      ) | (reg & 0x00000000)
 	*/
 }
+
 
 
 u32 LWR_MASK[4] = { 0, 0xff000000, 0xffff0000, 0xffffff00 };
@@ -679,10 +683,10 @@ __inline void psxSWR() {
 	*/
 }
 
-/*********************************************************
-* Moves between GPR and COPx			     *
-* Format:  OP rt, fs				     *
-*********************************************************/
+/*
+ * Moves between GPR and COPx
+ * Format:  OP rt, fs
+ */
 
 __inline void psxMFC0() { if (!_Rt_) return; _rRt_ = _rFs_; }
 __inline void psxCFC0() { if (!_Rt_) return; _rRt_ = _rFs_; }
@@ -697,10 +701,10 @@ __inline void psxCTC0()
 	psxRegs.CP0.r[_Rd_] = _rRt_;
 }
 
-/*********************************************************
-* Unknow instruction (would generate an exception)       *
-* Format:  ?					     *
-*********************************************************/
+/*
+ * Unknow instruction (would generate an exception)
+ * Format:  ?
+ */
 void psxNULL() {
 #ifdef PSXCPU_LOG
 	PSXCPU_LOG("psx: Unimplemented op %x\n", psxRegs.code);
@@ -729,7 +733,7 @@ void psxBASIC() {
 
 void psxHLE() {
 //      psxHLEt[psxRegs.code & 0xffff]();
-	psxHLEt[psxRegs.code & 0x07]();	 // HDHOSHY experimental patch
+	psxHLEt[psxRegs.code & 0x07]();  // HDHOSHY experimental patch
 }
 
 void (*psxBSC[64])() = {
@@ -813,6 +817,7 @@ static void intExecuteBlock() {
 }
 
 
+
 static void intExecuteBlockDbg() {
 	branch2 = 0;
 	while (!branch2) execIDbg();
@@ -830,7 +835,7 @@ inline void execI() {
 	if(code == NULL)
 	{
 		psxRegs.pc += 4;
-		psxRegs.cycle++;
+		psxRegs.evtCycleCountdown--;
 		code = (u32 *)PSXM(psxRegs.pc);
 		psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
 	}
@@ -839,7 +844,7 @@ inline void execI() {
 	debugI();
 
 	psxRegs.pc += 4;
-	psxRegs.cycle++;
+	psxRegs.evtCycleCountdown--;
 
 	psxBSC[psxRegs.code >> 26]();
 }
@@ -852,4 +857,3 @@ R3000Acpu psxInt = {
 	intClear,
 	intShutdown
 };
-

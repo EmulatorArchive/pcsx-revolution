@@ -33,6 +33,7 @@
 #include "PsxMem.h"
 #include "plugins.h"
 #include "PSEmu_Plugin_Defs.h"
+#include "Sio.h"
 
 #ifdef _MSC_VER_
 #pragma warning(disable:4244)

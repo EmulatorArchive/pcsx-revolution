@@ -150,8 +150,8 @@ typedef struct {
     u32 code;			/* The instruction */
 	u32 cycle;
 
-	u32 NextBranchCycle;
-/*
+	//u32 NextBranchCycle;
+
 	// marks the original duration of time for the current pending event.  This is
 	// typically used to determine the amount of time passed since the last update
 	// to psxRegs.cycle:
@@ -162,7 +162,7 @@ typedef struct {
 	// other words: counts down from evtCycleDuration to 0; event is raised when 0
 	// is reached.
 	s32 evtCycleCountdown;
-*/
+
 	// number of cycles pending on the current div unit instruction (mult and div both run in the same
 	// unit).  Any zero-or-negative values mean the unit is free and no stalls incurred for executing
 	// a new instruction on the pipeline.  Negative values are flushed to 0 during PendingEvent executions.
@@ -253,6 +253,7 @@ void psxTestSWInts();
 int  psxTestLoadDelay(int reg, u32 tmp);
 void psxJumpTest();
 
+u32 psxGetCycle();
 void AddCycles( int amount );
 void psx_int_add(int n, s32 ecycle);
 void psx_int_remove(int n);

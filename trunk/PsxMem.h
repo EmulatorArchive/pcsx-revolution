@@ -1,48 +1,40 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+/***************************************************************************
+ *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
+ *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
+ *                                                                         *
+ *   This program is free software; you can redistribute it and/or modify  *
+ *   it under the terms of the GNU General Public License as published by  *
+ *   the Free Software Foundation; either version 2 of the License, or     *
+ *   (at your option) any later version.                                   *
+ *                                                                         *
+ *   This program is distributed in the hope that it will be useful,       *
+ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
+ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
+ *   GNU General Public License for more details.                          *
+ *                                                                         *
+ *   You should have received a copy of the GNU General Public License     *
+ *   along with this program; if not, write to the                         *
+ *   Free Software Foundation, Inc.,                                       *
+ *   59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             *
+ ***************************************************************************/
 
 #ifndef __PSXMEMORY_H__
 #define __PSXMEMORY_H__
 
-extern s8 psxM[0x200000];
-extern s8 psxP[0x010000];
-extern s8 psxR[0x080000];
-extern s8 psxH[0x010000];
-extern u32 psxMemWLUT[0x10000];
-extern u32 psxMemRLUT[0x10000];
+#include "PsxCommon.h"
 
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
+#if defined(HW_RVL) || defined(HW_DOL) || defined(BIG_ENDIAN)
 
 #define _SWAP16(b) ((((unsigned char*)&(b))[0]&0xff) | (((unsigned char*)&(b))[1]&0xff)<<8)
 #define _SWAP32(b) ((((unsigned char*)&(b))[0]&0xff) | ((((unsigned char*)&(b))[1]&0xff)<<8) | ((((unsigned char*)&(b))[2]&0xff)<<16) | (((unsigned char*)&(b))[3]<<24))
 
 #define SWAP16(v) ((((v)&0xff00)>>8) +(((v)&0xff)<<8))
 #define SWAP32(v) ((((v)&0xff000000ul)>>24) + (((v)&0xff0000ul)>>8) + (((v)&0xff00ul)<<8) +(((v)&0xfful)<<24))
-
 #define SWAPu32(v) SWAP32((u32)(v))
 #define SWAPs32(v) SWAP32((s32)(v))
 
 #define SWAPu16(v) SWAP16((u16)(v))
 #define SWAPs16(v) SWAP16((s16)(v))
-
-#define SWAP16p(ptr) ({u16 __ret, *__ptr=(ptr); __asm__ ("lhbrx %0, 0, %1" : "=r" (__ret) : "r" (__ptr)); __ret;})
-#define SWAP32p(ptr) ({u32 __ret, *__ptr=(ptr); __asm__ ("lwbrx %0, 0, %1" : "=r" (__ret) : "r" (__ptr)); __ret;})
-#define SWAP32wp(ptr,val) ({u32 __val=(val), *__ptr=(ptr); __asm__ ("stwbrx %0, 0, %1" : : "r" (__val), "r" (__ptr) : "memory");})
 
 #else
 
@@ -54,6 +46,7 @@ extern u32 psxMemRLUT[0x10000];
 
 #endif
 
+s8 *psxM;
 #define psxMs8(mem)		psxM[(mem) & 0x1fffff]
 #define psxMs16(mem)	(SWAP16(*(s16*)&psxM[(mem) & 0x1fffff]))
 #define psxMs32(mem)	(SWAP32(*(s32*)&psxM[(mem) & 0x1fffff]))
@@ -68,6 +61,7 @@ extern u32 psxMemRLUT[0x10000];
 #define psxMu16ref(mem)	(*(u16*)&psxM[(mem) & 0x1fffff])
 #define psxMu32ref(mem)	(*(u32*)&psxM[(mem) & 0x1fffff])
 
+s8 *psxP;
 #define psxPs8(mem)	    psxP[(mem) & 0xffff]
 #define psxPs16(mem)	(SWAP16(*(s16*)&psxP[(mem) & 0xffff]))
 #define psxPs32(mem)	(SWAP32(*(s32*)&psxP[(mem) & 0xffff]))
@@ -82,6 +76,7 @@ extern u32 psxMemRLUT[0x10000];
 #define psxPu16ref(mem)	(*(u16*)&psxP[(mem) & 0xffff])
 #define psxPu32ref(mem)	(*(u32*)&psxP[(mem) & 0xffff])
 
+s8 *psxR;
 #define psxRs8(mem)		psxR[(mem) & 0x7ffff]
 #define psxRs16(mem)	(SWAP16(*(s16*)&psxR[(mem) & 0x7ffff]))
 #define psxRs32(mem)	(SWAP32(*(s32*)&psxR[(mem) & 0x7ffff]))
@@ -96,6 +91,7 @@ extern u32 psxMemRLUT[0x10000];
 #define psxRu16ref(mem)	(*(u16*)&psxR[(mem) & 0x7ffff])
 #define psxRu32ref(mem)	(*(u32*)&psxR[(mem) & 0x7ffff])
 
+s8 *psxH;
 #define psxHs8(mem)		psxH[(mem) & 0xffff]
 #define psxHs16(mem)	(SWAP16(*(s16*)&psxH[(mem) & 0xffff]))
 #define psxHs32(mem)	(SWAP32(*(s32*)&psxH[(mem) & 0xffff]))
@@ -110,6 +106,9 @@ extern u32 psxMemRLUT[0x10000];
 #define psxHu16ref(mem)	(*(u16*)&psxH[(mem) & 0xffff])
 #define psxHu32ref(mem)	(*(u32*)&psxH[(mem) & 0xffff])
 
+u8** psxMemWLUT;
+u8** psxMemRLUT;
+
 #define PSXM(mem)		(psxMemRLUT[(mem) >> 16] == 0 ? NULL : (u8*)(psxMemRLUT[(mem) >> 16] + ((mem) & 0xffff)))
 #define PSXMs8(mem)		(*(s8 *)PSXM(mem))
 #define PSXMs16(mem)	(SWAP16(*(s16*)PSXM(mem)))
@@ -120,13 +119,9 @@ extern u32 psxMemRLUT[0x10000];
 
 #define PSXMu32ref(mem)	(*(u32*)PSXM(mem))
 
-#ifdef PSXREC
-extern u32 *psxRecLUT;
 
-#define PC_REC(x)	(psxRecLUT[(x) >> 16] + ((x) & 0xffff))
-#define PC_REC32(x) (*(u32*)PC_REC(x))
-
-#define REC_CLEARM(mem) PC_REC32(mem) = 0;
+#if !defined PSXREC && (defined(__x86_64__) || defined(__i386__) || defined(__sh__) || defined(__ppc__) || defined(HW_RVL)) || defined(HW_DOL)
+#define PSXREC
 #endif
 
 int  psxMemInit();

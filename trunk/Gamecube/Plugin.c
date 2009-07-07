@@ -20,10 +20,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <zlib.h>
-#include "PsxCommon.h"
 
-#include "plugins.h"
-#include "Spu.h"
+//#include "../PsxCommon.h"
+#include "../PsxMem.h"
+#include "../plugins.h"
+#include "../Spu.h"
+#include "../Misc.h"
+
 #ifndef __GX__
 #include "NoPic.h"
 #endif //!__GX__

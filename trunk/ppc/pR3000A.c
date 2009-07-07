@@ -24,6 +24,10 @@
 #include "PsxCommon.h"
 #include "ppc.h"
 #include "reguse.h"
+#include "PsxCounters.h"
+#include "PsxHLE.h"
+#include "R3000A.h"
+#include "PsxMem.h"
  
 #define CPI_NUM 1
 #define CPI_DEN 1

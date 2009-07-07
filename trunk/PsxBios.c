@@ -24,6 +24,11 @@
 
 #include "PsxBios.h"
 #include "PsxHw.h"
+#include "PsxCommon.h"
+#include "R3000A.h"
+#include "PsxMem.h"
+#include "Misc.h"
+#include "Sio.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

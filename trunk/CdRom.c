@@ -30,44 +30,48 @@
 #include "PsxHw.h"
 
 /* CD-ROM magic numbers */
-#define CdlSync        0
-#define CdlNop         1
-#define CdlSetloc      2
-#define CdlPlay        3
-#define CdlForward     4
-#define CdlBackward    5
-#define CdlReadN       6
-#define CdlStandby     7
-#define CdlStop        8
-#define CdlPause       9
-#define CdlInit        10
-#define CdlMute        11
-#define CdlDemute      12
-#define CdlSetfilter   13
-#define CdlSetmode     14
-#define CdlGetmode     15
-#define CdlGetlocL     16
-#define CdlGetlocP     17
-#define Cdl18          18
-#define CdlGetTN       19
-#define CdlGetTD       20
-#define CdlSeekL       21
-#define CdlSeekP       22
-#define CdlTest        25
-#define CdlID          26
-#define CdlReadS       27
-#define CdlReset       28
-#define CdlReadToc     30
+enum {
+	CdlSync = 0
+,	CdlNop
+,	CdlSetloc
+,	CdlPlay
+,	CdlForward
+,	CdlBackward
+,	CdlReadN
+,	CdlStandby
+,	CdlStop
+,	CdlPause
+,	CdlInit
+,	CdlMute
+,	CdlDemute
+,	CdlSetfilter
+,	CdlSetmode
+,	CdlGetmode
+,	CdlGetlocL
+,	CdlGetlocP
+,	Cdl18
+,	CdlGetTN
+,	CdlGetTD
+,	CdlSeekL
+,	CdlSeekP
+,	CdlTest = 25
+,	CdlID
+,	CdlReadS
+,	CdlReset
+,	CdlReadToc = 30
+};
 
-#define AUTOPAUSE      249
-#define READ_ACK       250
-#define READ           251
-#define REPPLAY_ACK    252
-#define REPPLAY        253
-#define ASYNC          254
+enum {
+	AUTOPAUSE = 249
+,	READ_ACK
+,	READ
+,	REPPLAY_ACK
+,	REPPLAY
+,	ASYNC
 /* don't set 255, it's reserved */
+};
 
-char *CmdName[0x100]= {
+static char *CmdName[0x100]= {
     "CdlSync",    "CdlNop",       "CdlSetloc",  "CdlPlay",
     "CdlForward", "CdlBackward",  "CdlReadN",   "CdlStandby",
     "CdlStop",    "CdlPause",     "CdlInit",    "CdlMute",
@@ -78,11 +82,11 @@ char *CmdName[0x100]= {
     "CdlReset",   NULL,           "CDlReadToc", NULL
 };
 
-unsigned char Test04[] = { 0 };
-unsigned char Test05[] = { 0 };
-unsigned char Test20[] = { 0x98, 0x06, 0x10, 0xC3 };
-unsigned char Test22[] = { 0x66, 0x6F, 0x72, 0x20, 0x45, 0x75, 0x72, 0x6F };
-unsigned char Test23[] = { 0x43, 0x58, 0x44, 0x32, 0x39 ,0x34, 0x30, 0x51 };
+static unsigned char Test04[] = { 0 };
+static unsigned char Test05[] = { 0 };
+static unsigned char Test20[] = { 0x98, 0x06, 0x10, 0xC3 };
+static unsigned char Test22[] = { 0x66, 0x6F, 0x72, 0x20, 0x45, 0x75, 0x72, 0x6F };
+static unsigned char Test23[] = { 0x43, 0x58, 0x44, 0x32, 0x39 ,0x34, 0x30, 0x51 };
 
 // 1x = 75 sectors per second
 // PSXCLK = 1 sec in the ps
@@ -526,7 +530,7 @@ void cdrInterrupt() {
 			break;
 	}
 
-	if (cdr.Stat != NoIntr && cdr.Reg2 != 0x18)
+	if (cdr.Stat != NoIntr && cdr.Reg2 != 0x18) 
 		psxRaiseExtInt(PsxInt_CDROM);
 
 #ifdef CDR_LOG
@@ -919,8 +923,9 @@ void cdrWrite1(unsigned char rt) {
 #endif
 			return;
     }
-	if (cdr.Stat != NoIntr)
+	if (cdr.Stat != NoIntr) {
 		psxRaiseExtInt(PsxInt_CDROM);
+	}
 }
 
 unsigned char cdrRead2(void) {

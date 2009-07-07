@@ -21,6 +21,7 @@
 #define _SIO_H_
 
 #include "MemoryCard.h"
+#include "PsxHw.h"
 
 //extern char Mcd1Data[MCD_SIZE], Mcd2Data[MCD_SIZE];
 

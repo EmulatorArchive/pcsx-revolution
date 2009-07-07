@@ -178,21 +178,6 @@ enum {
 	PSX_TYPE_PAL
 };	/* PSX Type */
 
-#include "R3000A.h"
-#include "PsxMem.h"
-#include "PsxHw.h"
-#include "PsxBios.h"
-#include "PsxDma.h"
-#include "PsxCounters.h"
-#include "PsxHLE.h"
-#include "Mdec.h"
-#include "CdRom.h"
-#include "Sio.h"
-#include "MemoryCard.h"
-#include "Spu.h"
 #include "plugins.h"
-#include "Decode_XA.h"
-#include "Misc.h"
-#include "Gte.h"
 
 #endif /* __PSXCOMMON_H__ */
