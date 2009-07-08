@@ -46,6 +46,12 @@ void Config_menu()
 					break;
 
 				case 4:
+#if 0
+					Config.Cpu ^= 1;
+					break;
+
+				case 5:
+#endif
 					SaveConfig();
 					return;
 			}
@@ -75,7 +81,12 @@ void Config_menu()
 		printf("\tConfigure SPU\n");
 
 		printf("\x1b[%um", (index == 4) ? 32 : 37);
-		printf("\tReturn\n\n");
+#if 0
+		printf("\tCPU: %s\n", Config.Cpu ? "Interpreter" : "Recompiler");
+
+		printf("\x1b[%um", (index == 5) ? 32 : 37);
+#endif
+		printf("\n\tReturn\n\n");
 
 		printf("\x1b[37m");								// Reset Color
 
@@ -455,7 +466,7 @@ u32 set_button(char msg[15], int type, int pad_num)
 	VIDEO_WaitVSync();
 	u32 b;
 	clrscr();
-	SysPrintf("\tRelease all buttons");
+	printf("\tRelease all buttons");
 	
 #ifdef HW_RVL
 	if(type)												// All except GC pad
@@ -467,7 +478,7 @@ u32 set_button(char msg[15], int type, int pad_num)
 		}
 		
 		clrscr();
-		SysPrintf("\tPress button for %s", msg);
+		printf("\tPress button for %s", msg);
 		
 		while(!WPAD_ButtonsDown(pad_num)) 
 		{
@@ -497,7 +508,7 @@ u32 set_button(char msg[15], int type, int pad_num)
 		}
 		
 		clrscr();
-		SysPrintf("\tPress button for %s", msg);
+		printf("\tPress button for %s", msg);
 		
 		while(!PAD_ButtonsDown(pad_num)) 
 		{
