@@ -1,45 +1,44 @@
 #summary How to compile and launch.
+#labels Featured,Phase-Deploy
 
 = Compile =
 
   * Download latest [http://wiibrew.org/wiki/DevkitPro Devkitpro] and install.
-   # Win: 
+   # *Windows*: 
     * Download [http://tortoisesvn.net/downloads TortoiseSVN].
     * Create folder, right click on it -> TortoiseSVN -> checkout -> http://pcsx-revolution.googlecode.com/svn/trunk/
     * Run Programmer's Notepad (installed with devkitPro and libfat=libogc=r3635)
     * Find the Makefile.Wii from the source you downloaded. Click Tools > Make.
-   # Unix: 
+   # *Unix*: 
     * Install subversion.
     * svn checkout http://pcsx-revolution.googlecode.com/svn/trunk/ pcsx-revolution-read-only
-    * "cd ./pcsx-revolution-read-only/Gamecube && make -f Makefile.Wii". Or you can modify build.sh script for your system.
+    * "cd ./pcsx-revolution-read-only/Gamecube && make". Or you can modify build.sh script for your system.
 
 = Launch =
 File organisation:
 {{{
 [sd:]&[usb:]
-|
-|-apps
-|  `-pcsx-r
-|    |-boot.dol
-|    |-meta.xml
-|    `-icon.png
-|
++-apps
+|  +-pcsx-r
+|     |-boot.dol
+|     |-meta.xml
+|     |-icon.png
+
 [sd:]&[usb:]
-|
-|-pcsx-r
-|  |-bios
++-pcsx-r
+|  +-bios
+|     |-scph1001.bin
 |  |-memcards
-|  `-games
-|
+|  |-games
+
 [smb:]
-|
-`-pcsx-r
-   `games
++-pcsx-r
+|  |-games
 }}}
-  * Put scph1001.bin in bios dir.
-  * Memory cards will be created automaticaly on the first launch.
+  * Put *scph1001.bin* in bios dir.
+  * Memory cards will be created automatically on the first launch.
   * Default folder for games is sd:/pcsx-r/games.
-  * Supported types: iso, bin, bin+cue, bin+toc, img.
+  * Supported types: iso, bin, bin+cue, bin+toc, img, mdf.
   * All config files stored in sd:/pcsx-r.
 
-  * Don't forget to configure PAD, default is GCpad.
+  * Don't forget to configure PAD before launch a game.
