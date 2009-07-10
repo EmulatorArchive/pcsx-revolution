@@ -56,7 +56,7 @@ static int textFileBrowser(file_browser_st *file_struct){
 	// Set everything up to read
 	DIR_ITER* dp = diropen(file_struct->path);
 	if(!dp)
-		return -1;
+		return BROWSER_FILE_NOT_FOUND;
 	struct stat fstat;
 	char filename[MAXPATHLEN];
 	int num_entries = 1, i = 0;
@@ -117,11 +117,6 @@ static int textFileBrowser(file_browser_st *file_struct){
 
 		if(GetInput(A, A, A))
 		{
-			if(index == num_entries) 
-			{
-				return 0;
-			}
-
 			sprintf(file_struct->path, "%s/%s", file_struct->path, dir[index].name);
 			BOOL atr = dir[index].attr & S_IFDIR;
 			free(dir);
@@ -130,13 +125,13 @@ static int textFileBrowser(file_browser_st *file_struct){
 			else
 			{
 				strcpy(Settings.filename, file_struct->path);
-				return 0;
+				return BROWSER_FILE_CHOSED;
 			}
 		}
 		
 		if(GetInput(B, B, B)) 
 		{
-			return -2;
+			return BROWSER_CANCELED;
 		}
 
 		if(draw)
