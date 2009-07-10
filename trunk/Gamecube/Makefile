@@ -9,7 +9,7 @@ default: release
 release: cube wii
 
 cube:
-	$(MAKE) -f Makefile.gc BUILD=cude-release
+	$(MAKE) -f Makefile.gc BUILD=cube-release
 
 wii:
 	$(MAKE) -f Makefile.Wii BUILD=release
@@ -17,7 +17,7 @@ wii:
 debug: cube-debug wii-debug
 
 cube-debug:
-	$(MAKE) -f Makefile.gc BUILD=cude-debug
+	$(MAKE) -f Makefile.gc BUILD=cube-debug
 
 wii-debug:
 	$(MAKE) -f Makefile.Wii BUILD=debug

@@ -1,5 +1,7 @@
 #include "textmenu.h"
 #include <sys/dir.h>
+#include <string.h>
+#include <stdio.h>
 #include "../storage/wiismb.h"
 #include "../storage/wiifat.h"
 #include "../storage/mount.h"
@@ -30,6 +32,11 @@ static const char *device[DEVICES] = {
 
 #endif	//HW_RVL
 
+enum {
+	BROWSER_CANCELED = -2,
+	BROWSER_FILE_NOT_FOUND = -1,
+	BROWSER_FILE_CHOSED = 0
+};
 
 typedef struct {
 	char name[255];
@@ -39,9 +46,15 @@ typedef struct {
 
 static int const per_page = 20;
 
-static int textFileBrowser(char* directory){
+typedef struct {
+	char title[30];
+	char path[255];
+	int filter;
+} file_browser_st;
+
+static int textFileBrowser(file_browser_st *file_struct){
 	// Set everything up to read
-	DIR_ITER* dp = diropen(directory);
+	DIR_ITER* dp = diropen(file_struct->path);
 	if(!dp)
 		return -1;
 	struct stat fstat;
@@ -50,7 +63,7 @@ static int textFileBrowser(char* directory){
 	dir_ent* dir = malloc( num_entries * sizeof(dir_ent) );
 	// Read each entry of the directory
 	while( dirnext(dp, filename, &fstat) == 0 ){
-		if((strcmp(filename, ".") != 0 && (fstat.st_mode  & S_IFDIR)) || TYPE_FILTER(filename))
+		if((strcmp(filename, ".") != 0 && (fstat.st_mode & S_IFDIR)) || (file_struct->filter ? TYPE_FILTER(filename) : 1))
 		{
 			// Make sure we have room for this one
 			if(i == num_entries){
@@ -108,27 +121,22 @@ static int textFileBrowser(char* directory){
 			{
 				return 0;
 			}
-			
-			if(dir[index].attr & S_IFDIR)
+
+			sprintf(file_struct->path, "%s/%s", file_struct->path, dir[index].name);
+			BOOL atr = dir[index].attr & S_IFDIR;
+			free(dir);
+			if(atr)
+				return textFileBrowser(file_struct);
+			else
 			{
-				char newDir[MAXPATHLEN];
-				sprintf(newDir, "%s/%s", directory, dir[index].name);
-				free(dir);
-				return textFileBrowser(newDir);
-			}
-			else 
-			{
-				char newDir[MAXPATHLEN];
-				sprintf(newDir, "%s/%s", directory, dir[index].name);
-				free(dir);
-				strcpy(Settings.filename, newDir);
+				strcpy(Settings.filename, file_struct->path);
 				return 0;
 			}
 		}
 		
 		if(GetInput(B, B, B)) 
 		{
-			return 0;
+			return -2;
 		}
 
 		if(draw)
@@ -137,8 +145,8 @@ static int textFileBrowser(char* directory){
 			printf("\x1B[2;2H");	
 
 			printf("\x1b[33m");
-			printf("\tFile browser\n\n");
-			printf("\tbrowsing %s:\n\n", directory);
+			printf("\t%s\n\n", file_struct->title);
+			printf("\tbrowsing %s:\n\n", file_struct->path);
 
 			page = index / per_page;
 			start = page * per_page;
@@ -156,29 +164,65 @@ static int textFileBrowser(char* directory){
 	}
 }
 
-int OpenBrowser()
+static int MountDevice(int device)
 {
+	int ret = 0;
 	switch(Settings.device)
 	{
 		case DEVICE_SD:
 		case DEVICE_USB:
-			if(MountFAT(Settings.device) == -1) 
-				return -1;
+			ret = MountFAT(Settings.device);
 			break;
 		case DEVICE_SMB:
-			if(ConnectShare() == -1)
-				return -1;
+			ret = ConnectShare();
 			break;
 		case DEVICE_DVD:
-			if(MountDVD() == -1)
-				return -1;
+			ret = MountDVD();
 			break;
 	}
-	sprintf(Settings.filename, "%s%s", device[Settings.device], "pcsx-r/games");
-	if(textFileBrowser(Settings.filename) == -1)
+	return ret;
+}
+
+int GameBrowser()
+{
+	if( MountDevice(Settings.device) == -1 )
+		return -1;
+
+	int ret = 0;
+
+	file_browser_st game_filename;
+	strcpy(game_filename.title, "Select game image");
+	game_filename.filter = 1;
+	sprintf(game_filename.path, "%s%s", device[Settings.device], "pcsx-r/games");
+
+	if(ret = textFileBrowser(&game_filename) == BROWSER_FILE_NOT_FOUND)
 	{
-		sprintf(Settings.filename, "%s", device[Settings.device]);
-		return textFileBrowser(Settings.filename);
+		sprintf(game_filename.path, "%s", device[Settings.device]);
+		ret = textFileBrowser(&game_filename);
 	}
-	return 0;
+	return ret;
+}
+
+char *StateBrowser( )
+{
+	if( MountDevice(Settings.device) == -1 )
+		return NULL;
+
+	int ret = 0;
+	char *statename;
+
+	file_browser_st state_filename;
+	strcpy(state_filename.title, "Select SaveState to load");
+	state_filename.filter = 0;
+	sprintf(state_filename.path, "%s%s", device[Settings.device], "pcsx-r/sstates");
+
+	if(ret = textFileBrowser(&state_filename) == BROWSER_FILE_NOT_FOUND)
+	{
+		sprintf(state_filename.path, "%s", device[Settings.device]);
+		ret = textFileBrowser(&state_filename);
+	}
+	if(ret == BROWSER_FILE_NOT_FOUND || ret == BROWSER_CANCELED) 
+		return NULL;
+	statename = state_filename.path;
+	return statename;
 }

@@ -33,7 +33,7 @@ CFLAGS	+= -mrvl -O2 -pipe -fno-strict-aliasing \
 		  -fomit-frame-pointer \
 		  -Wno-unused-parameter -Wno-strict-aliasing
 else
-CFLAGS	+= -DSHOW_DEBUG
+CFLAGS	+= #-DSHOW_DEBUG
 endif
 		  
 CXXFLAGS	=	$(CFLAGS)
@@ -43,7 +43,7 @@ LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map -Wl,--cref
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	-lwiiuse -lbte -lm -lfat -logc  -ltinysmb -ldi -liso9660
+LIBS	:=	-lwiiuse -lbte -lm -lfat -logc  -ltinysmb -ldi -liso9660 -lz
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing

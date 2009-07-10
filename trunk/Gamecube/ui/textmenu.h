@@ -4,7 +4,8 @@
 #include "../gcMisc.h"
 
 void Main_menu();
-int OpenBrowser();
+int GameBrowser();
+char *StateBrowser();
 void Config_menu();
 
 #endif

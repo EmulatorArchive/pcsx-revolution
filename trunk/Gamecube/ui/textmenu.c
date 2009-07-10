@@ -1,5 +1,6 @@
 #include "textmenu.h"
-#include "../R3000A.h"
+#include "../../R3000A.h"
+#include "../save_state.h"
 
 #ifdef HW_RVL
 
@@ -81,7 +82,16 @@ void Main_menu()
 
 		if(GetHeld(DOWN, DOWN, DOWN))
 		{
-			if(index < 4) index++;
+#if 0
+			if(index < 6) 
+#else
+#ifdef HW_RVL
+			if(index < 4) 
+#else
+			if(index < 3) 
+#endif
+#endif
+				index++;
 			usleep(150000);
 			draw = 1;
 		}
@@ -140,7 +150,7 @@ void Main_menu()
 					NeedReset = 1;
 
 					msg = NULL;
-					if( OpenBrowser() == 0 )
+					if( GameBrowser() == 0 )
 						index = 0;
 					else 
 						msg = "Device not found";
@@ -154,10 +164,30 @@ void Main_menu()
 					clrscr();
 					draw = 1;
 					break;
+#if 0
+				case 4:
+					if(on_states_save() == -1)
+						msg = "Error saving save state";
+					clrscr();
+					draw = 1;
+					break;
 
+				case 5:
+					if(on_states_load() == -1)
+					{
+						clrscr();
+						draw = 1;
+					}
+					break;
+
+				case 6: 
+					to_loader();
+					break;
+#else
 				case 4: 
 					to_loader();
 					break;
+#endif
 			}
 		}
 
@@ -180,9 +210,22 @@ void Main_menu()
 
 			printf("\x1b[%um", (index == 3) ? 32 : 37);
 			printf("\tConfig\n");
+#if 0
+			printf("\x1b[%um", (index == 4) ? 32 : 37);
+			printf("\tSave state\n");
+
+			printf("\x1b[%um", (index == 5) ? 32 : 37);
+			printf("\tLoad state\n\n");
+
+#ifdef HW_RVL
+			printf("\x1b[%um", (index == 6) ? 32 : 37);
+			printf("\tExit to HBC\n\n");
+#endif
+#else
 #ifdef HW_RVL
 			printf("\x1b[%um", (index == 4) ? 32 : 37);
-			printf("\tExit to HBC\n\n");
+			printf("\tExit to HBC\n");
+#endif
 #endif
 			if(msg)
 			{
