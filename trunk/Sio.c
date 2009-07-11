@@ -318,7 +318,8 @@ void sioInterrupt() {
 #endif
 //	SysPrintf("Sio Interrupt\n");
 	sio.StatReg|= IRQ;
-	psxHu32ref(0x1070) |= SWAPu32( 0x80 );
+	//psxHu32ref(0x1070) |= SWAPu32( 0x80 );
+	psxRaiseExtInt( PsxInt_SIO0 );
 }
 
 int sioFreeze(gzFile f, int Mode) {

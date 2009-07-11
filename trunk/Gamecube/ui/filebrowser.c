@@ -123,10 +123,7 @@ static int textFileBrowser(file_browser_st *file_struct){
 			if(atr)
 				return textFileBrowser(file_struct);
 			else
-			{
-				strcpy(Settings.filename, file_struct->path);
 				return BROWSER_FILE_CHOSED;
-			}
 		}
 		
 		if(GetInput(B, B, B)) 
@@ -195,6 +192,8 @@ int GameBrowser()
 		sprintf(game_filename.path, "%s", device[Settings.device]);
 		ret = textFileBrowser(&game_filename);
 	}
+	if (ret == BROWSER_FILE_CHOSED)
+		strcpy(Settings.filename, game_filename.path);
 	return ret;
 }
 

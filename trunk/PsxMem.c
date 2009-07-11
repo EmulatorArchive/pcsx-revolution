@@ -124,17 +124,21 @@ void psxMemShutdown() {
 static int writeok=1;
 
 u8 psxMemRead8(u32 mem) {
-	char *p;
-	u32 t;
+	u32 t = mem >> 16;
 
-	t = mem >> 16;
-	if (t == 0x1f80) {
-		if (mem < 0x1f801000)
-			return psxHu8(mem);
-		else
+	if (t == 0x1f80)
+	{
+		if( mem & 0xf0001000 )
 			return psxHwRead8(mem);
-	} else {
-		p = (char *)(psxMemRLUT[t]);
+		else
+			return psxHu8(mem);
+	}
+	else if (t == 0x1f40)
+	{
+		return psxHwRead8(mem);
+	}
+	else {
+		char *p = (char *)(psxMemRLUT[t]);
 		if (p != NULL) {
 			return *(u8 *)(p + (mem & 0xffff));
 		} else {
@@ -147,17 +151,17 @@ u8 psxMemRead8(u32 mem) {
 }
 
 u16 psxMemRead16(u32 mem) {
-	char *p;
-	u32 t;
+	u32 t = mem >> 16;
 
-	t = mem >> 16;
-	if (t == 0x1f80) {
-		if (mem < 0x1f801000)
-			return psxHu16(mem);
-		else
+	if (t == 0x1f80)
+	{
+		if( mem & 0xf0001000 )
 			return psxHwRead16(mem);
-	} else {
-		p = (char *)(psxMemRLUT[t]);
+		else
+			return psxHu16(mem);
+	}
+	else {
+		char *p = (char *)(psxMemRLUT[t]);
 		if (p != NULL) {
 			return SWAPu16(*(u16 *)(p + (mem & 0xffff)));
 		} else {
@@ -170,17 +174,17 @@ u16 psxMemRead16(u32 mem) {
 }
 
 u32 psxMemRead32(u32 mem) {
-	char *p;
-	u32 t;
+	u32 t = mem >> 16;
 
-	t = mem >> 16;
-	if (t == 0x1f80) {
-		if (mem < 0x1f801000)
-			return psxHu32(mem);
-		else
+	if (t == 0x1f80)
+	{
+		if( mem & 0xf0001000 )
 			return psxHwRead32(mem);
-	} else {
-		p = (char *)(psxMemRLUT[t]);
+		else
+			return psxHu32(mem);
+	}
+	else {
+		char *p = (char *)(psxMemRLUT[t]);
 		if (p != NULL) {
 			return SWAPu32(*(u32 *)(p + (mem & 0xffff)));
 		} else {
@@ -193,21 +197,24 @@ u32 psxMemRead32(u32 mem) {
 }
 
 void psxMemWrite8(u32 mem, u8 value) {
-	char *p;
-	u32 t;
+	u32 t = mem >> 16;
 
-	t = mem >> 16;
 	if (t == 0x1f80) {
-		if (mem < 0x1f801000)
-			psxHu8(mem) = value;
+		if( mem & 0xf0001000 )
+			psxHwWrite8(mem,value);
 		else
-			psxHwWrite8(mem, value);
-	} else {
-		p = (char *)(psxMemWLUT[t]);
+			psxHu8(mem) = value;
+	}
+	else if (t == 0x1f40)
+	{
+		psxHwWrite8(mem, value);
+	} 
+	else {
+		char *p = (char *)(psxMemWLUT[t]);
 		if (p != NULL) {
 			*(u8  *)(p + (mem & 0xffff)) = value;
 #ifdef PSXREC
-			psxCpu->Clear((mem&(~3)), 1);
+			psxCpu->Clear((mem & (~3)), 1);
 #endif
 		} else {
 #ifdef PSXMEM_LOG
@@ -218,21 +225,20 @@ void psxMemWrite8(u32 mem, u8 value) {
 }
 
 void psxMemWrite16(u32 mem, u16 value) {
-	char *p;
-	u32 t;
+	u32 t = mem >> 16;
 
-	t = mem >> 16;
 	if (t == 0x1f80) {
-		if (mem < 0x1f801000)
-			psxHu16ref(mem) = SWAPu16(value);
-		else
+		if( mem & 0xf0001000 )
 			psxHwWrite16(mem, value);
-	} else {
-		p = (char *)(psxMemWLUT[t]);
-		if (p != NULL) {
+		else
+			psxHu16ref(mem) = SWAPu16(value);
+	} 
+	else {
+		char *p = (char *)(psxMemWLUT[t]);
+		if (p != NULL && !(psxRegs.CP0.n.Status & 0x10000) ) {
 			*(u16 *)(p + (mem & 0xffff)) = SWAPu16(value);
 #ifdef PSXREC
-			psxCpu->Clear((mem&(~1)), 1);
+			psxCpu->Clear((mem & (~1)), 1);
 #endif
 		} else {
 #ifdef PSXMEM_LOG
@@ -243,56 +249,66 @@ void psxMemWrite16(u32 mem, u16 value) {
 }
 
 void psxMemWrite32(u32 mem, u32 value) {
-	char *p;
-	u32 t;
+	u32 t = mem >> 16;
 
-//	if ((mem&0x1fffff) == 0x71E18 || value == 0x48088800) SysPrintf("t2fix!!\n");
-	t = mem >> 16;
 	if (t == 0x1f80) {
-		if (mem < 0x1f801000)
-			psxHu32ref(mem) = SWAPu32(value);
-		else
+		if( mem & 0xf0001000 )
 			psxHwWrite32(mem, value);
-	} else {
-		p = (char *)(psxMemWLUT[t]);
-		if (p != NULL) {
+		else
+			psxHu32ref(mem) = SWAP32(value);
+	} 
+	else {
+		char *p = (char *)(psxMemWLUT[t]);
+		if (p != NULL && !(psxRegs.CP0.n.Status & 0x10000)) {
 			*(u32 *)(p + (mem & 0xffff)) = SWAPu32(value);
 #ifdef PSXREC
 			psxCpu->Clear(mem, 1);
 #endif
-		} else {
-			if (mem != 0xfffe0130) {
+		}
+		else 
+		{
 #ifdef PSXREC
+			if (mem != 0xfffe0130) 
+			{
+
 				if (!writeok)
 					psxCpu->Clear(mem, 1);
-#endif
 
 #ifdef PSXMEM_LOG
 				if (writeok) { PSXMEM_LOG("err sw %8.8lx\n", mem); }
 #endif
-			} else {
-				int i;
+			} 
+			else 
+#endif	//PSXREC
+			{
+				if (t == 0x1d00)
+				{
+					int i;
 
-				switch (value) {
-					case 0x800: case 0x804:
-						if (writeok == 0) break;
-						writeok = 0;
-						memset(psxMemWLUT + 0x0000, 0, 0x80 * sizeof(void*));
-						memset(psxMemWLUT + 0x8000, 0, 0x80 * sizeof(void*));
-						memset(psxMemWLUT + 0xa000, 0, 0x80 * sizeof(void*));
-						break;
-					case 0x1e988:
-						if (writeok == 1) break;
-						writeok = 1;
-						for (i=0; i<0x80; i++) psxMemWLUT[i + 0x0000] = (void*)&psxM[(i & 0x1f) << 16];
-						memcpy(psxMemWLUT + 0x8000, psxMemWLUT, 0x80 * sizeof(void*));
-						memcpy(psxMemWLUT + 0xa000, psxMemWLUT, 0x80 * sizeof(void*));
-						break;
-					default:
+					switch (value) {
+						case 0x800: case 0x804:
+							if (writeok == 0) break;
+							writeok = 0;
+							memset(psxMemWLUT + 0x0000, 0, 0x80 * sizeof(void*));
+							memset(psxMemWLUT + 0x8000, 0, 0x80 * sizeof(void*));
+							memset(psxMemWLUT + 0xa000, 0, 0x80 * sizeof(void*));
+							break;
+						case 0x1e988:
+							if (writeok == 1) break;
+							writeok = 1;
+
+							for (i=0; i<0x80; i++) 
+								psxMemWLUT[i + 0x0000] = (void*)&psxM[(i & 0x1f) << 16];
+							memcpy(psxMemWLUT + 0x8000, psxMemWLUT, 0x80 * sizeof(void*));
+							memcpy(psxMemWLUT + 0xa000, psxMemWLUT, 0x80 * sizeof(void*));
+
+							break;
+						default:
 #ifdef PSXMEM_LOG
-						PSXMEM_LOG("unk %8.8lx = %x\n", mem, value);
+							PSXMEM_LOG("unk %8.8lx = %x\n", mem, value);
 #endif
-						break;
+							break;
+					}
 				}
 			}
 		}
@@ -300,17 +316,16 @@ void psxMemWrite32(u32 mem, u32 value) {
 }
 
 void *psxMemPointer(u32 mem) {
-	char *p;
-	u32 t;
+	
+	u32 t = mem >> 16;
 
-	t = mem >> 16;
 	if (t == 0x1f80) {
 		if (mem < 0x1f801000)
 			return (void *)&psxH[mem];
 		else
 			return NULL;
 	} else {
-		p = (char *)(psxMemWLUT[t]);
+		char *p = (char *)(psxMemWLUT[t]);
 		if (p != NULL) {
 			return (void *)(p + (mem & 0xffff));
 		}

@@ -30,12 +30,13 @@ typedef struct {
 
 typedef struct
 {
- char          szSPUName[8];
- unsigned long ulFreezeVersion;
- unsigned long ulFreezeSize;
- unsigned char cSPUPort[0x200];
- unsigned char cSPURam[0x80000];
- xa_decode_t   xaS;     
+	unsigned char PluginName[8];
+	unsigned long PluginVersion;
+	unsigned long Size;
+	unsigned char SPUPorts[0x200];
+	unsigned char SPURam[0x80000];
+	xa_decode_t xa;
+	unsigned char *SPUInfo;
 } SPUFreeze_t;
 
 #if defined (__WIN32__)

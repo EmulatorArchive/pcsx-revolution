@@ -65,43 +65,23 @@ enum PSXCountRegs
 	PSX_T2_TARGET = 0x1f801128,
 };
 
-enum PsxEventType
-{
-	PsxEvt_Counter0 = 0,
-	PsxEvt_Counter1,
-	PsxEvt_Counter2,
-	PsxEvt_Counter3,
-	PsxEvt_Counter4,
-
-	PsxEvt_Exception,		// 5
-	PsxEvt_SIO,				// 6
-	PsxEvt_GPU,				// 7
-
-	PsxEvt_Cdrom,			// 8	
-	PsxEvt_CdromRead,		// 9
-	PsxEvt_SPU,				// 10
-
-	PsxEvt_CountNonIdle,
-
-	// Idle state, no events scheduled.  Placed at -1 since it has no actual
-	// entry in the Event System's event schedule table.
-	PsxEvt_Idle = PsxEvt_CountNonIdle,
-
-	PsxEvt_CountAll         // total number of schedulable event types in the Psx
-};
-
-
 enum PsxInterrupts
 {
 	PsxInt_VBlank = 0
-,	PsxInt_GM
+,	PsxInt_GPU
 ,	PsxInt_CDROM
 ,	PsxInt_DMA
-
-,	PsxInt_SIO
+,	PsxInt_RTC0
+,	PsxInt_RTC1
+,	PsxInt_RTC2
+,	PsxInt_SIO0
 ,	PsxInt_SPU
-
-,	PsxInt_VBlankEnd
+,	PsxInt_PIO
+,	PsxInt_SIO
+,	PsxInt_Exception
+,	PsxInt_Mcd1
+,	PsxInt_Mcd2
+,	PsxInt_Mcd3
 };
 
 void psxHwReset();

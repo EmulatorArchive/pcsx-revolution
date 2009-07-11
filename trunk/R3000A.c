@@ -42,7 +42,7 @@ static int_timer_st events[PsxEvt_CountAll];
 static int_timer_st *event_list;
 
 int psxInit() {
-	//SysPrintf(_("Running PCSX Version %s (%s).\n"), PACKAGE_VERSION, __DATE__);
+	//SysPrintf(_("Running PCSX-Revolution %s (%s).\n"), PACKAGE_VERSION, __DATE__);
 
 #ifdef PSXREC
 	psxCpu = &psxRec;
@@ -247,8 +247,6 @@ static __inline void psx_event_remove( int n )
 	if( events[n].next == NULL ) return;		// not even scheduled.
 	events[n].next->time += events[n].time;
 
-	// Your Basic List Removal:
-
 	if( event_list == &events[n] )
 	{
 		event_list = events[n].next;
@@ -282,6 +280,7 @@ __inline void psx_int_add( int n, s32 ecycle )
 	// code to help trap those sort of things.
 	//if(events[n].next != NULL) \
 		printf("Event: %d\t Cycle: %d\tecycle: %d\ttime: %d\told time: %d\n", n, psxRegs.cycle, ecycle, psxRegs.cycle + ecycle, events[n].time);
+	//printf("Event: %d\t Cycle: %d\tecycle: %d\told time: %d\n", n, psxRegs.cycle, ecycle, events[n].time);
 	psx_event_remove( n );
 	psx_event_add( n, ecycle );
 }

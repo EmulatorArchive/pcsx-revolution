@@ -120,7 +120,7 @@ u8** psxMemRLUT;
 #define PSXMu32ref(mem)	(*(u32*)PSXM(mem))
 
 
-#if !defined PSXREC && (defined(__x86_64__) || defined(__i386__) || defined(__sh__) || defined(__ppc__) || defined(HW_RVL)) || defined(HW_DOL)
+#if !defined(PSXREC) && (defined(__x86_64__) || defined(__i386__) || defined(__sh__) || defined(__ppc__))
 #define PSXREC
 #endif
 

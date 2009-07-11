@@ -405,15 +405,15 @@ int Load(char *ExePath) {
 
 // STATES
 
-const char PcsxHeader[32] = "STv3 PCSX v 1.10";
+const char PcsxHeader[32] = "STv3 PCSX v1.10";
 
-int SaveState(const char *file) {
+int SaveState(char *file) {
 	gzFile f;
 	GPUFreeze_t *gpufP;
 	SPUFreeze_t *spufP;
 	int Size;
 	unsigned char *pMem;
- 
+
 	f = gzopen(file, "wb");
 	if (f == NULL) return -1;
 
@@ -424,100 +424,32 @@ int SaveState(const char *file) {
 	GPU_getScreenPic(pMem);
 	gzwrite(f, pMem, 128*96*3);
 	free(pMem);
-	
-	psxBiosFreeze(1);
-	
+
+	if (Config.HLE)
+		psxBiosFreeze(1);
+
 	gzwrite(f, psxM, 0x00200000);
 	gzwrite(f, psxR, 0x00080000);
 	gzwrite(f, psxH, 0x00010000);
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	{/*
-		int i;
-		psxRegisters tmpRegs;
-
-		for (i=0; i<sizeof(psxGPRRegs)/4; i++)
-			tmpRegs.GPR.r[i] = SWAP32p((u32*)&psxRegs.GPR.r[i]);
-		for (i=0; i<sizeof(psxCP0Regs)/4; i++)
-			tmpRegs.CP0.r[i] = SWAP32p((u32*)&psxRegs.CP0.r[i]);
-		for (i=0; i<sizeof(psxCP2Data)/4; i++)
-			tmpRegs.CP2D.r[i] = SWAP32p((u32*)&psxRegs.CP2D.r[i]);
-		for (i=0; i<sizeof(psxCP2Ctrl)/4; i++)
-			tmpRegs.CP2C.r[i] = SWAP32p((u32*)&psxRegs.CP2C.r[i]);
-		tmpRegs.pc = SWAP32p(&psxRegs.pc);
-		tmpRegs.code = SWAP32p(&psxRegs.code);
-		tmpRegs.cycle = SWAP32(&psxRegs.Cycle);
-		tmpRegs.interrupt = SWAP32p(&psxRegs.interrupt);
-		for (i=0; i<32; i++)
-			tmpRegs.intCycle[i] = SWAP32p(&psxRegs.intCycle[i]);
-		gzwrite(f, (void*)&tmpRegs, sizeof(tmpRegs));
-	*/}
-#else
 	gzwrite(f, (void*)&psxRegs, sizeof(psxRegs));
-#endif
 
 	// gpu
 	gpufP = (GPUFreeze_t *) malloc(sizeof(GPUFreeze_t));
 	gpufP->ulFreezeVersion = 1;
 	GPU_freeze(1, gpufP);
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	gpufP->ulFreezeVersion = SWAP32p((void*)&gpufP->ulFreezeVersion);
-	gpufP->ulStatus = SWAP32p((void*)&gpufP->ulStatus);
-	//for (i=0; i<256; i++)
-	//	gpufP->ulControl[i] = SWAP32p(&gpufP->ulControl[i]);
-#endif
 	gzwrite(f, gpufP, sizeof(GPUFreeze_t));
 	free(gpufP);
-#if !defined(__MACOSX__) || !defined(__GAMECUBE__)
-	spufP = (SPUFreeze_t *) malloc(16);
-	SPU_freeze(2, spufP);
-	Size = spufP->ulFreezeSize; 
-	gzwrite(f, &Size, 4);
-	free(spufP);
-	spufP = (SPUFreeze_t *) malloc(Size);
-	SPU_freeze(1, spufP);
-	gzwrite(f, spufP, Size);
-	free(spufP);
-#else
+
 	// spu
-/*
 	spufP = (SPUFreeze_t *) malloc(16);
 	SPU_freeze(2, spufP);
-
-	// hm...
-	//Size = spufP->Size;
-	//spufP->Size = SWAP32p((void*)&spufP->Size);
-
-	Size = SWAP32(spufP->Size);
-
-	gzwrite(f, &Size, 4);
+	Size = spufP->Size; gzwrite(f, &Size, 4);
 	free(spufP);
 	spufP = (SPUFreeze_t *) malloc(Size);
 	SPU_freeze(1, spufP);
-
-	spufP->PluginVersion = SWAP32p((void*)&spufP->PluginVersion);
-	spufP->Size = SWAP32p((void*)&spufP->Size);
-	
-	{
-		xa_decode_t tmpXa;
-		memcpy(&tmpXa, &spufP->xa, sizeof(xa_decode_t));
-		spufP->xa = tmpXa;
-		
-		spufP->xa.freq = SWAP32p((u32*)&spufP->xa.freq);
-		spufP->xa.nbits = SWAP32p((u32*)&spufP->xa.nbits);
-		spufP->xa.stereo = SWAP32p((u32*)&spufP->xa.stereo);
-		spufP->xa.nsamples = SWAP32p((u32*)&spufP->xa.nsamples);
-		spufP->xa.left.y0 = SWAP32p((void*)&spufP->xa.left.y0);
-		spufP->xa.left.y1 = SWAP32p((void*)&spufP->xa.left.y1);
-		spufP->xa.right.y0 = SWAP32p((void*)&spufP->xa.right.y0);
-		spufP->xa.right.y1 = SWAP32p((void*)&spufP->xa.right.y1);
-		for (i=0; i<16384; i++)
-			spufP->xa.pcm[i] = SWAP16p((void*)&spufP->xa.pcm[i]);
-	}
-
 	gzwrite(f, spufP, Size);
 	free(spufP);
-*/
-#endif
+
 	sioFreeze(f, 1);
 	cdrFreeze(f, 1);
 	psxHwFreeze(f, 1);
@@ -529,7 +461,7 @@ int SaveState(const char *file) {
 	return 0;
 }
 
-int LoadState(const char *file) {
+int LoadState(char *file) {
 	gzFile f;
 	GPUFreeze_t *gpufP;
 	SPUFreeze_t *spufP;
@@ -550,75 +482,21 @@ int LoadState(const char *file) {
 	gzread(f, psxM, 0x00200000);
 	gzread(f, psxR, 0x00080000);
 	gzread(f, psxH, 0x00010000);
-
 	gzread(f, (void*)&psxRegs, sizeof(psxRegs));
+
 	if (Config.HLE)
 		psxBiosFreeze(0);
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	{
-		int i;
-		for (i=0; i<sizeof(psxGPRRegs)/4; i++)
-			psxRegs.GPR.r[i] = SWAP32p((u32*)&psxRegs.GPR.r[i]);
-		for (i=0; i<sizeof(psxCP0Regs)/4; i++)
-			psxRegs.CP0.r[i] = SWAP32p((u32*)&psxRegs.CP0.r[i]);
-		for (i=0; i<sizeof(psxCP2Data)/4; i++)
-			psxRegs.CP2D.r[i] = SWAP32p((u32*)&psxRegs.CP2D.r[i]);
-		for (i=0; i<sizeof(psxCP2Ctrl)/4; i++)
-			psxRegs.CP2C.r[i] = SWAP32p((u32*)&psxRegs.CP2C.r[i]);
-		psxRegs.pc = SWAP32p(&psxRegs.pc);
-		psxRegs.code = SWAP32p(&psxRegs.code);
-		psxRegs.cycle = SWAP32p((u32*)&psxRegs.cycle);
-		/*for (i=0; i<32; i++)
-		{
-			psxRegs.sCycle[i] = SWAP32p(&psxRegs.sCycle[i]);
-			psxRegs.eCycle[i] = SWAP32p(&psxRegs.eCycle[i]);
-		}*/
-	}
-#endif
 
 	// gpu
 	gpufP = (GPUFreeze_t *) malloc (sizeof(GPUFreeze_t));
 	gzread(f, gpufP, sizeof(GPUFreeze_t));
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-	gpufP->ulFreezeVersion = SWAP32p((void*)&gpufP->ulFreezeVersion);
-	gpufP->ulStatus = SWAP32p((void*)&gpufP->ulStatus);
-	//for (i=0; i<256; i++)
-	//	gpufP->ulControl[i] = SWAP32p(&gpufP->ulControl[i]);
-#endif
 	GPU_freeze(0, gpufP);
 	free(gpufP);
 
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
-/*	// spu
-	gzread(f, &Size, 4);
-	Size = SWAP32(Size);
-	spufP = (SPUFreeze_t *) malloc (Size);
-	gzread(f, spufP, Size);
-	spufP->PluginVersion = SWAP32p((void*)&spufP->PluginVersion);
-	spufP->Size = SWAP32p((void*)&spufP->Size);
-	
-	{
-		xa_decode_t tmpXa;
-		memcpy(&tmpXa, &spufP->xa, sizeof(xa_decode_t));
-		spufP->xa = tmpXa;
-		
-		spufP->xa.freq = SWAP32p((u32*)&spufP->xa.freq);
-		spufP->xa.nbits = SWAP32p((u32*)&spufP->xa.nbits);
-		spufP->xa.stereo = SWAP32p((u32*)&spufP->xa.stereo);
-		spufP->xa.nsamples = SWAP32p((u32*)&spufP->xa.nsamples);
-		spufP->xa.left.y0 = SWAP32p((void*)&spufP->xa.left.y0);
-		spufP->xa.left.y1 = SWAP32p((void*)&spufP->xa.left.y1);
-		spufP->xa.right.y0 = SWAP32p((void*)&spufP->xa.right.y0);
-		spufP->xa.right.y1 = SWAP32p((void*)&spufP->xa.right.y1);
-		for (i=0; i<16384; i++)
-			spufP->xa.pcm[i] = SWAP16p((void*)&spufP->xa.pcm[i]);
-	}
-*/
-#else
+	// spu
 	gzread(f, &Size, 4);
 	spufP = (SPUFreeze_t *) malloc (Size);
 	gzread(f, spufP, Size);
-#endif
 	SPU_freeze(0, spufP);
 	free(spufP);
 
@@ -633,7 +511,7 @@ int LoadState(const char *file) {
 	return 0;
 }
 
-int CheckState(const char *file) {
+int CheckState(char *file) {
 	gzFile f;
 	char header[32];
 
@@ -694,7 +572,7 @@ int RecvPcsxInfo() {
 		psxCpu->Shutdown();
 #ifdef PSXREC
 		if (Config.Cpu)	
-			 psxCpu = &psxInt;
+			psxCpu = &psxInt;
 		else psxCpu = &psxRec;
 #else
 		psxCpu = &psxInt;
@@ -712,7 +590,6 @@ int RecvPcsxInfo() {
 
 
 void __Log(char *fmt, ...) {
-#ifndef __GAMECUBE__
 	va_list list;
 #ifdef LOG_STDOUT
 	char tmp[1024];
@@ -726,7 +603,6 @@ void __Log(char *fmt, ...) {
 	SysPrintf(tmp);
 #endif
 	va_end(list);
-#endif
 }
 
 // remove the leading and trailing spaces in a string

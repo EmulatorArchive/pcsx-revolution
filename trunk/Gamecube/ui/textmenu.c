@@ -23,6 +23,8 @@ static const char *devicename[DEVICES] = {
 
 #endif	//HW_RVL
 
+#define SAVE_STATE 0
+
 static int NeedReset = 0;
 extern int Running;
 
@@ -82,7 +84,7 @@ void Main_menu()
 
 		if(GetHeld(DOWN, DOWN, DOWN))
 		{
-#if 0
+#if SAVE_STATE
 			if(index < 6) 
 #else
 #ifdef HW_RVL
@@ -164,7 +166,7 @@ void Main_menu()
 					clrscr();
 					draw = 1;
 					break;
-#if 0
+#if SAVE_STATE
 				case 4:
 					if(on_states_save() == -1)
 						msg = "Error saving save state";
@@ -210,7 +212,7 @@ void Main_menu()
 
 			printf("\x1b[%um", (index == 3) ? 32 : 37);
 			printf("\tConfig\n");
-#if 0
+#if SAVE_STATE
 			printf("\x1b[%um", (index == 4) ? 32 : 37);
 			printf("\tSave state\n");
 

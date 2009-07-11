@@ -40,6 +40,32 @@ extern R3000Acpu psxRec;
 #define PSXREC
 #endif
 
+enum PsxEventType
+{
+	PsxEvt_Counter0 = 0,
+
+	PsxEvt_Counter1,
+	PsxEvt_Counter2,
+	PsxEvt_Counter3,
+	PsxEvt_Counter4,
+
+	PsxEvt_Exception,		// 5
+	PsxEvt_SIO,				// 6
+	PsxEvt_GPU,				// 7
+
+	PsxEvt_Cdrom,			// 8
+	PsxEvt_CdromRead,		// 9
+	PsxEvt_SPU,				// 10
+
+	PsxEvt_CountNonIdle,
+
+	// Idle state, no events scheduled.  Placed at -1 since it has no actual
+	// entry in the Event System's event schedule table.
+	PsxEvt_Idle = PsxEvt_CountNonIdle,
+
+	PsxEvt_CountAll		// total number of schedulable event types in the Psx
+};
+
 typedef union 
 {
 	struct 
@@ -111,32 +137,32 @@ typedef union {
 	struct {
 		SVector3D     v0, v1, v2;
 		CBGR          rgb;
-		long          otz;
-		long          ir0, ir1, ir2, ir3;
+		s32          otz;
+		s32          ir0, ir1, ir2, ir3;
 		SVector2D     sxy0, sxy1, sxy2, sxyp;
 		SVector2Dz    sz0, sz1, sz2, sz3;
 		CBGR          rgb0, rgb1, rgb2;
-		long          reserved;
-		long          mac0, mac1, mac2, mac3;
-		unsigned long irgb, orgb;
-		long          lzcs, lzcr;
+		s32          reserved;
+		s32          mac0, mac1, mac2, mac3;
+		u32 irgb, orgb;
+		s32          lzcs, lzcr;
 	} n;
-	unsigned long r[32];
+	u32 r[32];
 } psxCP2Data;
 
 typedef union {
 	struct {
 		SMatrix3D rMatrix;
-		long      trX, trY, trZ;
+		s32      trX, trY, trZ;
 		SMatrix3D lMatrix;
-		long      rbk, gbk, bbk;
+		s32      rbk, gbk, bbk;
 		SMatrix3D cMatrix;
-		long      rfc, gfc, bfc;
-		long      ofx, ofy;
-		long      h;
-		long      dqa, dqb;
-		long      zsf3, zsf4;
-		long      flag;
+		s32      rfc, gfc, bfc;
+		s32      ofx, ofy;
+		s32      h;
+		s32      dqa, dqb;
+		s32      zsf3, zsf4;
+		s32      flag;
 	} n;
 	u32 r[32];
 } psxCP2Ctrl;
@@ -149,8 +175,6 @@ typedef struct {
     u32 pc;				/* Program counter */
     u32 code;			/* The instruction */
 	u32 cycle;
-
-	//u32 NextBranchCycle;
 
 	// marks the original duration of time for the current pending event.  This is
 	// typically used to determine the amount of time passed since the last update
@@ -172,7 +196,7 @@ typedef struct {
 
 extern psxRegisters psxRegs;
 
-#if defined(__MACOSX__) || defined(__GAMECUBE__)
+#if defined(__BIGENDIAN__) || defined(__GAMECUBE__)
 
 #define _i32(x) *(s32 *)&x
 #define _u32(x) x
@@ -248,13 +272,14 @@ void psxShutdown();
 void psxException(u32 code, u32 bd);
 void psxBranchTest();
 void psxExecuteBios();
+int  psxTestLoadDelay(int reg, u32 tmp);
 void psxDelayTest(int reg, u32 bpc);
 void psxTestSWInts();
-int  psxTestLoadDelay(int reg, u32 tmp);
 void psxJumpTest();
 
 u32 psxGetCycle();
 void AddCycles( int amount );
+
 void psx_int_add(int n, s32 ecycle);
 void psx_int_remove(int n);
 void psxRaiseExtInt( uint irq );

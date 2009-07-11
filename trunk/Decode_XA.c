@@ -14,10 +14,6 @@
 #pragma warning(disable:4244)
 #endif
 
-#ifndef FIXED
-#define FIXED
-#endif
-
 #define NOT(_X_)				(!(_X_))
 #define XACLAMP(_X_,_MI_,_MA_)	{if(_X_<_MI_)_X_=_MI_;if(_X_>_MA_)_X_=_MA_;}
 
@@ -28,21 +24,6 @@
 //===  ADPCM DECODING ROUTINES
 //============================================
 
-#ifndef FIXED
-static double K0[4] = {
-    0.0,
-    0.9375,
-    1.796875,
-    1.53125
-};
-
-static double K1[4] = {
-    0.0,
-    0.0,
-    -0.8125,
-    -0.859375
-};
-#else
 static int K0[4] = {
 	0.0       * (1<<SHC),
 	0.9375    * (1<<SHC),
@@ -56,7 +37,6 @@ static int K1[4] = {
 	-0.8125   * (1<<SHC),
 	-0.859375 * (1<<SHC)
 };
-#endif
 
 #define BLKSIZ 28       /* block size (32 - 4 nibbles) */
 
@@ -67,13 +47,8 @@ void ADPCM_InitDecode(ADPCM_Decode_t *decp) {
 }
 
 //===========================================
-#ifndef FIXED
-#define IK0(fid)	((int)((-K0[fid]) * (1<<SHC)))
-#define IK1(fid)	((int)((-K1[fid]) * (1<<SHC)))
-#else
 #define IK0(fid)	(-K0[fid])
 #define IK1(fid)	(-K1[fid])
-#endif
 
 static __inline void ADPCM_DecodeBlock16( ADPCM_Decode_t *decp, u8 filter_range, const void *vblockp, short *destp, int inc ) {
 	int i;

@@ -24,14 +24,14 @@
 struct PSXCNT_MODE
 {
 #if defined(__ppc__) || defined(__BIGENDIAN__)
-	u32 garbage:21;
+	u32 garbage:22;
 
 	u32 Div:1;
 
 	u32 ClockSource:1;
 
-	u32 IRQ1:2;
 	u32 IRQ2:2;
+	u32 IRQ1:2;
 
 	u32 Tar:1;
 
@@ -64,7 +64,7 @@ struct PSXCNT_MODE
 	u32 Div:1;
 
 /*
-	When Clc and Div of the counters are zero, they all run at the
+	When ClockSource of the counters is zero, they all run at the
 		same speed. This speed seems to be about 8 times the normal
 		speed of root counter 2, which is specified as 1/8 the system
 		clock.
@@ -90,10 +90,10 @@ void __inline psxRcntUpdate1();
 void __inline psxRcntUpdate2();
 void __inline psxRcntUpdate3();
 void __inline psxRcntUpdate4();
-void psxRcntWcount(u32 index, u32 value);
-void psxRcntWmode(u32 index, u32 value);
-void psxRcntWtarget(u32 index, u32 value);
-u32 psxRcntRcount(u32 index);
+void psxRcntWcount(int index, u32 value);
+void psxRcntWmode(int index, u32 value);
+void psxRcntWtarget(int index, u32 value);
+u32 psxRcntRcount(int index);
 int psxRcntFreeze(gzFile f, int Mode);
 
 void psxUpdateVSyncRate();

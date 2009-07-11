@@ -22,7 +22,7 @@
 #include "PsxMem.h"
 
 #include "Cheat.h"
-#include "malloc.h"
+#include <malloc.h>
 
 Cheat *Cheats = NULL;
 int NumCheats = 0;
