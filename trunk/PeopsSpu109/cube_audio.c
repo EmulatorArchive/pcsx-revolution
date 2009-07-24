@@ -12,84 +12,161 @@
 
 #include "stdafx.h"
 #include "externals.h"
+#include "PsxCommon.h"
 
 ////////////////////////////////////////////////////////////////////////
 // cube audio globals
 ////////////////////////////////////////////////////////////////////////
 #include "../Gamecube/DEBUG.h"
 #include <ogc/audio.h>
+#include <ogc/cache.h>
+
 #include <malloc.h>
+#include <math.h>
 
-static u8 audio_buffer[2][3840] __attribute__((aligned(32)));
-static u8 *mixbuffer;
-static u8 IsPlaying = 0;
-static s32 BufLen;
-static u8 whichab = 0;
+#define NUM_BUFFERS 4
+#define BUFFER_SIZE 3840
+static char buffer[NUM_BUFFERS][BUFFER_SIZE] __attribute__((aligned(32)));
+static int which_buffer = 0;
+static unsigned int buffer_offset = 0;
+#define NEXT(x) (x=(x+1)%NUM_BUFFERS)
+static const float freq_ratio = 44100.0f / 32000.0f;
+static const float inv_freq_ratio = 32000.0f / 44100.0f;
+//static enum { BUFFER_SIZE_32_60 = 2112, BUFFER_SIZE_32_50 = 2560 } buffer_size;
 
-static void AudioSwitchBuffers()
-{
-	//memset(audio_buffer[whichab], 0, BufLen);
-	memcpy(audio_buffer[whichab], mixbuffer, BufLen);
+static s32 buffer_size;
+#define thread_buffer which_buffer
 
-	DCFlushRange(audio_buffer[whichab], BufLen);
-	AUDIO_InitDMA((u32)audio_buffer[whichab], (u32)BufLen);
+static void inline play_buffer(void);
+static void done_playing(void);
+static void copy_to_buffer_mono(void* out, void* in, unsigned int samples);
+static void copy_to_buffer_stereo(void* out, void* in, unsigned int samples);
+static void (*copy_to_buffer)(void* out, void* in, unsigned int samples);
 
-	whichab ^= 1;
-	if(!IsPlaying)
-	{
-		AUDIO_StartDMA();
-		IsPlaying = 1;
-	}
-}
-
+////////////////////////////////////////////////////////////////////////
+// SETUP SOUND
 ////////////////////////////////////////////////////////////////////////
 
 void SetupSound(void)
 {
-	AUDIO_Init(NULL);
+  AUDIO_Init(NULL);
+
+	//buffer_size = Config.PsxType ? BUFFER_SIZE_32_50 : BUFFER_SIZE_32_60;
 	AUDIO_SetDSPSampleRate(AI_SAMPLERATE_48KHZ);
-	AUDIO_RegisterDMACallback (AudioSwitchBuffers);
-	memset(audio_buffer, 0, 3840 * 2);
-	DEBUG_print("SetupSound called",12);
+	copy_to_buffer = iDisStereo ? copy_to_buffer_mono : copy_to_buffer_stereo;
+	//printf("SetupSound\n");
 }
 
+////////////////////////////////////////////////////////////////////////
+// REMOVE SOUND
 ////////////////////////////////////////////////////////////////////////
 
 void RemoveSound(void)
 {
-	AUDIO_StopDMA();
-	AUDIO_RegisterDMACallback(NULL);
-	DEBUG_print("RemoveSound called",12);
-	IsPlaying = 0;
+ AUDIO_StopDMA();
+
+ //DEBUG_print("RemoveSound called",12);
 }
 
 ////////////////////////////////////////////////////////////////////////
+// GET BYTES BUFFERED
+////////////////////////////////////////////////////////////////////////
 
-u32 SoundGetBytesBuffered(void)
+unsigned long SoundGetBytesBuffered(void)
 {
-	return 0;/*
-	u32 l = AUDIO_GetDMABytesLeft();
-#ifdef PEOPS_SDLOG
- 	sprintf(txtbuffer,"SoundGetBytesBuffered returns approx: %d bytes", l);
- 	DEBUG_print(txtbuffer, 12);
+ 	/*sprintf(txtbuffer,"SoundGetBytesBuffered returns approx: %d bytes",
+ 	        buffer_size - AUDIO_GetDMABytesLeft());
+ 	DEBUG_print(txtbuffer,12);*/
+ 	if(!AUDIO_GetDMABytesLeft())
+ 	  return 0;
+  return buffer_size - AUDIO_GetDMABytesLeft();
+}
+
+static void inline play_buffer(void){
+	// Make sure the buffer is in RAM, not the cache
+	DCFlushRange(buffer[thread_buffer], buffer_size);
+
+	// Actually send the buffer out to be played next
+	AUDIO_InitDMA((unsigned int)&buffer[thread_buffer], buffer_size);
+
+	// Start playing the buffer
+	AUDIO_StartDMA();
+}
+
+static void copy_to_buffer_mono(void* b, void* s, unsigned int length){
+	// NOTE: length is in resampled samples (mono (1) short)
+	short* buffer = b, * stream = s;
+	int di;
+	float si;
+	for(di = 0, si = 0.0f; di < length; ++di, si += freq_ratio){
+		// Linear interpolation between current and next sample
+		float t = si - floorf(si);
+		buffer[di] = (1.0f - t)*stream[(int)si] + t*stream[(int)ceilf(si)];
+	}
+}
+
+static void copy_to_buffer_stereo(void* b, void* s, unsigned int length){
+	// NOTE: length is in resampled samples (stereo (2) shorts)
+	int* buffer = b, * stream = s;
+	int di;
+	float si;
+	for(di = 0, si = 0.0f; di < length; ++di, si += freq_ratio){
+#if 1
+		// Linear interpolation between current and next sample
+		float t = si - floorf(si);
+		short* osample  = (short*)(buffer + di);
+		short* isample1 = (short*)(stream + (int)si);
+		short* isample2 = (short*)(stream + (int)ceilf(si));
+		// Left and right
+		osample[0] = (1.0f - t)*isample1[0] + t*isample2[0];
+		osample[1] = (1.0f - t)*isample1[1] + t*isample2[1];
+#else
+		// Quick and dirty resampling: skip over or repeat samples
+		buffer[di] = stream[(int)si];
 #endif
-	if( l <= 0 ) return 0;
-	if( l < BufLen / 2 )
-		l = SOUNDSIZE;
-	else
-		l = 0;
-	return l;*/
+	}
+}
+
+static void inline add_to_buffer(void* stream, unsigned int length){
+	// This shouldn't lose any data and works for any size
+	unsigned int stream_offset = 0;
+	// Length calculations are in samples
+	//   (Either pairs of shorts (stereo) or shorts (mono))
+	const int shift = iDisStereo ? 1 : 2;
+	unsigned int lengthi, rlengthi;
+	unsigned int lengthLeft = length >> shift;
+	unsigned int rlengthLeft = ceilf(lengthLeft * inv_freq_ratio);
+
+	while(rlengthLeft > 0){
+		rlengthi = (buffer_offset + (rlengthLeft << shift) <= buffer_size) ?
+		            rlengthLeft : ((buffer_size - buffer_offset) >> shift);
+		lengthi  = rlengthi * freq_ratio;
+
+		copy_to_buffer(buffer[which_buffer] + buffer_offset,
+		               stream + stream_offset, rlengthi);
+
+		if(buffer_offset + (rlengthLeft << shift) < buffer_size){
+			buffer_offset += rlengthi << shift;
+			return;
+		}
+
+		lengthLeft    -= lengthi;
+		stream_offset += lengthi << shift;
+		rlengthLeft   -= rlengthi;
+
+		play_buffer();
+
+		NEXT(which_buffer);
+		buffer_offset = 0;
+	}
+
 }
 
 ////////////////////////////////////////////////////////////////////////
-void SoundFeedStreamData( unsigned char *pSound, long lBytes)
+// FEED SOUND DATA
+////////////////////////////////////////////////////////////////////////
+void SoundFeedStreamData(unsigned char* pSound,long lBytes)
 {
-	BufLen = lBytes;
-	mixbuffer = pSound;
-	if (!IsPlaying) AudioSwitchBuffers();
-#ifdef PEOPS_SDLOG
-	sprintf(txtbuffer,"SoundFeedStreamData length: %ld bytes",lBytes);
-//	SysPrintf(txtbuffer);
-	DEBUG_print(txtbuffer,13);
-#endif
+	buffer_size = lBytes;
+	add_to_buffer(pSound, lBytes);
 }

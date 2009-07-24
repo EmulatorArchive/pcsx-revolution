@@ -22,7 +22,11 @@ void Config_menu()
 		}
 		if(GetInput(DOWN, DOWN, DOWN))
 		{
+#if 1
+			if(index < 5) index++;
+#else
 			if(index < 4) index++;
+#endif
 		}
 			
 		if(GetInput(A, A, A)) 
@@ -46,7 +50,7 @@ void Config_menu()
 					break;
 
 				case 4:
-#if 0
+#if 1
 					Config.Cpu ^= 1;
 					break;
 
@@ -81,7 +85,7 @@ void Config_menu()
 		printf("\tConfigure SPU\n");
 
 		printf("\x1b[%um", (index == 4) ? 32 : 37);
-#if 0
+#if 1
 		printf("\tCPU: %s\n", Config.Cpu ? "Interpreter" : "Recompiler");
 
 		printf("\x1b[%um", (index == 5) ? 32 : 37);

@@ -11,11 +11,12 @@
 
 // General Purpose hardware registers
 int cpuHWRegisters[NUM_HW_REGISTERS] = {
-    3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 
+    3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 
     21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
 };
 
 u32 *ppcPtr;
+u32 *b32Ptr[32];
 
 void ppcInit() {
 }
@@ -29,4 +30,78 @@ void ppcAlign(int bytes) {
 
 void ppcShutdown() {
 }
+
+inline void write32(u32 val)
+{
+	*(u32*)ppcPtr = val;
+	ppcPtr++;
+}
+inline void write64(u64 val)
+{
+	*(u64*)ppcPtr = val;
+	ppcPtr+=2;
+}
+
+inline u32 mod1(int to, int from)
+{
+	return ((to << 21) | (from & 0xffff));
+}
+
+inline u32 mod2(int to, int from, int imm)
+{
+	return ((to << 21) | (from << 16) | (imm & 0xffff));
+}
+
+inline u32 mod3(int to, int from, int imm)
+{
+	return ((to << 21) | (from << 16) | (imm << 11));
+}
+
+/* Link register related */
+MOD0_INSTR( MFLR,  0x7C0802A6 );
+MOD0_INSTR( MTLR,  0x7C0803A6 );
+MOD0_INSTR( MTCTR, 0x7C0903A6 );
+
+void BLR()
+{
+	write32(0x4e800020);
+}
+
+void BGTLR()
+{
+	write32(0x4d810020);
+}
+
+/* Load ops */
+MOD1_INSTR( LI,  0x38000000 );
+MOD1_INSTR( LIS, 0x3c000000 );
+
+MOD2_INSTR( LWZ, 0x80000000 );
+MOD2_INSTR( LHZ, 0xa0000000 );
+MOD2_INSTR( LHA, 0xa8000000 );
+MOD2_INSTR( LBZ, 0x88000000 );
+MOD2_INSTR( LMW, 0xb8000000 );
+
+MOD3_INSTR( LWZX,  0x7C00002E );
+MOD3_INSTR( LWBRX, 0x7C00042C );
+MOD3_INSTR( LHBRX, 0x7C00062C );
+
+/* Store ops */
+MOD2_INSTR( STMW, 0xBC000000 );
+MOD2_INSTR( STW,  0x90000000 );
+MOD2_INSTR( STH,  0xB0000000 );
+MOD2_INSTR( STB,  0x98000000 );
+MOD2_INSTR( STWU, 0x94000000 );
+
+MOD3_INSTR( STHBRX, 0x7C00072C );
+MOD3_INSTR( STWBRX, 0x7C00052C );
+
+/* Arithmic ops */
+/*
+MOD2_INSTR( ADDI,   0x38000000 );
+MOD2_INSTR( ADDIS,  0x3C000000 );
+MOD2_INSTR( ADDIC,  0x30000000 );
+MOD2_INSTR( ADDIC_, 0x34000000 );
+MOD2_INSTR( MULLI,  0x1C000000 );
+*/
 

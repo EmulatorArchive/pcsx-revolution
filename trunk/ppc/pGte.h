@@ -27,39 +27,26 @@ int psxCP2time[64] = {
         1 , 1 , 1 , 1, 1, 6 , 5  , 39  // 38
 };
 
-//extern int psxCP2time[64];
-
-/*int psxCP2time[64] = {
-	2, 16 , 1 , 1, 1, 1 , 8, 1, // 00
-	1 , 1 , 1 , 1, 6 , 1 , 1 , 1, // 08
-	8 , 8, 8, 19, 13 , 1 , 44 , 1, // 10
-	1 , 1 , 1 , 17, 11 , 1 , 14  , 1, // 18
-	30 , 1 , 1 , 1, 1, 1 , 1 , 1, // 20
-	5 , 8 , 17 , 1, 1, 5, 6, 1, // 28 
-	23 , 1 , 1 , 1, 1, 1 , 1 , 1, // 30
-	1 , 1 , 1 , 1, 1, 6 , 5  , 39  // 38
-};*/
-
 #define CP2_FUNC(f) \
 void gte##f(); \
 static void rec##f() { \
-	if (pc < cop2readypc) idlecyclecount += (cop2readypc - pc)>>2; \
+	/*if (pc < cop2readypc) idlecyclecount += ((cop2readypc - pc)>>2);*/ \
 	iFlushRegs(0); \
 	LIW(0, (u32)psxRegs.code); \
-	STW(0, OFFSET(&psxRegs, &psxRegs.code), GetHWRegSpecial(PSXREGS)); \
+	STW(0, GetHWRegSpecial(PSXREGS), OFFSET(&psxRegs, &psxRegs.code)); \
 	FlushAllHWReg(); \
 	CALLFunc ((u32)gte##f); \
-	cop2readypc = (pc + psxCP2time[_fFunct_(psxRegs.code)])<<2; \
+	/*cop2readypc = pc + (psxCP2time[_fFunct_(psxRegs.code)]<<2);*/ \
 }
 
 #define CP2_FUNCNC(f) \
 void gte##f(); \
 static void rec##f() { \
-	if (pc < cop2readypc) idlecyclecount += (cop2readypc - pc)>>2; \
+	/*if (pc < cop2readypc) idlecyclecount += ((cop2readypc - pc)>>2);*/ \
 	iFlushRegs(0); \
 	CALLFunc ((u32)gte##f); \
 /*	branch = 2; */\
-	cop2readypc = pc + psxCP2time[_fFunct_(psxRegs.code)]; \
+	/*cop2readypc = pc + psxCP2time[_fFunct_(psxRegs.code)];*/ \
 }
 
 CP2_FUNC(MFC2);
@@ -149,7 +136,7 @@ static void recLWC2() {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
 
-		if ((t & 0x1fe0) == 0) {
+		if ((t & 0x1fe0) == 0 && (t & 0x1fff) != 0) {
 			MOV32MtoR(EAX, (u32)&psxM[addr & 0x1fffff]);
 			if (fixt == 1) MOVSX32R16toR(EAX, EAX);
 			else if (fixt == 2) AND32ItoR(EAX, 0xffff);
@@ -190,7 +177,7 @@ static void recSWC2() {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
 
-		if ((t & 0x1fe0) == 0) {
+		if ((t & 0x1fe0) == 0 && (t & 0x1fff) != 0) {
 			MOV32MtoR(EAX, (u32)&psxRegs.CP2D.r[_Rt_]);
 			MOV32RtoM((u32)&psxM[addr & 0x1fffff], EAX);
 			return;

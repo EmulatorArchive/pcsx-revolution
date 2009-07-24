@@ -58,6 +58,13 @@ int32_t  *psxVsl;
 ////////////////////////////////////////////////////////////////////////
 // GPU globals
 ////////////////////////////////////////////////////////////////////////
+#ifndef __GX__
+uint32_t        dwGPUVersion = 0;
+int             iGPUHeight = 512;
+int             iGPUHeightMask = 511;
+int             GlobalTextIL = 0;
+int             iTileCheat = 0;
+#endif
 
 static long       lGPUdataRet;
 long              lGPUstatusRet;
@@ -1056,38 +1063,38 @@ void CALLBACK GPUwriteStatus(uint32_t gdata)      // WRITE STATUS
     return;
    //--------------------------------------------------//
    // ask about GPU version and other stuff
-   case 0x10: 
+	case 0x10: 
 
-    gdata&=0xff;
-
-    switch(gdata) 
-     {
-      case 0x02:
-       lGPUdataRet=lGPUInfoVals[INFO_TW];              // tw infos
-       return;
-      case 0x03:
-       lGPUdataRet=lGPUInfoVals[INFO_DRAWSTART];       // draw start
-       return;
-      case 0x04:
-       lGPUdataRet=lGPUInfoVals[INFO_DRAWEND];         // draw end
-       return;
-      case 0x05:
-      case 0x06:
-       lGPUdataRet=lGPUInfoVals[INFO_DRAWOFF];         // draw offset
-       return;
-      case 0x07:
-       if(dwGPUVersion==2)
-            lGPUdataRet=0x01;
-       else lGPUdataRet=0x02;                          // gpu type
-       return;
-      case 0x08:
-      case 0x0F:                                       // some bios addr?
-       lGPUdataRet=0xBFC03720;
-       return;
-     }
-    return;
-   //--------------------------------------------------//
-  }   
+		gdata&=0xff;
+	
+		switch(gdata) 
+		{
+			case 0x02:
+				lGPUdataRet = lGPUInfoVals[INFO_TW];              // tw infos
+				return;
+			case 0x00:
+			case 0x01:
+			case 0x03:
+				lGPUdataRet = lGPUInfoVals[INFO_DRAWSTART];       // draw start
+				return;
+			case 0x04:
+				lGPUdataRet = lGPUInfoVals[INFO_DRAWEND];         // draw end
+				return;
+			case 0x05:
+			case 0x06:
+				lGPUdataRet = lGPUInfoVals[INFO_DRAWOFF];         // draw offset
+				return;
+			case 0x07:
+				lGPUdataRet = 0x02;                          // gpu type
+				return;
+			case 0x08:
+			case 0x0F:                                       // some bios addr?
+				lGPUdataRet = 0xBFC03720;
+			return;
+		}
+		return;
+	//--------------------------------------------------//
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1485,59 +1492,49 @@ void SetFixes(void)
 // process gpu commands
 ////////////////////////////////////////////////////////////////////////
 
-unsigned long lUsedAddr[3];
-
-__inline BOOL CheckForEndlessLoop(unsigned long laddr)
-{
- if(laddr==lUsedAddr[1]) return TRUE;
- if(laddr==lUsedAddr[2]) return TRUE;
-
- if(laddr<lUsedAddr[0]) lUsedAddr[1]=laddr;
- else                   lUsedAddr[2]=laddr;
- lUsedAddr[0]=laddr;
- return FALSE;
-}
-
 #ifdef __GX__
-long CALLBACK PEOPS_GPUdmaChain(uint32_t * baseAddrL, uint32_t addr)
+long CALLBACK PEOPS_GPUdmaChain(uint8_t * baseAddrL, uint32_t addr)
 #else
-long CALLBACK GPUdmaChain(uint32_t * baseAddrL, uint32_t addr)
+long CALLBACK GPUdmaChain(uint8_t * baseAddrL, uint32_t addr)
 #endif
 {
- uint32_t dmaMem;
- unsigned char * baseAddrB;
- short count;unsigned int DMACommandCounter = 0;
+	uint32_t last[3];
+	short count;
 
- GPUIsBusy;
+	GPUIsBusy;
 
- lUsedAddr[0]=lUsedAddr[1]=lUsedAddr[2]=0xffffff;
+	memset(last, 0xff, sizeof(last));
 
- baseAddrB = (unsigned char*) baseAddrL;
+	do
+	{
+		if(addr == last[1] || addr == last[2]) 
+		{
+			break;
+		}
 
- do
-  {
-   if(iGPUHeight==512) addr&=0x1FFFFC;
-   if(DMACommandCounter++ > 2000000) break;
-   if(CheckForEndlessLoop(addr)) break;
+		if(addr < last[0])
+			last[1] = addr;
+		else 
+			last[2] = addr;
+		
+		last[0] = addr;
 
-   count = baseAddrB[addr+3];
+		count = baseAddrL[addr+3];
 
-   dmaMem=addr+4;
-
-	if(count>0) 
+		if(count>0) 
 #ifdef __GX__
-		PEOPS_GPUwriteDataMem(&baseAddrL[dmaMem>>2],count);
+			PEOPS_GPUwriteDataMem(&baseAddrL[addr + 4],count);
 #else
-		GPUwriteDataMem(&baseAddrL[dmaMem>>2],count);
+			GPUwriteDataMem(&baseAddrL[addr + 4],count);
 #endif
 
-   addr = GETLE32(&baseAddrL[addr>>2])&0xffffff;
-  }
- while (addr != 0xffffff);
+		addr = GETLE32((uint32_t *)&baseAddrL[addr]) & 0xffffff;
+	}
+	while (addr != 0xffffff);
 
- GPUIsIdle;
+	GPUIsIdle;
 
- return 0;
+	return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////

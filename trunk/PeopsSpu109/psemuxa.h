@@ -3,8 +3,8 @@
 //=== Kazzuya
 //============================================
 
-#ifndef DECODEXA_H
-#define DECODEXA_H
+#ifndef __DECODE_XA_H__
+#define __DECODE_XA_H__
 
 typedef struct
 {

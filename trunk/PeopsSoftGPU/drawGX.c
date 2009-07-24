@@ -81,32 +81,6 @@ copy_to_xfb (u32 arg)
 		GX_Flush ();
 		copynow = GX_FALSE;
 	}
-/*
-	FrameTimer++;
-
-	// FDS switch disk requested - need to eject, select, and insert
-	// but not all at once!
-	if(FDSSwitchRequested)
-	{
-		switch(FDSSwitchRequested)
-		{
-			case 1:
-				FCEUI_FDSEject(); // eject disk
-				FDSSwitchRequested++;
-				break;
-			case 2:
-				if(FDSTimer > 60)
-				{
-					FCEUI_FDSSelect(); // select other side
-					FCEUI_FDSInsert(0); // insert disk
-					FDSSwitchRequested = 0;
-					FDSTimer = 0;
-				}
-				break;
-		}
-		FDSTimer++;
-	}
-*/
 }
 
 void DoBufferSwap(void)                                // SWAP BUFFERS
@@ -217,7 +191,8 @@ void DoClearFrontBuffer(void)                          // CLEAR DX BUFFER
 
 	GX_DrawDone();
 
-	whichfb ^= 1;
+	//whichfb ^= 1;
+	whichfb = 0;
 	GX_CopyDisp(xfb[whichfb], GX_TRUE);
 	GX_Flush();
 	//GX_DrawDone();
@@ -528,7 +503,8 @@ static void GX_Flip(short width, short height, u8 * buffer, int pitch)
 
 	GX_DrawDone();
 
-	whichfb ^= 1;
+	//whichfb ^= 1;
+	whichfb = 0;
 	//GX_DrawDone();
 //	printf("Prv.Rng.x0,x1,y0 = %d, %d, %d, Prv.Mode.y = %d,DispPos.x,y = %d, %d, RGB24 = %x\n",PreviousPSXDisplay.Range.x0,PreviousPSXDisplay.Range.x1,PreviousPSXDisplay.Range.y0,PreviousPSXDisplay.DisplayMode.y,PSXDisplay.DisplayPosition.x,PSXDisplay.DisplayPosition.y,PSXDisplay.RGB24);
 	VIDEO_SetNextFramebuffer(xfb[whichfb]);
