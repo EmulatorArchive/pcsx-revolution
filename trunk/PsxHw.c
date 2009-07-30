@@ -134,9 +134,7 @@ u16 psxHwRead16(u32 add) {
 #endif
 			return hard;
 		case PSX_T0_MODE:
-			hard = psxCounters[0].mode;
-			psxCounters[0].mode &= ~0x1800;
-			psxCounters[0].mode |= 0x400;
+			hard = psxRcntRmode(0);
 #ifdef PSXHW_LOG
 			PSXHW_LOG("T0 mode read16: %x\n", hard);
 #endif
@@ -154,9 +152,7 @@ u16 psxHwRead16(u32 add) {
 #endif
 			return hard;
 		case PSX_T1_MODE:
-			hard = psxCounters[1].mode;
-			psxCounters[1].mode &= ~0x1800;
-			psxCounters[1].mode |= 0x400;
+			hard = psxRcntRmode(1);
 #ifdef PSXHW_LOG
 			PSXHW_LOG("T1 mode read16: %x\n", hard);
 #endif
@@ -174,9 +170,7 @@ u16 psxHwRead16(u32 add) {
 #endif
 			return hard;
 		case PSX_T2_MODE:
-			hard = psxCounters[2].mode;
-			psxCounters[2].mode &= ~0x1800;
-			psxCounters[2].mode |= 0x400;
+			hard = psxRcntRmode(2);
 #ifdef PSXHW_LOG
 			PSXHW_LOG("T2 mode read16: %x\n", hard);
 #endif

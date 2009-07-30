@@ -305,6 +305,14 @@ u32 psxRcntRcount(int index) {
 	return (ret & 0xffff);
 }
 
+u32 psxRcntRmode(int index)
+{
+	u32 ret = psxCounters[index].mode;
+	psxCounters[index].mode &= ~0x1800;
+	psxCounters[index].mode |= 0x400;
+	return ret;
+}
+
 int psxRcntFreeze(gzFile f, int Mode) {
 	char Unused[4096 - sizeof(psxCounter)];
 

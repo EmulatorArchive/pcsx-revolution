@@ -407,8 +407,6 @@ __inline void psxDIVU() {
 	const u32 Rt = _rRt_;
 	const u32 Rs = _rRs_;
 
-
-
 	if( Rt == 0 )
 	{
 		_rHi_ = Rs;
@@ -815,8 +813,6 @@ static void intExecuteBlock() {
 	branch2 = 0;
 	while (!branch2) execI();
 }
-
-
 
 static void intExecuteBlockDbg() {
 	branch2 = 0;

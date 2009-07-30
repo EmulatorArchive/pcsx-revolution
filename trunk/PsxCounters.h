@@ -94,6 +94,7 @@ void psxRcntWcount(int index, u32 value);
 void psxRcntWmode(int index, u32 value);
 void psxRcntWtarget(int index, u32 value);
 u32 psxRcntRcount(int index);
+u32 psxRcntRmode(int index);
 int psxRcntFreeze(gzFile f, int Mode);
 
 void psxUpdateVSyncRate();
