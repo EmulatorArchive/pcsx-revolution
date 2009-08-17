@@ -25,7 +25,7 @@
 #include "PsxBios.h"
 #include "PsxHw.h"
 #include "PsxCommon.h"
-#include "R3000A.h"
+#include "R3000A/R3000A.h"
 #include "PsxMem.h"
 #include "Misc.h"
 #include "Sio.h"
@@ -272,14 +272,14 @@ static FileDesc FDesc[32];
 static __inline void softCall(u32 pc) {
 	pc0 = pc;
 	ra = 0x80001000;
-	while (pc0 != 0x80001000) psxCpu->ExecuteBlock();
+	while (pc0 != 0x80001000) psxCpu->ExecuteBlock(0x80001000);
 }
 
 static __inline void softCall2(u32 pc) {
 	u32 sra = ra;
 	pc0 = pc;
 	ra = 0x80001000;
-	while (pc0 != 0x80001000) psxCpu->ExecuteBlock();
+	while (pc0 != 0x80001000) psxCpu->ExecuteBlock(0x80001000);
 	ra = sra;
 }
 

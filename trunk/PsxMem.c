@@ -39,16 +39,16 @@
 * PSX memory functions.
 */
 
-/* Ryan TODO: I'd rather not use GLib in here */
-
 #include <malloc.h>
 #include <gccore.h>
 #include <stdlib.h>
 #include "PsxMem.h"
-#include "R3000A.h"
+#include "R3000A/R3000A.h"
 #include "PsxHw.h"
 
-extern void SysMessage(char *fmt, ...);
+#ifdef HW_RVL
+#include "Gamecube/MEM2.h"
+#endif
 
 int psxMemInit() {
 	int i;
@@ -58,9 +58,14 @@ int psxMemInit() {
 	memset(psxMemRLUT, 0, 0x10000 * sizeof(void*));
 	memset(psxMemWLUT, 0, 0x10000 * sizeof(void*));
 	psxM = memalign(32,0x00220000);
+
 	psxP = &psxM[0x200000];
 	psxH = &psxM[0x210000];
+#ifdef HW_RVL
+	psxR = (s8*)BIOS_LO;
+#else
 	psxR = (s8*)memalign(32,0x00080000);
+#endif
 	if (psxMemRLUT == NULL || psxMemWLUT == NULL || 
 		psxM == NULL || psxP == NULL || psxH == NULL) {
 		SysMessage(_("Error allocating memory!")); return -1;
@@ -115,8 +120,10 @@ void psxMemReset() {
 }
 
 void psxMemShutdown() {
-	free(psxM);
+#ifndef HW_RVL
 	free(psxR);
+#endif
+	free(psxM);
 	free(psxMemRLUT);
 	free(psxMemWLUT);
 }

@@ -23,7 +23,7 @@
 */
 
 #include "Mdec.h"
-#include "R3000A.h"
+#include "R3000A/R3000A.h"
 #include "PsxHw.h"
 #include "PsxDma.h"
 #include "PsxMem.h"

@@ -22,8 +22,9 @@
 
 #define EXT
 #include "../PsxCommon.h"
-#include "../R3000A.h"
+#include "../R3000A/R3000A.h"
 #include "GamecubePlugins.h"
+
 #define CheckErr(func) \
     err = SysLibError(); \
     if (err != NULL) { SysPrintf("Error loading %s: %s\n", func, err); return -1; }

@@ -20,7 +20,7 @@
 #include "Mdec.h"
 #include "CdRom.h"
 #include "Sio.h"
-#include "R3000A.h"
+#include "R3000A/R3000A.h"
 #include "PsxCounters.h"
 #include "PsxMem.h"
 

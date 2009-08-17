@@ -40,17 +40,11 @@
 #define STATS_THREE			3
 
 extern char txtbuffer[1024];
-#ifdef SHOW_DEBUG
 // Amount of time each string will be held onto
 #define DEBUG_STRING_LIFE 5
 // Dimensions of array returned by get_text
 #define DEBUG_TEXT_WIDTH  100
 #define DEBUG_TEXT_HEIGHT 40
-#else	//!SHOW_DEBUG
-#define DEBUG_STRING_LIFE 0
-#define DEBUG_TEXT_WIDTH  0
-#define DEBUG_TEXT_HEIGHT 0
-#endif	//SHOW_DEBUG
 
 #ifdef __cplusplus
 extern "C" {

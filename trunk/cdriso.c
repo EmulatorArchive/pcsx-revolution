@@ -31,12 +31,12 @@
 #include "psxcommon.h"
 #endif //__GAMECUBE__
 
-#define MSF2SECT(m, s, f)	(((m) * 60 + (s) - 2) * 75 + (f))
-#define btoi(b)			((b) / 16 * 10 + (b) % 16) /* BCD to u_char */
+#define MSF2SECT(m, s, f)    (((m) * 60 + (s) - 2) * 75 + (f))
+#define btoi(b)    ((b) / 16 * 10 + (b) % 16) /* BCD to u_char */
 
-#define CD_FRAMESIZE_RAW	2352
-#define BUFFER_SIZE CD_FRAMESIZE_RAW * 10
-#define DATA_SIZE		(CD_FRAMESIZE_RAW - 12)
+#define CD_FRAMESIZE_RAW    2352
+#define BUFFER_SIZE    CD_FRAMESIZE_RAW * 10
+#define DATA_SIZE    (CD_FRAMESIZE_RAW - 12)
 
 FILE *cdHandle = NULL;
 
@@ -99,7 +99,7 @@ static void tok2msf(char *time, char *msf) {
 	if (token)
 		msf[0] = atoi(token);
 	else
-		msf[0]=0;
+		msf[0] = 0;
 
 	token = strtok(NULL, ":");
 	if (token)
@@ -309,17 +309,6 @@ STATIC long CALLBACK ISOopen(void) {
 #ifdef __GAMECUBE__
 	char *cdrfilename = Settings.filename;
 #endif
-/*	if (cdHandle != NULL)
-		return 0; // it's already open
-	cdHandle = fopen(Settings.filename, "rb");
-	if (cdHandle == NULL)
-		return -1;
-	parsetoc(Settings.filename);
-	parsecue(Settings.filename);
-	return 0;
-}
-
-*/
 	if (cdHandle != NULL)
 		return 0; // it's already open
 	cdHandle = fopen(cdrfilename, "rb");

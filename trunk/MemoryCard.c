@@ -2,7 +2,13 @@
 #include "MemoryCard.h"
 #include <sys/stat.h>
 
+#ifdef HW_RVL
+#include "Gamecube/MEM2.h"
+char *Mcd1Data = (char*)MCD1_LO;
+char *Mcd2Data = (char*)MCD2_LO;
+#else
 char Mcd1Data[MCD_SIZE], Mcd2Data[MCD_SIZE];
+#endif
 
 void SeekMcd(FILE *f, u32 adr, char *str)
 {

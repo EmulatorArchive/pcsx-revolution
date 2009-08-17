@@ -23,44 +23,34 @@
 #include "Gte.h"
 #include "R3000A.h"
 
-#undef _Op_
-#define _Op_     _fOp_(psxRegs.code)
-#undef _Funct_
-#define _Funct_  _fFunct_(psxRegs.code)
-#undef _Rd_
-#define _Rd_     _fRd_(psxRegs.code)
-#undef _Rt_
-#define _Rt_     _fRt_(psxRegs.code)
-#undef _Rs_
-#define _Rs_     _fRs_(psxRegs.code)
-#undef _Sa_
-#define _Sa_     _fSa_(psxRegs.code)
-#undef _Im_
-#define _Im_     _fIm_(psxRegs.code)
-#undef _Target_
-#define _Target_ _fTarget_(psxRegs.code)
-
-#undef _Imm_
-#define _Imm_	 _fImm_(psxRegs.code)
-#undef _ImmU_
-#define _ImmU_	 _fImmU_(psxRegs.code)
-
-
 #ifdef GTE_DUMP
-#define G_OP(name,delay) fprintf(gteLog, "* : %08X : %02d : %s\n", psxRegs.code, delay, name);
-#define G_SD(reg)  fprintf(gteLog, "+D%02d : %08X\n", reg, psxRegs.CP2D.r[reg]);
-#define G_SC(reg)  fprintf(gteLog, "+C%02d : %08X\n", reg, psxRegs.CP2C.r[reg]);
-#define G_GD(reg)  fprintf(gteLog, "-D%02d : %08X\n", reg, psxRegs.CP2D.r[reg]);
-#define G_GC(reg)  fprintf(gteLog, "-C%02d : %08X\n", reg, psxRegs.CP2C.r[reg]);
-#else
-#define G_OP(name,delay)
-#define G_SD(reg)
-#define G_SC(reg)
-#define G_GD(reg)
-#define G_GC(reg)
-#endif
+void G_OP(name,delay){
+	fprintf(gteLog, "* : %08X : %02d : %s\n", psxRegs.code, delay, name);
+}
 
-#define SUM_FLAG if(gteFLAG & 0x7F87E000) gteFLAG |= 0x80000000;
+void G_SD(reg){
+	fprintf(gteLog, "+D%02d : %08X\n", reg, psxRegs.CP2D.r[reg]);
+}
+
+void G_SC(reg){
+	fprintf(gteLog, "+C%02d : %08X\n", reg, psxRegs.CP2C.r[reg]);
+}
+
+void G_GD(reg){
+	fprintf(gteLog, "-D%02d : %08X\n", reg, psxRegs.CP2D.r[reg]);
+}
+
+void G_GC(reg){
+	fprintf(gteLog, "-C%02d : %08X\n", reg, psxRegs.CP2C.r[reg]);
+}
+
+#else
+void G_OP(name,delay) {}
+void G_SD(reg) {}
+void G_SC(reg) {}
+void G_GD(reg) {}
+void G_GC(reg) {}
+#endif
 
 #ifdef _MSC_VER_
 #pragma warning(disable:4244)
@@ -188,6 +178,12 @@
 #define gteZSF3 ((s16*)psxRegs.CP2C.r)[SEL16(58)]
 #define gteZSF4 ((s16*)psxRegs.CP2C.r)[SEL16(60)]
 #define gteFLAG psxRegs.CP2C.r[31]
+
+inline void SUM_FLAG()
+{
+	if(gteFLAG & 0x7F87E000) 
+		gteFLAG |= 0x80000000;
+}
 
 __inline unsigned long MFC2(int reg) {
 	switch(reg) {
@@ -764,7 +760,7 @@ void gteRTPS() {
 
 	GTE_RTPS3();
 
-	SUM_FLAG;
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -972,7 +968,7 @@ void gteRTPT() {
 
 	GTE_RTPS3();
 
-	SUM_FLAG;
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -1098,7 +1094,7 @@ void gteMVMVA() {
 		MAC2IR1()
 	else MAC2IR()
 
-	SUM_FLAG;
+	SUM_FLAG();
 }
 
 void gteNCLIP() {
@@ -1138,7 +1134,7 @@ void gteNCLIP() {
 	
 	//gteMAC0 = (gteSX0 - gteSX1) * (gteSY0 - gteSY2) - (gteSX0 - gteSX2) * (gteSY0 - gteSY1);
 
-	SUM_FLAG;
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -1202,7 +1198,7 @@ void gteAVSZ3() {
 	gteOTZ = FlimC(gteMAC0);
 //	gteOTZ = limC((double)gteMAC0);
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -1267,7 +1263,7 @@ void gteAVSZ4() {
 	gteOTZ = FlimC(gteMAC0);
 //	gteOTZ = limC((double)gteMAC0);
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -1338,7 +1334,7 @@ void gteSQR() {
 	}
 	MAC2IR1();
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -1527,7 +1523,7 @@ void gteNCCS()  {
 
 	MAC2IR1();
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -1625,7 +1621,7 @@ void gteNCCT() {
 
 	MAC2IR1();
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -1800,7 +1796,7 @@ void gteNCDS() {
 
 	MAC2IR1();
 
-	SUM_FLAG;
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -2012,7 +2008,7 @@ void gteNCDT() {
 
 	MAC2IR1();
 
-	SUM_FLAG;
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -2115,7 +2111,7 @@ void gteOP() {
 	*/
 	MAC2IR();
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -2208,7 +2204,7 @@ void gteDCPL() {
 	gteG2 = FlimB2(gteMAC2 >> 4);
 	gteB2 = FlimB3(gteMAC3 >> 4); gteCODE2 = gteCODE;
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -2309,7 +2305,7 @@ void gteGPF() {
 	gteG2 = FlimB2(gteMAC2 >> 4);
 	gteB2 = FlimB3(gteMAC3 >> 4); gteCODE2 = gteCODE;
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -2419,7 +2415,7 @@ void gteGPL() {
 	gteG2 = FlimB2(gteMAC2 >> 4);
 	gteB2 = FlimB3(gteMAC3 >> 4); gteCODE2 = gteCODE;
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -2522,7 +2518,7 @@ void gteDPCS() {
 	gteG2 = FlimB2(gteMAC2 >> 4);
 	gteB2 = FlimB3(gteMAC3 >> 4); gteCODE2 = gteCODE;
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -2652,7 +2648,7 @@ void gteDPCT() {
 	gteG2 = FlimB2(gteMAC2 >> 4);
 	gteB2 = FlimB3(gteMAC3 >> 4); gteCODE2 = gteCODE;
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -2784,7 +2780,7 @@ void gteNCS() {
 
 	MAC2IR1();
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -2885,7 +2881,7 @@ void gteNCT() {
 
 	MAC2IR1();
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -2988,7 +2984,7 @@ void gteCC() {
 	gteG2 = FlimB2(gteMAC2 >> 4);
 	gteB2 = FlimB3(gteMAC3 >> 4); gteCODE2 = gteCODE;
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -3080,7 +3076,7 @@ void gteINTPL() { //test opcode
 	gteG2 = FlimB2(gteMAC2 >> 4);
 	gteB2 = FlimB3(gteMAC3 >> 4); gteCODE2 = gteCODE;
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)
@@ -3164,7 +3160,7 @@ void gteCDP() { //test opcode
 	gteG2 = FlimB2(gteMAC2 >> 4);
 	gteB2 = FlimB3(gteMAC3 >> 4); gteCODE2 = gteCODE;
 
-	SUM_FLAG
+	SUM_FLAG();
 
 #ifdef GTE_DUMP
 	if(sample < 100)

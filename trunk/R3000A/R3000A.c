@@ -43,7 +43,6 @@ static int_timer_st *event_list;
 
 int psxInit() {
 	//SysPrintf(_("Running PCSX-Revolution %s (%s).\n"), PACKAGE_VERSION, __DATE__);
-
 #ifdef PSXREC
 	psxCpu = &psxRec;
 	if (Config.Cpu) {
@@ -209,7 +208,7 @@ static __inline void psx_event_add( int n, u32 time )
 	int_timer_st* curEvt = event_list;
 	int_timer_st* prevEvt = NULL;
 	s32 runningDelta = -GetPendingCycles();
-
+	
 	while( 1 )
 	{
 		// Note: curEvt->next represents the Idle node, which should always be scheduled
@@ -291,6 +290,7 @@ __inline void psx_int_remove( int n )
 }
 
 void psxBranchTest() {
+	if (psxRegs.evtCycleCountdown > 0) return;
 	while( 1 ) {
 		s32 oldtime = psxRegs.evtCycleCountdown;
 
@@ -301,6 +301,7 @@ void psxBranchTest() {
 		int_timer_st* exeEvt	= event_list;
 		event_list 				= exeEvt->next;
 		exeEvt->next			= NULL;
+
 		exeEvt->Execute();
 
 		psxRegs.evtCycleDuration	 = event_list->time;
@@ -373,6 +374,6 @@ void psxJumpTest() {
 
 void psxExecuteBios() {
 	while (psxRegs.pc != 0x80030000)
-		psxCpu->ExecuteBlock();
+		psxCpu->ExecuteBlock(0x80030000);
 }
 

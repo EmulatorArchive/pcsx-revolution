@@ -18,6 +18,7 @@
 
 #include "PsxHw.h"
 #include "Spu.h"
+#include "R3000A/R3000A.h"
 
 void CALLBACK SPUirq(void) {
 	psxRaiseExtInt( PsxInt_SPU );

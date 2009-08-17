@@ -19,7 +19,7 @@
 #include "PsxCommon.h"
 #include "PsxCounters.h"
 #include "Cheat.h"
-#include "R3000A.h"
+#include "R3000A/R3000A.h"
 #include "PsxMem.h"
 #include "PsxHw.h"
 #include "plugins.h"

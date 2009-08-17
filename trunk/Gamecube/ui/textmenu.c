@@ -1,5 +1,5 @@
 #include "textmenu.h"
-#include "../../R3000A.h"
+#include "../../R3000A/R3000A.h"
 #include "../save_state.h"
 
 #ifdef HW_RVL
@@ -129,18 +129,27 @@ void Main_menu()
 			switch(index)
 			{
 				case 0:
+					clrscr();
 					if(strlen(Settings.filename) > 6)
 					{
-						clrscr();
-						if( RunEmu() == 0 )
-							return psxCpu->Execute();
+						FILE *f = NULL;
+						char bios[256];
+						sprintf (bios,"%s%s",Config.BiosDir, Config.Bios);
+						f = fopen(bios, "rb");
+						if(!f)
+							msg = "Bios not found";
 						else
-							msg = "Error loading CD image";
+						{
+							fclose(f);
+							if( RunEmu() == 0 )
+								return psxCpu->Execute();
+							else
+								msg = "Error loading CD image";
+						}
 					}
 					else 
 						msg = "Select a file first";
 					draw = 1;
-					clrscr();
 					break;
 					
 				case 1:

@@ -25,7 +25,7 @@ typedef struct {
 	int  (*Init)();
 	void (*Reset)();
 	void (*Execute)();		/* executes up to a break */
-	void (*ExecuteBlock)();	/* executes up to a jump */
+	void (*ExecuteBlock)(u32 addr);	/* executes up to a jump */
 	void (*Clear)(u32 Addr, u32 Size);
 	void (*Shutdown)();
 } R3000Acpu;
@@ -172,9 +172,10 @@ typedef struct {
 	psxCP0Regs CP0;		/* Coprocessor0 Registers */
 	psxCP2Data CP2D; 	/* Cop2 data registers */
 	psxCP2Ctrl CP2C; 	/* Cop2 control registers */
-    u32 pc;				/* Program counter */
-    u32 code;			/* The instruction */
+	u32 pc;				/* Program counter */
+	u32 code;			/* The instruction */
 	u32 cycle;
+	u32 IsDelaySlot:1;
 
 	// marks the original duration of time for the current pending event.  This is
 	// typically used to determine the amount of time passed since the last update

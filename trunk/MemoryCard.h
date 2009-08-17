@@ -3,7 +3,11 @@
 
 #define MCD_SIZE	(1024 * 8 * 16)
 
+#ifdef HW_RVL
+extern char *Mcd1Data, *Mcd2Data;
+#else
 extern char Mcd1Data[MCD_SIZE], Mcd2Data[MCD_SIZE];
+#endif
 
 void LoadMcd(int mcd);
 void LoadMcds();

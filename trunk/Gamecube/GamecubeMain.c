@@ -24,7 +24,8 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
-#include "System.h"
+#include "../System.h"
+#include "../R3000A/R3000A.h"
 #include "DEBUG.h"
 
 #include "Config.h"
@@ -247,10 +248,7 @@ void SysCloseLibrary(void *lib) {
 int framesdone = 0;
 void SysUpdate() {
 #ifdef SHOW_DEBUG
-	sprintf(txtbuffer,"Executed %i SysUpdates",framesdone);
-	DEBUG_print(txtbuffer,DBG_CORE1);
-	//printf("Executed %i frames\n",framesdone);
-	framesdone++;
+
 #endif
 }
 

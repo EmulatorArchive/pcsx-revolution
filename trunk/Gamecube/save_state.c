@@ -1,7 +1,7 @@
 #include "save_state.h"
 #include "plugins.h"
 #include "ui/textmenu.h"
-#include "../R3000A.h"
+#include "../R3000A/R3000A.h"
 #include "../Misc.h"
 #include <malloc.h>
 

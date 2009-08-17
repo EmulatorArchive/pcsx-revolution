@@ -20,7 +20,7 @@
 #include "Mdec.h"
 #include "Coff.h"
 #include "plugins.h"
-#include "R3000A.h"
+#include "R3000A/R3000A.h"
 #include "PsxMem.h"
 #include "PsxCommon.h"
 #include "Misc.h"

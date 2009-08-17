@@ -17,7 +17,7 @@
  */
 
 
-#include "R3000A.h"
+#include "R3000A/R3000A.h"
 #include "plugins.h"
 #include "PsxHLE.h"
 #include "PsxBios.h"
