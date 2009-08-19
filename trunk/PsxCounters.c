@@ -24,13 +24,20 @@
 #include "PsxHw.h"
 #include "plugins.h"
 
+static int cnts = 4;
 psxCounter psxCounters[5];
 
-static int cnts = 4;
+//#define _DEBUG_CNT_
 
-static u32 rate1;
+#ifdef _DEBUG_CNT_
+static u8 cnt[3];
+#endif
 
-static const uint EECNT_FUTURE_TARGET = 0x10000000;
+static u32 vRenderRate, vBlankRate, FrameRate = 0;
+
+static const uint PSXCNT_FUTURE_TARGET = 0x10000000;
+static const uint FRAMERATE_NTSC = 2997;	/* frames per second * 100 (29.97)*/
+static const uint FRAMERATE_PAL  = 2500;	/* frames per second * 100 (25)*/
 
 static void print_cnt(int index)
 {
@@ -41,7 +48,8 @@ static void print_cnt(int index)
 		IRQ1 = %lx \n\
 		IRQ2  = %lx \n\
 		TargetInterrupt  = %lx \n\
-		ClockSource  = %lx \n",
+		ClockSource  = %lx \n\
+		Div  = %lx \n",
 		index, 
 		psxCounters[index].mode, 
 		psxCounters[index].mode_st.Disabled, 
@@ -49,7 +57,8 @@ static void print_cnt(int index)
 		psxCounters[index].mode_st.IRQ1, 
 		psxCounters[index].mode_st.IRQ2, 
 		psxCounters[index].mode_st.Tar, 
-		psxCounters[index].mode_st.ClockSource
+		psxCounters[index].mode_st.ClockSource,
+		psxCounters[index].mode_st.Div
 	);
 }
 
@@ -62,35 +71,49 @@ static void psxRcntUpd(int index) {
 	if (psxCounters[index].mode_st.Disabled) return;
 	u32 cycle = psxGetCycle();
 	psxCounters[index].sCycle = cycle;
-	if (((!(psxCounters[index].mode_st.Disabled)) || (index!=2)) &&
+	//if (((!(psxCounters[index].mode_st.Disabled)) || (index!=2)) && \
 		psxCounters[index].mode & 0x30) {
-		//if (psxCounters[index].mode & 0x10) { // Interrupt on target
-		if (psxCounters[index].mode_st.Tar) { // Interrupt on target
-			//printf("cnt[%d] Target = %lx\n", index, psxCounters[index].mode);
+	if(!(psxCounters[index].target & PSXCNT_FUTURE_TARGET)) {
+		if (psxCounters[index].mode & 0x10) { // Interrupt on target
+			if( psxCounters[index].mode & 0x80 )
+				psxCounters[index].mode &= ~0x0400; // Interrupt flag
+			psxCounters[index].mode |= 0x0800; // Target flag
+			//psxHu32ref(0x1070) |= SWAPu32(psxCounters[index].interrupt);
 			psxCounters[index].Cycle = ((psxCounters[index].target - psxCounters[index].count) * psxCounters[index].rate) / BIAS; //*/ - (cycle - psxCounters[index].sCycle);
-		} else { // Interrupt on 0xffff
-			//printf("cnt[%d] Overflow = %lx\n", index, psxCounters[index].mode);
-			psxCounters[index].Cycle = ((0x10000 - psxCounters[index].count) * psxCounters[index].rate) / BIAS; //*/ - (cycle - psxCounters[index].sCycle);
+		} 
+		
+		if(psxCounters[index].mode & 0x08) {
+			psxCounters[index].count = 0;
+			if (!(psxCounters[index].mode & 0x40)) { // Only 1 interrupt
+				psxCounters[index].Cycle = 0xffffffff;
+				psxCounters[index].target |= PSXCNT_FUTURE_TARGET;
+			} // else Continuos interrupt mode
 		}
-	} //else psxCounters[index].Cycle = 0xffffffff;
-	else psxCounters[index].target |= EECNT_FUTURE_TARGET;
-//	if (index == 2) SysPrintf("Cycle %x\n", psxCounters[index].Cycle);
+		else \
+			psxCounters[index].target |= PSXCNT_FUTURE_TARGET;
+
+	} else psxCounters[index].Cycle = 0xffffffff;
+	
+	if (psxCounters[index].mode & 0x20) { // Interrupt on 0xffff
+	//else {
+		// Overflow interrupt
+		psxCounters[index].mode |= 0x1000; // Overflow flag
+		if(psxCounters[index].mode & 0x80)
+			psxCounters[index].mode &= ~0x0400; // Interrupt flag
+		//psxHu32ref(0x1070) |= SWAPu32(psxCounters[index].interrupt);
+		psxCounters[index].Cycle = ((0x10000 - psxCounters[index].count) * psxCounters[index].rate) / BIAS; //*/ - (cycle - psxCounters[index].sCycle);
+	}
+
 }
 
 static void psxRcntReset(int index) {
 //	SysPrintf("psxRcntReset %x (mode=%x)\n", index, psxCounters[index].mode);
-	psxCounters[index].count = 0;
+	
 	psxRcntUpd(index);
-
 //	if (index == 2) SysPrintf("rcnt2 %x\n", psxCounters[index].mode);
 	psxHu32ref(0x1070) |= SWAPu32(psxCounters[index].interrupt);
 	//psxRaiseExtInt( psxCounters[index].interrupt );
-	if (!(psxCounters[index].mode & 0x40)) { // Only 1 interrupt
-		//printf("One interrupt\n");
-		//psxCounters[index].mode_st.Disabled = 1;
-		psxCounters[index].Cycle = 0xffffffff;
-		psxCounters[index].target |= EECNT_FUTURE_TARGET;
-	} // else Continuos interrupt mode
+
 }
 
 static void psxRcntSet() {
@@ -142,18 +165,36 @@ void psxRcntInit() {
 
 }
 
+void CalcRate(u32 rate)
+{
+	FrameRate = rate;
+	u64 Frame = ((PSXCLK * 1000000ULL) / FrameRate);
+	u64 HalfFrame = Frame / 2;
+	u64 Blank = HalfFrame / 2;		// two blanks and renders per frame
+	u64 Render = HalfFrame - Blank;	// so use the half-frame value for these...
+	vRenderRate = (u32)(Render/10000);
+	vBlankRate  = (u32)(Blank/10000);
+	// Apply rounding:
+	if( ( Render - vRenderRate ) >= 5000 ) vRenderRate++;
+	else if( ( Blank - vBlankRate ) >= 5000 ) vBlankRate++;
+}
+
 void psxUpdateVSyncRate() {
-	//psxHu32ref(0x1070)|= SWAPu32(0x800);
-	psxRaiseExtInt( PsxInt_VBlank );
-	rate1 = psxCounters[3].rate = (PSXCLK / (Config.PsxType ? 50 : 60));
-//printf("rate1 = %d\n", rate1);
+	if(Config.PsxType)
+	{
+		if(FrameRate != FRAMERATE_PAL)
+			CalcRate(FRAMERATE_PAL);
+	}
+	else
+	{
+		if(FrameRate != FRAMERATE_NTSC)
+			CalcRate(FRAMERATE_NTSC);
+	}
+	psxCounters[3].rate = vRenderRate;
 }
 
 void psxUpdateVSyncRateEnd() {
-	psxHu32ref(0x1070)|= SWAPu32(1);
-
-	psxCounters[3].rate /= (Config.PsxType ? 314 : 263);		// Bad magic =(
-//printf("rate2 = %d\n", psxCounters[3].rate);
+	psxCounters[3].rate = vBlankRate;
 }
 
 void psxRcntUpdate() {
@@ -169,10 +210,26 @@ void psxRcntUpdate() {
 #ifdef GTE_LOG
 			GTE_LOG("VSync\n");
 #endif
+#ifdef _DEBUG_CNT_
+			printf("VSync\n");
+			for(i = 0; i < 3; i++)
+			{
+				printf("cnt[%d] = %d\n", i, cnt[i]);
+				cnt[i] = 0;
+			}
+#endif
 		} else { // VSync Start (240 hsyncs) 
 			psxCounters[3].mode|= 0x10000;
 			psxUpdateVSyncRateEnd();
 			psxRcntUpd(3);
+			psxHu32ref(0x1070)|= SWAPu32(1);
+#ifdef _DEBUG_CNT_
+			for(i = 0; i < 3; i++)
+			{
+				printf("cnt[%d] = %d\n", i, cnt[i]);
+				cnt[i] = 0;
+			}
+#endif
 		}
 	}
 
@@ -180,6 +237,9 @@ void psxRcntUpdate() {
 	{
 		if ((psxRegs.cycle - psxCounters[i].sCycle) >= psxCounters[i].Cycle)
 		{
+#ifdef _DEBUG_CNT_
+			cnt[i]++;
+#endif
 			psxRcntReset(i);
 		}
 	}
@@ -202,7 +262,7 @@ void psxRcntWcount(int index, u32 value) {
 	psxCounters[index].target &= 0xffff;
 
 	if( psxCounters[index].count > psxCounters[index].target ) \
-		psxCounters[index].target |= EECNT_FUTURE_TARGET;
+		psxCounters[index].target |= PSXCNT_FUTURE_TARGET;
 
 	s32 cycle = psxGetCycle();
 	if(!psxCounters[index].mode_st.Disabled) {
@@ -250,16 +310,17 @@ void psxRcntWmode(int index, u32 value)  {
 
 		if (psxCounters[index].mode_st.ClockSource)
 		{
+#if 1
 			if(index == 0)
-				psxCounters[index].rate = ((psxCounters[3].rate) / 426) / 263;
+				psxCounters[index].rate = PSXCLK / 13500000;
 			else
-				psxCounters[index].rate = rate1 / (Config.PsxType ? 314 : 263); // seems ok
-/*
+				psxCounters[index].rate = PSXCLK / (Config.PsxType ? (50*625) : (59.94*525));	// Not sure about that...
+#else
 			if(index == 0)
-				psxCounters[index].rate = psxCounters[3].rate / (Config.PsxType ? 340 : 341);		// Depends on screen width, but most games set this before write screen width in memory
+				psxCounters[index].rate = (psxCounters[3].rate / 426) / 263;
 			else
-				psxCounters[index].rate = psxCounters[3].rate / (Config.PsxType ? 314 : 263);	// Not sure about that...
-*/
+				psxCounters[index].rate = psxCounters[3].rate / (Config.PsxType ? 314 : 263); // seems ok
+#endif
 		}
 	}
 
