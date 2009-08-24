@@ -107,18 +107,18 @@ static void ResetEvents()
 	
 	event_list = &events[PsxEvt_Idle];
 
-	events[PsxEvt_Counter0].Execute 	= psxRcntUpdate;
+	//events[PsxEvt_Counter0].Execute 	= psxRcntUpdate;
 	
-	//events[PsxEvt_Counter0].Execute 	= psxRcntUpdate0;
-	//events[PsxEvt_Counter1].Execute 	= psxRcntUpdate1;
-	//events[PsxEvt_Counter2].Execute 	= psxRcntUpdate2;
-	//events[PsxEvt_Counter3].Execute 	= psxRcntUpdate3;
-	//events[PsxEvt_Counter4].Execute 	= psxRcntUpdate4;
-	//psx_int_add(PsxEvt_Counter3, 0);
+	events[PsxEvt_Counter0].Execute 	= psxRcntUpdate0;
+	events[PsxEvt_Counter1].Execute 	= psxRcntUpdate1;
+	events[PsxEvt_Counter2].Execute 	= psxRcntUpdate2;
+	events[PsxEvt_Counter3].Execute 	= psxRcntUpdate3;
+	events[PsxEvt_Counter4].Execute 	= psxRcntUpdate4;
+	psx_int_add(PsxEvt_Counter3, 0);
 	psx_int_add(PsxEvt_Counter0, 0);
-	//psx_int_add(PsxEvt_Counter1, 0);
-	//psx_int_add(PsxEvt_Counter2, 0);
-	//psx_int_add(PsxEvt_Counter4, 0);
+	psx_int_add(PsxEvt_Counter1, 0);
+	psx_int_add(PsxEvt_Counter2, 0);
+	psx_int_add(PsxEvt_Counter4, 0);
 }
 
 void AddCycles( int amount )

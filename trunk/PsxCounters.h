@@ -74,6 +74,8 @@ struct PSXCNT_MODE
 
 typedef struct {
 	u32 count, target;
+	u32 IsFutureTarget:1;
+	u32 IsCounting:1;
 	union {
 		u32 mode;
 		struct PSXCNT_MODE mode_st;
@@ -85,11 +87,11 @@ extern psxCounter psxCounters[5];
 
 void psxRcntInit();
 void psxRcntUpdate();
-void __inline psxRcntUpdate0();
-void __inline psxRcntUpdate1();
-void __inline psxRcntUpdate2();
-void __inline psxRcntUpdate3();
-void __inline psxRcntUpdate4();
+void psxRcntUpdate0();
+void psxRcntUpdate1();
+void psxRcntUpdate2();
+void psxRcntUpdate3();
+void psxRcntUpdate4();
 void psxRcntWcount(int index, u32 value);
 void psxRcntWmode(int index, u32 value);
 void psxRcntWtarget(int index, u32 value);

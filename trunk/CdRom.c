@@ -49,12 +49,14 @@ enum {
 ,	CdlGetmode
 ,	CdlGetlocL
 ,	CdlGetlocP
-,	Cdl18
+,	CdlReadT
 ,	CdlGetTN
 ,	CdlGetTD
 ,	CdlSeekL
 ,	CdlSeekP
-,	CdlTest = 25
+,	CdlSetlock
+,	CdlGetlock
+,	CdlTest
 ,	CdlID
 ,	CdlReadS
 ,	CdlReset
@@ -76,9 +78,9 @@ static char *CmdName[0x100]= {
     "CdlForward", "CdlBackward",  "CdlReadN",   "CdlStandby",
     "CdlStop",    "CdlPause",     "CdlInit",    "CdlMute",
     "CdlDemute",  "CdlSetfilter", "CdlSetmode", "CdlGetmode",
-    "CdlGetlocL", "CdlGetlocP",   "Cdl18",      "CdlGetTN",
-    "CdlGetTD",   "CdlSeekL",     "CdlSeekP",   NULL,
-    NULL,         "CdlTest",      "CdlID",      "CdlReadS",
+    "CdlGetlocL", "CdlGetlocP",   "CdlReadT",   "CdlGetTN",
+    "CdlGetTD",   "CdlSeekL",     "CdlSeekP",   "CdlSetlock",
+    "CdlGetlock", "CdlTest",      "CdlID",      "CdlReadS",
     "CdlReset",   NULL,           "CDlReadToc", NULL
 };
 
@@ -91,7 +93,7 @@ static unsigned char Test23[] = { 0x43, 0x58, 0x44, 0x32, 0x39 ,0x34, 0x30, 0x51
 // 1x = 75 sectors per second
 // PSXCLK = 1 sec in the ps
 // so (PSXCLK / 75) / BIAS = cdr read time (linuzappz)
-#define cdReadTime ((PSXCLK / 75) / BIAS)
+static const u32 cdReadTime = ((PSXCLK / 75) / BIAS);
 
 #define btoi(b)     ((b)/16*10 + (b)%16)    /* BCD to u_char */
 #define itob(i)     ((i)/10*16 + (i)%10)    /* u_char to BCD */
@@ -151,12 +153,14 @@ static void ReadTrack() {
 }
 
 // cdr.Stat:
-#define NoIntr		0
-#define DataReady	1
-#define Complete	2
-#define Acknowledge	3
-#define DataEnd		4
-#define DiskError	5
+enum {
+	NoIntr = 0,
+	DataReady,
+	Complete,
+	Acknowledge,
+	DataEnd,
+	DiskError
+};
 
 void cdrInterrupt() {
 	int i;
@@ -960,7 +964,7 @@ void cdrWrite2(unsigned char rt) {
 				cdr.Reg2 = rt;
 				break;
 		}
-    } else if (!(cdr.Ctrl & 0x1) && cdr.ParamP < 8) {
+    } else if (cdr.ParamP < 8) {
 		cdr.Param[cdr.ParamP++] = rt;
 		cdr.ParamC++;
 	}

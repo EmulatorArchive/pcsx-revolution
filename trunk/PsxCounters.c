@@ -16,28 +16,38 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-//#include "PsxCommon.h"
 #include "PsxCounters.h"
 #include "Cheat.h"
 #include "R3000A/R3000A.h"
 #include "PsxMem.h"
 #include "PsxHw.h"
-//#include "plugins.h"
 
-static int cnts = 4;
 psxCounter psxCounters[5];
 
-//#define _DEBUG_CNT_
+static u32 vRenderRate, vBlankRate;
+static float FrameRate = 0.0f;
 
-#ifdef _DEBUG_CNT_
-static u8 cnt[3];
-#endif
+static const u32 PSXCNT_ENABLE_GATE = (1<<0);	// enables gate-based counters
+/* frames per second * 100 */
+static const uint FRAMERATE_NTSC = 5994;
+static const uint FRAMERATE_PAL  = 5000;
+/* scanlines */
+static const uint SCANLINES_NTSC = 525;
+static const uint SCANLINES_PAL  = 625;
 
-static u32 vRenderRate, vBlankRate, FrameRate = 0;
+static const uint PSXSOUNDCLK = 48000;
 
-static const uint PSXCNT_FUTURE_TARGET = 0x10000000;
-static const uint FRAMERATE_NTSC = 2997;	/* frames per second * 100 (29.97)*/
-static const uint FRAMERATE_PAL  = 2500;	/* frames per second * 100 (25)*/
+typedef struct
+{
+	u32 hBlank0:1;		// counter 0 is counting HBLANKs (16bit)
+	u32 vBlank1:1;		// counter 1 is counting VBLANKs (16bit)
+	u32 vBlank3:1;		// Counter 3 is counting VBLANKs in 32 bit style.
+}  PsxGateFlags_t;
+
+static PsxGateFlags_t psxGateFlags;
+
+static void CheckEndGate(int index);
+static void CheckStartGate(int index);
 
 static void print_cnt(int index)
 {
@@ -63,95 +73,57 @@ static void print_cnt(int index)
 }
 
 static void _psxRcntSet(int i) {
-	if (psxCounters[i].mode_st.Disabled) return;
-	if (psxCounters[i].Cycle == 0xffffffff) return;
+	if( psxCounters[i].IsFutureTarget ) return;
 
 	s32 count = psxCounters[i].Cycle - (psxGetCycle() - psxCounters[i].sCycle);
 
-	if (count > 0) {
-		psx_int_add(0, count);
-	}	
+	if (count > 0)
+		psx_int_add(i, count);
 }
 
 static void psxRcntUpd(int index) {
-	if (psxCounters[index].mode_st.Disabled) return;
-	u32 cycle = psxGetCycle();
+	if ( !psxCounters[index].IsCounting ) return;
+
 	u32 count = psxCounters[index].count;
 	psxCounters[index].count = psxCounters[index].target;
-	psxCounters[index].sCycle = cycle;
-	if(!(psxCounters[index].target & PSXCNT_FUTURE_TARGET)) {
-		if (psxCounters[index].mode & 0x10) { // Interrupt on target
+
+	if( !psxCounters[index].IsFutureTarget )
+	{
+		if (psxCounters[index].mode & 0x10) {	// Interrupt on target
 			if( psxCounters[index].mode & 0x80 )
-				psxCounters[index].mode &= ~0x0400; // Interrupt flag
-			psxCounters[index].mode |= 0x0800; // Target flag
-			//psxHu32ref(0x1070) |= SWAPu32(psxCounters[index].interrupt);
-			psxCounters[index].Cycle = ((psxCounters[index].target - count) * psxCounters[index].rate) / BIAS; //*/ - (cycle - psxCounters[index].sCycle);
+				psxCounters[index].mode &= ~0x0400;	// Interrupt flag
+			psxCounters[index].mode |= 0x0800;	// Target flag
+			psxHu32ref(0x1070) |= SWAPu32(psxCounters[index].interrupt);
+			psxCounters[index].Cycle = (psxCounters[index].target - count) * psxCounters[index].rate;
 		} 
-		
-		if(psxCounters[index].mode & 0x08) {
+
+		if(psxCounters[index].mode & 0x08) {	// Reset
 			psxCounters[index].count = 0;
 			if (!(psxCounters[index].mode & 0x40)) { // Only 1 interrupt
-				psxCounters[index].Cycle = 0xffffffff;
-				psxCounters[index].target |= PSXCNT_FUTURE_TARGET;
-			} // else Continuos interrupt mode
+				psxCounters[index].IsFutureTarget = 1;
+			}
 		}
-		else \
-			psxCounters[index].target |= PSXCNT_FUTURE_TARGET;
+		else
+			psxCounters[index].IsFutureTarget = 1;
+	}
 
-	} else psxCounters[index].Cycle = 0xffffffff;
-	
-	if (psxCounters[index].mode & 0x20) { // Interrupt on 0xffff
-		// Overflow interrupt
-		psxCounters[index].mode |= 0x1000; // Overflow flag
+	if (psxCounters[index].mode & 0x20) {	// Interrupt on overflow
+		psxCounters[index].mode |= 0x1000;	// Overflow flag
 		if(psxCounters[index].mode & 0x80)
-			psxCounters[index].mode &= ~0x0400; // Interrupt flag
-		//psxHu32ref(0x1070) |= SWAPu32(psxCounters[index].interrupt);
-		psxCounters[index].Cycle = ((0x10000 - count) * psxCounters[index].rate) / BIAS; //*/ - (cycle - psxCounters[index].sCycle);
+			psxCounters[index].mode &= ~0x0400;	// Interrupt flag
+		psxHu32ref(0x1070) |= SWAPu32(psxCounters[index].interrupt);
+		psxCounters[index].Cycle = (0x10000 - count) * psxCounters[index].rate;
 	}
-	//_psxRcntSet(index);
-}
-
-static void psxRcntReset(int index) {
-//	SysPrintf("psxRcntReset %x (mode=%x)\n", index, psxCounters[index].mode);
-	
-	psxRcntUpd(index);
-//	if (index == 2) SysPrintf("rcnt2 %x\n", psxCounters[index].mode);
-	psxHu32ref(0x1070) |= SWAPu32(psxCounters[index].interrupt);
-	//psxRaiseExtInt( psxCounters[index].interrupt );
-
-}
-
-static void psxRcntSet() {
-	int i;
-
-	u32 psxNextCounter = 0x7fffffff;
-
-	for (i=0; i<cnts; i++) {
-		s32 count;
-		if (psxCounters[i].mode_st.Disabled) continue;
-		if (psxCounters[i].Cycle == 0xffffffff) continue;
-
-		count = psxCounters[i].Cycle - (psxGetCycle() - psxCounters[i].sCycle);
-
-		if (count < 0) {
-			psxNextCounter = 0; break;
-		}
-
-		if (count < (s32)psxNextCounter) {
-			psxNextCounter = count;
-		}
-	}
-	psx_int_add(0, psxNextCounter);
+	_psxRcntSet(index);
 }
 
 static void ResetCount(u32 index, u32 value)
 {
 	psxCounters[index].count = value;
-	psxCounters[index].target &= ~PSXCNT_FUTURE_TARGET;
-	if(!psxCounters[index].mode_st.Disabled)
+	psxCounters[index].IsFutureTarget = 0;
+	if (psxCounters[index].IsCounting)
 	{
 		psxRcntUpd(index);
-		_psxRcntSet(index);
 	}
 }
 
@@ -163,111 +135,104 @@ void psxRcntInit() {
 	psxCounters[1].rate = 1; psxCounters[1].interrupt = 0x20;
 	psxCounters[2].rate = 1; psxCounters[2].interrupt = 0x40;
 
-	psxCounters[3].interrupt = 1;
-	psxCounters[3].mode = 0x58; // The VSync counter mode
-	psxCounters[3].target = 1;
 	psxUpdateVSyncRate();
 
-	if (SPU_async != NULL) {
-		cnts = 5;
+	if (SPU_async) {
+		psxCounters[4].rate = PSXSOUNDCLK;
+	}
 
-		psxCounters[4].rate = 768 * 64;
-		psxCounters[4].target = 1;
-		psxCounters[4].mode = 0x58;
-	} else cnts = 4;
-
-	for (i=0; i<5; i++)
+	for (i=0; i<3; i++)
+	{
+		psxCounters[i].IsCounting = 1;
 		psxCounters[i].sCycle = psxRegs.cycle;
+	}
 
 }
 
-void CalcRate(u32 rate)
+void CalcRate(u32 frames, u32 scans)
 {
-	FrameRate = rate;
-	u64 Frame = ((PSXCLK * 1000000ULL) / FrameRate);
-	u64 HalfFrame = Frame / 2;
-	u64 Blank = HalfFrame / 2;		// two blanks and renders per frame
-	u64 Render = HalfFrame - Blank;	// so use the half-frame value for these...
-	vRenderRate = (u32)(Render/10000);
-	vBlankRate  = (u32)(Blank/10000);
-	// Apply rounding:
-	if( ( Render - vRenderRate ) >= 5000 ) vRenderRate++;
-	else if( ( Blank - vBlankRate ) >= 5000 ) vBlankRate++;
+	FrameRate = frames;
+
+	float frame = (PSXCLK / FrameRate) * 100;
+
+	// frame
+	vBlankRate = PSXCLK / scans;
+	vRenderRate = frame - vBlankRate;
+
+	// half frame
+	vRenderRate /= 2;
+	vBlankRate /= 2;
 }
 
 void psxUpdateVSyncRate() {
-	if(Config.PsxType)
-	{
-		if(FrameRate != FRAMERATE_PAL)
-			CalcRate(FRAMERATE_PAL);
-	}
-	else
-	{
-		if(FrameRate != FRAMERATE_NTSC)
-			CalcRate(FRAMERATE_NTSC);
-	}
 	psxCounters[3].rate = vRenderRate;
+	if( psxGateFlags.hBlank0 ) CheckStartGate(0);
+	if( psxGateFlags.vBlank1 ) CheckStartGate(1);
+	if( psxGateFlags.vBlank3 ) CheckStartGate(3);
+
 }
 
 void psxUpdateVSyncRateEnd() {
 	psxCounters[3].rate = vBlankRate;
+	if( psxGateFlags.hBlank0 ) CheckEndGate(0);
+	if( psxGateFlags.vBlank1 ) CheckEndGate(1);
+	if( psxGateFlags.vBlank3 ) CheckEndGate(3);
 }
 
-void psxRcntUpdate() {
-	int i;
-	if ((psxGetCycle() - psxCounters[3].sCycle) >= psxCounters[3].Cycle) {
-		if (psxCounters[3].mode & 0x10000) { // VSync End (22 hsyncs)
-			psxCounters[3].mode&=~0x10000;
-			psxUpdateVSyncRate();
-			psxRcntUpd(3);
-			GPU_updateLace(); // updateGPU
-			SysUpdate();
-			ApplyCheats();
-#ifdef GTE_LOG
-			GTE_LOG("VSync\n");
-#endif
-#ifdef _DEBUG_CNT_
-			printf("VSync\n");
-			for(i = 0; i < 3; i++)
-			{
-				printf("cnt[%d] = %d\n", i, cnt[i]);
-				cnt[i] = 0;
-			}
-#endif
-		} else { // VSync Start (240 hsyncs) 
-			psxCounters[3].mode|= 0x10000;
-			psxUpdateVSyncRateEnd();
-			psxRcntUpd(3);
-			psxHu32ref(0x1070)|= SWAPu32(1);
-#ifdef _DEBUG_CNT_
-			for(i = 0; i < 3; i++)
-			{
-				printf("cnt[%d] = %d\n", i, cnt[i]);
-				cnt[i] = 0;
-			}
-#endif
-		}
-	}
+static inline void cnt_upd(int i)
+{
+	psxCounters[i].sCycle = psxRegs.cycle;
+	psxRcntUpd(i);
+}
 
-	for(i = 0; i < 3; i++)
+void psxRcntUpdate0() {
+	cnt_upd(0);
+}
+
+void psxRcntUpdate1() {
+	cnt_upd(1);
+}
+
+void psxRcntUpdate2() {
+	cnt_upd(2);
+}
+
+void psxRcntUpdate3() {
+	if(Config.PsxType)
 	{
-		if ((psxRegs.cycle - psxCounters[i].sCycle) >= psxCounters[i].Cycle)
-		{
-#ifdef _DEBUG_CNT_
-			cnt[i]++;
+		if(FrameRate != FRAMERATE_PAL)
+			CalcRate(FRAMERATE_PAL, SCANLINES_PAL);
+	}
+	else
+	{
+		if(FrameRate != FRAMERATE_NTSC)
+			CalcRate(FRAMERATE_NTSC, SCANLINES_NTSC);
+	}
+	if (psxCounters[3].mode & 0x10000) { // VSync End (22 hsyncs)
+		psxCounters[3].mode&=~0x10000;
+		psxUpdateVSyncRate();
+		psxHu32ref(0x1070)|= SWAPu32(0x800);
+		GPU_updateLace(); // updateGPU
+		SysUpdate();
+		ApplyCheats();
+#ifdef GTE_LOG
+		GTE_LOG("VSync\n");
 #endif
-			psxRcntReset(i);
-		}
+	} else { // VSync Start (240 hsyncs) 
+		psxCounters[3].mode|= 0x10000;
+		psxUpdateVSyncRateEnd();
+		psxHu32ref(0x1070)|= SWAPu32(1);
 	}
+	psx_int_add(3, psxCounters[3].rate/* / BIAS*/);
+}
 
-	if (cnts >= 5) {
-		if ((psxRegs.cycle - psxCounters[4].sCycle) >= psxCounters[4].Cycle) {
-			SPU_async((psxGetCycle() - psxCounters[4].sCycle) * BIAS);
-			psxRcntReset(4);
-		}
+
+void psxRcntUpdate4() {
+	if (SPU_async) {
+		psxCounters[4].sCycle = psxRegs.cycle;
+		SPU_async(psxCounters[4].rate);
+		psx_int_add(4, psxCounters[4].rate);
 	}
-
-	psxRcntSet();
 }
 
 void psxRcntWcount(int index, u32 value) {
@@ -276,10 +241,33 @@ void psxRcntWcount(int index, u32 value) {
 //	PSXCPU_LOG("writeCcount[%d] = %x\n", index, value);
 }
 
+static int PixelClock()
+{
+	return (PSXCLK / 13500000);
+}
+
+static u32 hSync()
+{
+	u32 scanlines;
+	u32 framerate;
+	if(Config.PsxType)
+	{
+		scanlines = SCANLINES_PAL;
+		framerate = FRAMERATE_PAL;
+	}
+	else
+	{
+		scanlines = SCANLINES_NTSC;
+		framerate = FRAMERATE_NTSC;
+	}
+	return ((PSXCLK * 100) / (scanlines * framerate));
+}
+
 void psxRcntWmode(int index, u32 value)  {
 	//SysPrintf("writeCmode[%ld] = %lx\n", index, value);
 	psxCounters[index].mode = value | 0x0400;
 	psxCounters[index].count = 0;
+	psxCounters[index].IsCounting = 1;
 
 	if(index == 2) {
 		psxCounters[index].rate = 1; // normal speed
@@ -293,18 +281,27 @@ void psxRcntWmode(int index, u32 value)  {
 
 		if (psxCounters[index].mode_st.ClockSource)
 		{
-#if 1
 			if(index == 0)
-				psxCounters[index].rate = PSXCLK / 13500000;	// PixelClock
+				psxCounters[index].rate = PixelClock();
 			else
-				psxCounters[index].rate = PSXCLK / (Config.PsxType ? (50*625) : (59.94*525));	// Not sure about that... (framerate * scanlines)
-#else
-			if(index == 0)
-				psxCounters[index].rate = (psxCounters[3].rate / 426) / 263;
-			else
-				psxCounters[index].rate = psxCounters[3].rate / (Config.PsxType ? 314 : 263); // seems ok
-#endif
+				psxCounters[index].rate = hSync();
 		}
+	}
+	
+	if( psxCounters[index].mode & PSXCNT_ENABLE_GATE )
+	{
+		psxCounters[index].IsCounting = 0;
+		if( index == 0 )
+			psxGateFlags.hBlank0 = 1;
+		else
+			psxGateFlags.vBlank1 = 1;
+	}
+	else
+	{
+		if( index == 0 )
+			psxGateFlags.hBlank0 = 0;
+		else
+			psxGateFlags.vBlank1 = 0;
 	}
 
 	// Need to set a rate and target
@@ -316,7 +313,8 @@ void psxRcntWtarget(int index, u32 value) {
 	psxCounters[index].target = value;
 
 	s32 cycle = psxGetCycle();
-	if(!psxCounters[index].mode_st.Disabled) {
+	if (psxCounters[index].IsCounting)
+	{
 		u32 change = cycle - psxCounters[index].sCycle;
 		if( change > 0 )
 		{
@@ -328,24 +326,117 @@ void psxRcntWtarget(int index, u32 value) {
 	else psxCounters[index].sCycle = cycle;
 	
 	if( psxCounters[index].count >= psxCounters[index].target ) \
-		psxCounters[index].target |= PSXCNT_FUTURE_TARGET;
+		psxCounters[index].IsFutureTarget = 1;
 
 	psxRcntUpd(index);
-	_psxRcntSet(index);
 }
 
 u32 psxRcntRcount(int index) {
 //	SysPrintf("readCcount[%d] = %lx\n", index, psxCounters[index].mode);
 
 	u32 ret = psxCounters[index].count;
-	if (!psxCounters[index].mode_st.Disabled)
+	if(psxCounters[index].IsCounting)
 	{
-		ret += ((psxGetCycle() - psxCounters[index].sCycle) / psxCounters[index].rate);
+		s32 delta = ((psxGetCycle() - psxCounters[index].sCycle) / psxCounters[index].rate);
+		ret += delta;
 	}
 
 //	SysPrintf("readCcount[%ld] = %lx (mode %lx, target %lx, cycle %lx)\n", index, ret, psxCounters[index].mode, psxCounters[index].target, psxRegs.cycle);
 
 	return ret;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+// The PSX Does Sci-Fi: How?  Gate Travel!
+
+/*
+Gate:
+   TM_NO_GATE                   000
+   TM_GATE_ON_Count             001
+   TM_GATE_ON_ClearStart        011
+   TM_GATE_ON_Clear_OFF_Start   101
+   TM_GATE_ON_Start             111
+
+   V-blank  ----+    +----------------------------+    +------
+                |    |                            |    |
+                |    |                            |    |
+                +----+                            +----+
+ TM_NO_GATE:
+
+                0================================>============
+
+ TM_GATE_ON_Count:
+
+                <---->0==========================><---->0=====
+
+ TM_GATE_ON_ClearStart:
+
+                0====>0================================>0=====
+
+ TM_GATE_ON_Clear_OFF_Start:
+
+                0====><-------------------------->0====><-----
+
+ TM_GATE_ON_Start:
+
+                <---->0==========================>============
+*/
+
+// ------------------------------------------------------------------------
+void CheckStartGate(int index)
+{
+	if(!(psxCounters[index].mode & PSXCNT_ENABLE_GATE)) return;	// not enabled? nothing to do!
+
+	switch((psxCounters[index].mode & 0x6) >> 1)
+	{
+		case 0x0: // GATE_ON_count - stop count on gate start:
+			//PSXCPU_LOG( "PSX Counter[%d] stopped (Gate 0).", index );
+			psxCounters[index].IsCounting = 0;
+		return;
+
+		case 0x1: //GATE_ON_ClearStart - count normally with resets after every end gate
+			// do nothing - All counting will be done on a need-to-count basis.
+		return;
+
+		case 0x2: //GATE_ON_Clear_OFF_Start - start counting on gate start, stop on gate end
+			//PSXCPU_LOG( "PSX Counter[%d] started (Gate 2).", index );
+			psxCounters[index].IsCounting = 1;
+			ResetCount(index, 0);
+		break;
+
+		case 0x3: //GATE_ON_Start - start and count normally on gate end (no restarts or stops or clears)
+			// do nothing!
+		return;
+	}
+}
+
+// ------------------------------------------------------------------------
+void CheckEndGate(int index)
+{
+	if(!(psxCounters[index].mode & PSXCNT_ENABLE_GATE)) return; //Ignore Gate
+	switch((psxCounters[index].mode & 0x6) >> 1)
+	{
+		case 0x0: //GATE_ON_count - reset and start counting
+		case 0x1: //GATE_ON_ClearStart - count normally with resets after every end gate
+			//PSXCPU_LOG( "PSX Counter[%d] started (Gate 0 and 1).", index );
+			psxCounters[index].IsCounting = 1;
+			ResetCount(index, 0);
+		break;
+
+		case 0x2: //GATE_ON_Clear_OFF_Start - start counting on gate start, stop on gate end
+			//PSXCPU_LOG( "PSX Counter[%d] stopped (Gate 2).", index );
+			psxCounters[index].IsCounting = 0;
+		return;	// do not set the counter
+
+		case 0x3: //GATE_ON_Start - start and count normally (no restarts or stops or clears)
+			if( !psxCounters[index].IsCounting )
+			{
+				//PSXCPU_LOG( "PSX Counter[%d] started (Gate 3).", index );
+				psxCounters[index].IsCounting = 1;
+				ResetCount(index, 0);
+			}
+		break;
+	}
 }
 
 u32 psxRcntRmode(int index)
