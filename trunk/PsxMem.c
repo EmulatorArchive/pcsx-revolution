@@ -170,7 +170,7 @@ u16 psxMemRead16(u32 mem) {
 	else {
 		char *p = (char *)(psxMemRLUT[t]);
 		if (p != NULL) {
-			return SWAPu16(*(u16 *)(p + (mem & 0xffff)));
+			return GETLE16((u16 *)(p + (mem & 0xffff)));
 		} else {
 #ifdef PSXMEM_LOG
 			PSXMEM_LOG("err lh %8.8lx\n", mem);
@@ -193,7 +193,7 @@ u32 psxMemRead32(u32 mem) {
 	else {
 		char *p = (char *)(psxMemRLUT[t]);
 		if (p != NULL) {
-			return SWAPu32(*(u32 *)(p + (mem & 0xffff)));
+			return GETLE32((u32 *)(p + (mem & 0xffff)));
 		} else {
 #ifdef PSXMEM_LOG
 			if (writeok) { PSXMEM_LOG("err lw %8.8lx\n", mem); }
@@ -238,12 +238,12 @@ void psxMemWrite16(u32 mem, u16 value) {
 		if( mem & 0xf0001000 )
 			psxHwWrite16(mem, value);
 		else
-			psxHu16ref(mem) = SWAPu16(value);
+			PUTLE16(&psxHu16ref(mem), value);
 	} 
 	else {
 		char *p = (char *)(psxMemWLUT[t]);
 		if (p != NULL && !(psxRegs.CP0.n.Status & 0x10000) ) {
-			*(u16 *)(p + (mem & 0xffff)) = SWAPu16(value);
+			PUTLE16((u16 *)(p + (mem & 0xffff)), value);
 #ifdef PSXREC
 			psxCpu->Clear((mem & (~1)), 1);
 #endif
@@ -262,12 +262,12 @@ void psxMemWrite32(u32 mem, u32 value) {
 		if( mem & 0xf0001000 )
 			psxHwWrite32(mem, value);
 		else
-			psxHu32ref(mem) = SWAP32(value);
+			PUTLE32(&psxHu32ref(mem), value);
 	} 
 	else {
 		char *p = (char *)(psxMemWLUT[t]);
 		if (p != NULL && !(psxRegs.CP0.n.Status & 0x10000)) {
-			*(u32 *)(p + (mem & 0xffff)) = SWAPu32(value);
+			PUTLE32((u32 *)(p + (mem & 0xffff)), value);
 #ifdef PSXREC
 			psxCpu->Clear(mem, 1);
 #endif

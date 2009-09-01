@@ -200,8 +200,6 @@ int psxTestLoadDelay(int reg, u32 tmp) {
 			}
 			break;
 
-
-
 		case 0x12: // COP2
 			switch (_tFunct_) {
 				case 0x00:
@@ -250,7 +248,7 @@ void psxDelayTest(int reg, u32 bpc) {
 	u32 tmp;
 
 	code = (u32 *)PSXM(bpc);
-	tmp = ((code == NULL) ? 0 : SWAP32(*code));
+	tmp = ((code == NULL) ? 0 : GETLE32(code));
 	psxRegs.IsDelaySlot = 1;
 
 	switch (psxTestLoadDelay(reg, tmp)) {
@@ -278,15 +276,15 @@ __inline void doBranch(u32 tar) {
 
 	code = (u32 *)PSXM(psxRegs.pc);
 
-	//psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
+	//psxRegs.code = ((code == NULL) ? 0 : GETLE32(code));
 	if(code == NULL)
 	{
 		psxRegs.pc += 4;
 		psxRegs.evtCycleCountdown--;
 		code = (u32 *)PSXM(psxRegs.pc);
-		psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
+		psxRegs.code = ((code == NULL) ? 0 : GETLE32(code));
 	}
-	else psxRegs.code = SWAP32(*code);
+	else psxRegs.code = GETLE32(code);
 
 	debugI();
 
@@ -367,9 +365,9 @@ inline void execI() {
 		psxRegs.pc += 4;
 		psxRegs.evtCycleCountdown--;
 		code = (u32 *)PSXM(psxRegs.pc);
-		psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
+		psxRegs.code = ((code == NULL) ? 0 : GETLE32(code));
 	}
-	else psxRegs.code = SWAP32(*code);
+	else psxRegs.code = GETLE32(code);
 
 	debugI();
 
@@ -391,7 +389,7 @@ R3000Acpu psxInt = {
 /* debugger version */
 static inline void execIDbg() { 
 	u32 *code = (u32 *)PSXM(psxRegs.pc);
-	psxRegs.code = ((code == NULL) ? 0 : SWAP32(*code));
+	psxRegs.code = ((code == NULL) ? 0 : GETLE32(code));
 
 	// dump opcode when LOG_CPU is enabled
 	debugI();

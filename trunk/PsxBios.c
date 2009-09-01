@@ -516,7 +516,8 @@ void psxBios_malloc() { // 33
 		else {
 			if(colflag == 1) {			// collection is over
 				colflag = 0;
-				*newchunk = SWAP32(dsize | 1);
+				//*newchunk = SWAP32(dsize | 1);
+				PUTLE32(newchunk, (dsize | 1));
 			}
 		}
 
@@ -525,7 +526,8 @@ void psxBios_malloc() { // 33
 	}
 	// if neccessary free memory on end of heap
 	if (colflag == 1)
-		*newchunk = SWAP32(dsize | 1);
+		PUTLE32(newchunk, (dsize | 1));
+		//*newchunk = SWAP32(dsize | 1);
 
 	chunk = heap_addr;
 	csize = ((u32)*chunk) & 0xfffffffc;
@@ -557,9 +559,11 @@ void psxBios_malloc() { // 33
 	}
 	else {
 		// split free chunk
-		*chunk = SWAP32(dsize);
+		//*chunk = SWAP32(dsize);
+		PUTLE32(chunk, dsize);
 		newchunk = (u32*)((u32)chunk + dsize + 4);
-		*newchunk = SWAP32((csize - dsize - 4) & 0xfffffffc | 1);
+		//*newchunk = SWAP32((csize - dsize - 4) & 0xfffffffc | 1);
+		PUTLE32(newchunk, ((csize - dsize - 4) & 0xfffffffc | 1));
 	}
 
 	// return pointer to allocated memory
@@ -622,7 +626,8 @@ void psxBios_InitHeap() { // 39
 	
 	heap_addr = (u32*)Ra0;
 	heap_end = (u32*)((u32)heap_addr + size);
-	*heap_addr = SWAP32(size | 1);
+	//*heap_addr = SWAP32(size | 1);
+	PUTLE32(heap_addr, (size | 1));
 
 	SysPrintf("InitHeap %lx,%lx : %lx %lx\n",a0,a1, (u32)heap_addr-(u32)psxM, size);
 
@@ -776,7 +781,7 @@ void psxBios_GPU_dw() { // 0x46
 	size = (a2*a3+1)/2;
 	ptr = (s32*)PSXM(Rsp[4]);  //that is correct?
 	do {
-		GPU_writeData(SWAP32(*ptr));
+		GPU_writeData(GETLE32(ptr));
 		ptr++;
 	} while(--size);
 
@@ -814,7 +819,7 @@ void psxBios_GPU_cwb() { // 0x4a
 	s32 *ptr = (s32*)Ra0;
 	int size = a1;
 	while(size--) {
-		GPU_writeData(SWAP32(*ptr));
+		GPU_writeData(GETLE32(ptr));
 		ptr++;
 	}
 

@@ -340,11 +340,13 @@ static unsigned short* rl2blk(int *blk,unsigned short *mdec_rl) {
 		if (i>1) iqtab = iq_y;
 
 		// zigzag transformation
-		rl = SWAP16(*mdec_rl); mdec_rl++;
+		rl = GETLE16(mdec_rl);
+		mdec_rl++;
 		q_scale = RUNOF(rl);
 		blk[0] = iqtab[0]*VALOF(rl);
 		for(k = 0;;) {
-			rl = SWAP16(*mdec_rl); mdec_rl++;
+			rl = GETLE16(mdec_rl);
+			mdec_rl++;
 			if (rl==NOP) break;
 			k += RUNOF(rl)+1;	// skip level zero-coefficients
 			if (k > 63) break;

@@ -2799,7 +2799,6 @@ REC_SYS(CTC0);
 static void recMFC0() {
 // Rt = Cop0->Rd
 	if (!_Rt_) return;
-	
 	LWZ(PutHWReg32(_Rt_), GetHWRegSpecial(PSXREGS), OFFSET(&psxRegs, &psxRegs.CP0.r[_Rd_]));
 }
 
@@ -2812,7 +2811,14 @@ static void recCFC0() {
 static void recMTC0() {
 // Cop0->Rd = Rt
 
-	STW(GetHWReg32(_Rt_), GetHWRegSpecial(PSXREGS), OFFSET(&psxRegs, &psxRegs.CP0.r[_Rd_]));
+	if (IsConst(_Rt_)) {
+		LIW(0, (u32)iRegs[_Rt_].k);
+		STW(0, GetHWRegSpecial(PSXREGS), OFFSET(&psxRegs, &psxRegs.CP0.r[_Rd_]));
+	}
+	else
+	{
+		STW(GetHWReg32(_Rt_), GetHWRegSpecial(PSXREGS), OFFSET(&psxRegs, &psxRegs.CP0.r[_Rd_]));
+	}
 }
 
 static void recCTC0() {
@@ -2942,7 +2948,7 @@ static void recRecompile() {
 	for (count=0; count<500;) {
 		p = (char *)PSXM(pc);
 		if (p == NULL) recError();
-		psxRegs.code = SWAP32(*(u32 *)p);
+		psxRegs.code = GETLE32((u32 *)p);
 
 		pc+=4; count++;
 //		iFlushRegs(0); // test

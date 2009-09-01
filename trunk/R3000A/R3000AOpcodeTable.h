@@ -74,6 +74,7 @@ void psxMFC0();
 void psxCFC0();
 void psxMTC0();
 void psxCTC0();
-void psxNULL(); 
+void psxNULL();
+void psxHLE();
 
 #endif

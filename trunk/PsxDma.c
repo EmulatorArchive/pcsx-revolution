@@ -66,7 +66,7 @@ void psxDma4(u32 madr, u32 bcr, u32 chcr) { // SPU
 
 	if (SPU_async)
 	{
-		SPU_async(psxGetCycle() - psxCounters[4].sCycle);	
+		SPU_async(psxGetCycle() - psxCounters[4].sCycle);
 		psx_int_add(PsxEvt_SPU, size * 3);
 	}
 
@@ -113,8 +113,10 @@ void psxDma6(u32 madr, u32 bcr, u32 chcr) {
 
 	if (chcr == 0x11000002) {
 		while (bcr--) {
-			*mem-- = SWAP32((madr - 4) & 0xffffff);
 			madr -= 4;
+			//*mem-- = SWAP32((madr - 4) & 0xffffff);
+			PUTLE32(mem--, madr & 0xffffff);
+			
 		}
 		mem++; *mem = 0xffffff;
 	}

@@ -26,7 +26,7 @@ INCLUDES	:=	.. ../ppc/ ../PeopsSpu109/
 #---------------------------------------------------------------------------------
 
 CFLAGS	= -g $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
-		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -DSHOW_DEBUG
+		  -D__GX__ -D_SDL -DEMBEDDED_FONTS #-DSHOW_DEBUG
 
 ifneq ($(BUILD),debug)
 CFLAGS	+= -mrvl -O2 -pipe -fno-strict-aliasing \

@@ -49,29 +49,6 @@ static PsxGateFlags_t psxGateFlags;
 static void CheckEndGate(int index);
 static void CheckStartGate(int index);
 
-static void print_cnt(int index)
-{
-	SysPrintf("counter[%d]: \
-		Mode  = %lx \n\
-		Disabled  = %lx \n\
-		unused = %lx \n\
-		IRQ1 = %lx \n\
-		IRQ2  = %lx \n\
-		TargetInterrupt  = %lx \n\
-		ClockSource  = %lx \n\
-		Div  = %lx \n",
-		index, 
-		psxCounters[index].mode, 
-		psxCounters[index].mode_st.Disabled, 
-		psxCounters[index].mode_st.unused, 
-		psxCounters[index].mode_st.IRQ1, 
-		psxCounters[index].mode_st.IRQ2, 
-		psxCounters[index].mode_st.Tar, 
-		psxCounters[index].mode_st.ClockSource,
-		psxCounters[index].mode_st.Div
-	);
-}
-
 static void _psxRcntSet(int i) {
 	if( psxCounters[i].IsFutureTarget ) return;
 
