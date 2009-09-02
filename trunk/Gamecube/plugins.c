@@ -186,8 +186,6 @@ int LoadGPUplugin(char *GPUdll) {
 }
 
 void *hCDRDriver;
-long CALLBACK CDR__play(unsigned char *sector) { return 0; }
-long CALLBACK CDR__stop(void) { return 0; }
 
 long CALLBACK CDR__getStatus(struct CdrStat *stat) {
     if (cdOpenCase) stat->Status = 0x10;
@@ -196,7 +194,6 @@ long CALLBACK CDR__getStatus(struct CdrStat *stat) {
 }
 
 char* CALLBACK CDR__getDriveLetter(void) { return NULL; }
-//unsigned char* CALLBACK CDR__getBufferSub(void) { return NULL; }
 long CALLBACK CDR__configure(void) { return 0; }
 long CALLBACK CDR__test(void) { return 0; }
 void CALLBACK CDR__about(void) {}
@@ -228,11 +225,11 @@ int LoadCDRplugin(char *CDRdll) {
 	LoadCdrSym1(getTD, "CDRgetTD");
 	LoadCdrSym1(readTrack, "CDRreadTrack");
 	LoadCdrSym1(getBuffer, "CDRgetBuffer");
-	LoadCdrSym0(play, "CDRplay");
-	LoadCdrSym0(stop, "CDRstop");
+	LoadCdrSym1(play, "CDRplay");
+	LoadCdrSym1(stop, "CDRstop");
 	LoadCdrSym0(getStatus, "CDRgetStatus");
 	LoadCdrSym0(getDriveLetter, "CDRgetDriveLetter");
-	LoadCdrSym0(getBufferSub, "CDRgetBufferSub");
+	LoadCdrSym1(getBufferSub, "CDRgetBufferSub");
 	LoadCdrSym0(configure, "CDRconfigure");
 	LoadCdrSym0(test, "CDRtest");
 	LoadCdrSym0(about, "CDRabout");
@@ -480,6 +477,7 @@ int LoadSPUplugin(char *SPUdll) {
 	LoadSpuSym1(freeze, "SPUfreeze");
 	LoadSpuSym1(async, "SPUasync");
 	LoadSpuSym1(registerCallback, "SPUregisterCallback");
+	LoadSpuSymN(playCDDAchannel, "SPUplayCDDAchannel");
 	//LoadSpuSym1(registerCDDAVolume, "SPUregisterCDDAVolume");
 
 	return 0;

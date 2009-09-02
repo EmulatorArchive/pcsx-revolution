@@ -23,7 +23,7 @@
 
 #include "PsxCommon.h"
 
-#if defined(HW_RVL) || defined(HW_DOL) || defined(BIG_ENDIAN)
+#if defined(__ppc__) || defined(BIG_ENDIAN)
 
 static __inline__ uint16_t GETLE16(uint16_t *ptr) {
     uint16_t ret; __asm__ ("lhbrx %0, 0, %1" : "=r" (ret) : "r" (ptr));
@@ -76,7 +76,7 @@ s8 *psxM;
 #define psxMs8(mem)		psxM[(mem) & 0x1fffff]
 #define psxMs16(mem)	(GETLE16((s16*)&psxM[(mem) & 0x1fffff]))
 #define psxMs32(mem)	(GETLE32((s32*)&psxM[(mem) & 0x1fffff]))
-#define psxMu8(mem)		(*(u8*)&psxM[(mem) & 0x1fffff]))
+#define psxMu8(mem)		(*(u8*)&psxM[(mem) & 0x1fffff])
 #define psxMu16(mem)	(GETLE16((u16*)&psxM[(mem) & 0x1fffff]))
 #define psxMu32(mem)	(GETLE32((u32*)&psxM[(mem) & 0x1fffff]))
 
@@ -145,8 +145,7 @@ u8** psxMemRLUT;
 
 #define PSXMu32ref(mem)	(*(u32*)PSXM(mem))
 
-
-#if !defined(PSXREC) && (defined(__x86_64__) || defined(__i386__) || defined(__sh__) || defined(__ppc__))
+#if !defined(PSXREC) && (defined(__x86_64__) || defined(__i386__) || defined(__ppc__)) && !defined(NOPSXREC)
 #define PSXREC
 #endif
 

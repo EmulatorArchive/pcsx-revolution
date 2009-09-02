@@ -91,6 +91,7 @@ void CALLBACK PEOPS_SPUwriteRegister(unsigned long reg, unsigned short val);
 unsigned short CALLBACK PEOPS_SPUreadRegister(unsigned long reg);
 //freeze.c
 long CALLBACK PEOPS_SPUfreeze(unsigned long ulFreezeMode,SPUFreeze_t * pF);
+void CALLBACK PEOPS_SPUplayCDDAchannel(short* pcm, int nbytes);
 
 /* CDR */
 long ISOinit(void);
@@ -101,7 +102,9 @@ long ISOgetTN(unsigned char *);
 long ISOgetTD(unsigned char , unsigned char *);
 long ISOreadTrack(unsigned char *);
 unsigned char *ISOgetBuffer(void);
-unsigned char *CDR__getBufferSub(void);
+unsigned char *ISOgetBufferSub(void);
+long ISOplay(unsigned char *time);
+long ISOstop(void);
 
 /* NULL GPU */
 typedef long (* GPUopen)(unsigned long *, char *, char *);
@@ -170,7 +173,7 @@ long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 
 #define CDR_PLUGIN \
 	{ "CDR",      \
-	  9,         \
+	  11,         \
 	  { { "CDRinit",  \
 	      ISOinit }, \
 	    { "CDRshutdown",	\
@@ -179,6 +182,10 @@ long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 	      ISOopen}, \
 	    { "CDRclose", \
 	      ISOclose}, \
+	    { "CDRplay", \
+	      ISOplay}, \
+	    { "CDRstop", \
+	      ISOstop}, \
 	    { "CDRgetTN", \
 	      ISOgetTN}, \
 	    { "CDRgetTD", \
@@ -188,7 +195,7 @@ long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 	    { "CDRgetBuffer", \
 	      ISOgetBuffer}, \
 	    { "CDRgetBufferSub", \
-	      CDR__getBufferSub} \
+	      ISOgetBufferSub} \
 	       } }
 
 #define SPU_NULL_PLUGIN \
@@ -268,7 +275,9 @@ long PEOPS_GPUfreeze(unsigned long,GPUFreeze_t *);
 	    { "SPUregisterCDDAVolume", \
 	      PEOPS_SPUregisterCDDAVolume}, \
 	    { "SPUasync", \
-	      PEOPS_SPUasync} \
+	      PEOPS_SPUasync}, \
+		{ "SPUplayCDDAchannel", \
+	      PEOPS_SPUplayCDDAchannel} \
 	       } }
       
 #define GPU_NULL_PLUGIN \
