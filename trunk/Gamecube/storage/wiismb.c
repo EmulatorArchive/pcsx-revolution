@@ -1,8 +1,8 @@
-#include <smb.h>
 #include <network.h>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <smb.h>
 
 #include "wiismb.h"
 #include "../Config.h"
