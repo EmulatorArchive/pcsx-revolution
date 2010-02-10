@@ -1,0 +1,2869 @@
+# Translation of pcsx.pot to Portuguese from Brazil
+# This file is distributed under the same license as the pcsx reloaded package.
+# Tibério Vítor <tvtoon@gmail.com>, 2009.
+msgid ""
+msgstr ""
+"Project-Id-Version: pcsx-df\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2009-12-19 12:58+0800\n"
+"PO-Revision-Date: 2009-11-28 23:57+0700\n"
+"Last-Translator: Wei Mingzhi <whistler@openoffice.org>\n"
+"Language-Team: PoBRE <romhackers@gmail.com>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.2\n"
+
+#: ../win32/gui/AboutDlg.c:26
+msgid ""
+"PCSX - A PlayStation Emulator\n"
+"\n"
+"Original Authors:\n"
+"main coder: linuzappz\n"
+"co-coders: shadow\n"
+"ex-coders: Nocomp, Pete Bernett, nik3d\n"
+"Webmaster: AkumaX"
+msgstr ""
+"PCSX - Um Emulador de PlayStation\n"
+"\n"
+"Autores Originais:\n"
+"Programador principal: linuzappz\n"
+"Programador auxiliar: shadow\n"
+"Ex-programadores: Nocomp, Pete Bernett, nik3d\n"
+"Webmaster: AkumaX"
+
+#: ../win32/gui/AboutDlg.c:35
+msgid ""
+"PCSX-df Authors:\n"
+"Ryan Schultz, Andrew Burton, Stephen Chao,\n"
+"Marcus Comstedt, Stefan Sikora\n"
+"\n"
+"PCSX-Reloaded By:\n"
+"Wei Mingzhi\n"
+"\n"
+"http://www.codeplex.com/pcsxr"
+msgstr ""
+"Autores do PCSX-df:\n"
+"Ryan Schultz, Andrew Burton, Stephen Chao,\n"
+"Marcus Comstedt, Stefan Sikora\n"
+"\n"
+"PCSX Reloaded por:\n"
+"Wei Mingzhi\n"
+"\n"
+"http://www.codeplex.com/pcsxr"
+
+#: ../win32/gui/AboutDlg.c:46 ../plugins/peopsxgl/gpucfg/interface.c:831
+msgid "About"
+msgstr "Sobre"
+
+#: ../win32/gui/AboutDlg.c:48 ../win32/gui/AboutDlg.c:52
+#: ../win32/gui/CheatDlg.c:70 ../win32/gui/CheatDlg.c:120
+#: ../win32/gui/ConfigurePlugins.c:470 ../win32/gui/ConfigurePlugins.c:601
+#: ../win32/gui/WndMain.c:964 ../win32/gui/WndMain.c:1200
+#: ../plugins/peopsxgl/gpucfg/interface.c:130
+#: ../plugins/peopsxgl/gpucfg/interface.c:843
+msgid "OK"
+msgstr "OK"
+
+#: ../win32/gui/AboutDlg.c:49
+msgid "PCSX EMU\n"
+msgstr "EMULADOR PCSX\n"
+
+#: ../win32/gui/CheatDlg.c:52 ../win32/gui/CheatDlg.c:224
+#: ../win32/gui/CheatDlg.c:271
+msgid "Yes"
+msgstr "Sim"
+
+#: ../win32/gui/CheatDlg.c:52 ../win32/gui/CheatDlg.c:224
+#: ../win32/gui/CheatDlg.c:271
+msgid "No"
+msgstr "Não"
+
+#: ../win32/gui/CheatDlg.c:67 ../gui/Cheat.c:195
+msgid "Edit Cheat"
+msgstr "Editar Trapaça"
+
+#: ../win32/gui/CheatDlg.c:68 ../win32/gui/CheatDlg.c:118 ../gui/Cheat.c:637
+msgid "Description:"
+msgstr "Descrição:"
+
+#: ../win32/gui/CheatDlg.c:69 ../win32/gui/CheatDlg.c:119 ../gui/Cheat.c:126
+#: ../gui/Cheat.c:212
+msgid "Cheat Code:"
+msgstr "Código de Trapaça:"
+
+#: ../win32/gui/CheatDlg.c:71 ../win32/gui/CheatDlg.c:121
+#: ../win32/gui/ConfigurePlugins.c:471 ../win32/gui/ConfigurePlugins.c:602
+#: ../win32/gui/WndMain.c:965 ../win32/gui/WndMain.c:1201
+#: ../plugins/peopsxgl/gpucfg/interface.c:338
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: ../win32/gui/CheatDlg.c:92 ../win32/gui/CheatDlg.c:133 ../gui/Cheat.c:156
+#: ../gui/Cheat.c:252
+msgid "Invalid cheat code!"
+msgstr "Código de trapaça inválido!"
+
+#: ../win32/gui/CheatDlg.c:117 ../gui/Cheat.c:110
+msgid "Add New Cheat"
+msgstr "Adicionar nova Trapaça"
+
+#: ../win32/gui/CheatDlg.c:167 ../data/pcsx.glade2:2644
+msgid "Edit Cheat Codes"
+msgstr "Editar Códigos de Trapaça"
+
+#: ../win32/gui/CheatDlg.c:169
+msgid "&Add Code"
+msgstr "&Adicionar código"
+
+#: ../win32/gui/CheatDlg.c:170
+msgid "&Edit Code"
+msgstr "&Editar trapaça"
+
+#: ../win32/gui/CheatDlg.c:171
+msgid "&Remove Code"
+msgstr "&Remover trapaça"
+
+#: ../win32/gui/CheatDlg.c:172
+msgid "&Enable/Disable"
+msgstr "Ativar ou desativar"
+
+#: ../win32/gui/CheatDlg.c:173
+msgid "&Load..."
+msgstr "&Carregar..."
+
+#: ../win32/gui/CheatDlg.c:174
+msgid "&Save As..."
+msgstr "&Salvar como..."
+
+#: ../win32/gui/CheatDlg.c:175
+msgid "&Close"
+msgstr "&Fechar"
+
+#: ../win32/gui/CheatDlg.c:186 ../gui/Cheat.c:414
+msgid "Description"
+msgstr "Descrição"
+
+#: ../win32/gui/CheatDlg.c:191
+msgid "Enabled"
+msgstr "Ligado"
+
+#: ../win32/gui/CheatDlg.c:283 ../win32/gui/CheatDlg.c:312
+msgid "PCSX Cheat Code Files"
+msgstr "Arquivos de trapaça do PCSX"
+
+#: ../win32/gui/CheatDlg.c:403
+msgid "Equal Value"
+msgstr "Valores igual à"
+
+#: ../win32/gui/CheatDlg.c:404
+msgid "Not Equal Value"
+msgstr "Valores diferente de"
+
+#: ../win32/gui/CheatDlg.c:405
+msgid "Range"
+msgstr "Intervalo"
+
+#: ../win32/gui/CheatDlg.c:408
+msgid "Increased By"
+msgstr "Somado por"
+
+#: ../win32/gui/CheatDlg.c:409
+msgid "Decreased By"
+msgstr "Subtraído por"
+
+#: ../win32/gui/CheatDlg.c:410
+msgid "Increased"
+msgstr "Maiores"
+
+#: ../win32/gui/CheatDlg.c:411
+msgid "Decreased"
+msgstr "Menores"
+
+#: ../win32/gui/CheatDlg.c:412
+msgid "Different"
+msgstr "Diferentes"
+
+#: ../win32/gui/CheatDlg.c:413
+msgid "No Change"
+msgstr "Sem mudanças"
+
+#: ../win32/gui/CheatDlg.c:449 ../gui/Cheat.c:586
+msgid "Enter the values and start your search."
+msgstr "Digite algum número para começar a pesquisa."
+
+#: ../win32/gui/CheatDlg.c:454
+msgid "No addresses found."
+msgstr "Nenhum endereço encontrado com esse número."
+
+#: ../win32/gui/CheatDlg.c:458 ../gui/Cheat.c:544
+msgid "Too many addresses found."
+msgstr "Muitos endereços encontrados com esse número, refine a pesquisa."
+
+#: ../win32/gui/CheatDlg.c:467 ../gui/Cheat.c:553
+#, c-format
+msgid "%.8X    Current: %u (%.2X), Previous: %u (%.2X)"
+msgstr "%.8X    Atual: %u (%.2X), Anterior: %u (%.2X)"
+
+#: ../win32/gui/CheatDlg.c:472 ../gui/Cheat.c:558
+#, c-format
+msgid "%.8X    Current: %u (%.4X), Previous: %u (%.4X)"
+msgstr "%.8X    Atual: %u (%.4X), Anterior: %u (%.4X)"
+
+#: ../win32/gui/CheatDlg.c:477 ../gui/Cheat.c:563
+#, c-format
+msgid "%.8X    Current: %u (%.8X), Previous: %u (%.8X)"
+msgstr "%.8X    Atual: %u (%.8X), Anterior: %u (%.8X)"
+
+#: ../win32/gui/CheatDlg.c:493 ../gui/Cheat.c:578
+#, c-format
+msgid "Founded Addresses: %d"
+msgstr "Endereços com o número: %d"
+
+#: ../win32/gui/CheatDlg.c:505 ../data/pcsx.glade2:3043
+msgid "Freeze"
+msgstr "Parar"
+
+#: ../win32/gui/CheatDlg.c:506 ../win32/gui/CheatDlg.c:597
+msgid "Address:"
+msgstr "Endereço:"
+
+#: ../win32/gui/CheatDlg.c:507 ../win32/gui/CheatDlg.c:598
+#: ../win32/gui/CheatDlg.c:683 ../gui/Cheat.c:648 ../data/pcsx.glade2:2887
+msgid "Value:"
+msgstr "Valor:"
+
+#: ../win32/gui/CheatDlg.c:567
+#, c-format
+msgid "Freeze %.8X"
+msgstr "Parar %.8X"
+
+#: ../win32/gui/CheatDlg.c:596 ../data/pcsx.glade2:3079
+msgid "Modify"
+msgstr "Modificar"
+
+#: ../win32/gui/CheatDlg.c:679 ../gui/Cheat.c:1130 ../data/pcsx.glade2:2815
+msgid "Cheat Search"
+msgstr "Procurar por trapaça"
+
+#: ../win32/gui/CheatDlg.c:681 ../data/pcsx.glade2:2865
+msgid "Search For:"
+msgstr "Buscar por:"
+
+#: ../win32/gui/CheatDlg.c:682 ../data/pcsx.glade2:2875
+msgid "Data Type:"
+msgstr "Tipo de dados:"
+
+#: ../win32/gui/CheatDlg.c:684 ../data/pcsx.glade2:2899
+msgid "Data Base:"
+msgstr "Banco de dados:"
+
+#: ../win32/gui/CheatDlg.c:685 ../data/pcsx.glade2:2959
+msgid "To:"
+msgstr "Para:"
+
+#: ../win32/gui/CheatDlg.c:686
+msgid "&Freeze"
+msgstr "&Parar"
+
+#: ../win32/gui/CheatDlg.c:687
+msgid "&Modify"
+msgstr "&Modificar"
+
+#: ../win32/gui/CheatDlg.c:688
+msgid "&Copy"
+msgstr "&Copiar"
+
+#: ../win32/gui/CheatDlg.c:689
+msgid "&Search"
+msgstr "&Buscar"
+
+#: ../win32/gui/CheatDlg.c:690
+msgid "&New Search"
+msgstr "&Nova busca"
+
+#: ../win32/gui/CheatDlg.c:691
+msgid "C&lose"
+msgstr "Fe&char"
+
+#: ../win32/gui/CheatDlg.c:693
+msgid "8-bit"
+msgstr "8-bit"
+
+#: ../win32/gui/CheatDlg.c:694
+msgid "16-bit"
+msgstr "16-bit"
+
+#: ../win32/gui/CheatDlg.c:695
+msgid "32-bit"
+msgstr "32-bit"
+
+#: ../win32/gui/CheatDlg.c:696
+msgid "Decimal"
+msgstr "Decimal"
+
+#: ../win32/gui/CheatDlg.c:697
+msgid "Hexadecimal"
+msgstr "Hexadecimal"
+
+#: ../win32/gui/ConfigurePlugins.c:206 ../gui/ConfDlg.c:680
+msgid "Internal HLE Bios"
+msgstr "BIOS HLE interna"
+
+#: ../win32/gui/ConfigurePlugins.c:292
+msgid "Configuration not OK!"
+msgstr "Não configurou corretamente!"
+
+#: ../win32/gui/ConfigurePlugins.c:292 ../gui/Cheat.c:156 ../gui/Cheat.c:252
+#: ../gui/LnxMain.c:409
+msgid "Error"
+msgstr "Erro"
+
+#: ../win32/gui/ConfigurePlugins.c:393
+msgid "This plugin reports that should work correctly"
+msgstr "Esta extensão informou que deve funcionar corretamente."
+
+#: ../win32/gui/ConfigurePlugins.c:394
+msgid "This plugin reports that should not work correctly"
+msgstr "Esta extensão informou que não deve funcionar corretamente."
+
+#: ../win32/gui/ConfigurePlugins.c:450
+msgid "Select Plugins Directory"
+msgstr "Escolha o diretório das extensões"
+
+#: ../win32/gui/ConfigurePlugins.c:459
+msgid "Select Bios Directory"
+msgstr "Escolha o diretório da BIOS"
+
+#: ../win32/gui/ConfigurePlugins.c:468
+msgid "Configuration"
+msgstr "Configuração"
+
+#: ../win32/gui/ConfigurePlugins.c:472
+msgid "Graphics"
+msgstr "Gráficos"
+
+#: ../win32/gui/ConfigurePlugins.c:473
+msgid "First Controller"
+msgstr "Controle 1"
+
+#: ../win32/gui/ConfigurePlugins.c:474
+msgid "Second Controller"
+msgstr "Controle 2"
+
+#: ../win32/gui/ConfigurePlugins.c:475
+msgid "Sound"
+msgstr "Áudio"
+
+#: ../win32/gui/ConfigurePlugins.c:476
+msgid "Cdrom"
+msgstr "CDROM"
+
+#: ../win32/gui/ConfigurePlugins.c:477
+msgid "Bios"
+msgstr "BIOS"
+
+#: ../win32/gui/ConfigurePlugins.c:478
+msgid "Set Bios Directory"
+msgstr "Escolher o diretório da BIOS"
+
+#: ../win32/gui/ConfigurePlugins.c:479
+msgid "Set Plugins Directory"
+msgstr "Escolher o diretório das extensões"
+
+#: ../win32/gui/ConfigurePlugins.c:480 ../win32/gui/ConfigurePlugins.c:483
+#: ../win32/gui/ConfigurePlugins.c:486 ../win32/gui/ConfigurePlugins.c:489
+#: ../win32/gui/ConfigurePlugins.c:492 ../win32/gui/ConfigurePlugins.c:604
+msgid "Configure..."
+msgstr "Configurar..."
+
+#: ../win32/gui/ConfigurePlugins.c:481 ../win32/gui/ConfigurePlugins.c:484
+#: ../win32/gui/ConfigurePlugins.c:487 ../win32/gui/ConfigurePlugins.c:490
+#: ../win32/gui/ConfigurePlugins.c:493 ../win32/gui/ConfigurePlugins.c:605
+msgid "Test..."
+msgstr "Testar..."
+
+#: ../win32/gui/ConfigurePlugins.c:482 ../win32/gui/ConfigurePlugins.c:485
+#: ../win32/gui/ConfigurePlugins.c:488 ../win32/gui/ConfigurePlugins.c:491
+#: ../win32/gui/ConfigurePlugins.c:494 ../win32/gui/ConfigurePlugins.c:606
+msgid "About..."
+msgstr "Sobre..."
+
+#: ../win32/gui/ConfigurePlugins.c:599
+msgid "NetPlay Configuration"
+msgstr "Configuração do jogo em rede"
+
+#: ../win32/gui/ConfigurePlugins.c:603
+msgid "NetPlay"
+msgstr "Jogo em rede"
+
+#: ../win32/gui/ConfigurePlugins.c:607
+msgid ""
+"Note: The NetPlay Plugin Directory should be the same as the other Plugins."
+msgstr ""
+"Observação: o diretório da extensão de jogo em rede deve ser o mesmo que "
+"odas outras extensões."
+
+#: ../win32/gui/plugin.c:90 ../win32/gui/WndMain.c:279
+#, c-format
+msgid "*PCSX*: Saved State %d"
+msgstr "PCSX: Estado \"%d\" salvo."
+
+#: ../win32/gui/plugin.c:91 ../win32/gui/WndMain.c:280
+#, c-format
+msgid "*PCSX*: Error Saving State %d"
+msgstr "PCSX: Erro ao salvar o estado \"%d\"!"
+
+#: ../win32/gui/plugin.c:107 ../win32/gui/WndMain.c:257
+#, c-format
+msgid "*PCSX*: Loaded State %d"
+msgstr "PCSX: Estado \"%d\" carregado."
+
+#: ../win32/gui/plugin.c:108 ../win32/gui/WndMain.c:258
+#, c-format
+msgid "*PCSX*: Error Loading State %d"
+msgstr "PCSX: Erro ao carregar o estado \"%d\"!"
+
+#: ../win32/gui/plugin.c:119
+#, c-format
+msgid "*PCSX*: Sio Irq Always Enabled"
+msgstr "PCSX: IRQ SIO sempre ativada."
+
+#: ../win32/gui/plugin.c:120
+#, c-format
+msgid "*PCSX*: Sio Irq Not Always Enabled"
+msgstr "PCSX: IRQ SIO nem sempre ativada."
+
+#: ../win32/gui/plugin.c:127
+#, c-format
+msgid "*PCSX*: Black&White Mdecs Only Enabled"
+msgstr "PCSX: Mdecs apenas em preto e branco."
+
+#: ../win32/gui/plugin.c:128
+#, c-format
+msgid "*PCSX*: Black&White Mdecs Only Disabled"
+msgstr "PCSX: Mdecs coloridas."
+
+#: ../win32/gui/plugin.c:135
+#, c-format
+msgid "*PCSX*: Xa Enabled"
+msgstr "PCSX: XA Ligado."
+
+#: ../win32/gui/plugin.c:136
+#, c-format
+msgid "*PCSX*: Xa Disabled"
+msgstr "PCSX: XA Desligado."
+
+#: ../win32/gui/plugin.c:145
+msgid "*PCSX*: CdRom Case Opened"
+msgstr "PCSX: Bandeja do CDROM aberta."
+
+#: ../win32/gui/plugin.c:150
+msgid "*PCSX*: CdRom Case Closed"
+msgstr "PCSX: Bandeja do CDROM fechada."
+
+#: ../win32/gui/plugin.c:177
+msgid "Connecting..."
+msgstr "Conectando..."
+
+#: ../win32/gui/plugin.c:179 ../win32/gui/plugin.c:186
+#, c-format
+msgid "Please wait while connecting... %c\n"
+msgstr "Por favor, espere enquanto o emulador se conecta... %c\n"
+
+#: ../win32/gui/plugin.c:216
+msgid "Error Opening CDR Plugin"
+msgstr "Erro ao abrir a extensão de CDROM!"
+
+#: ../win32/gui/plugin.c:279
+#, c-format
+msgid "Error Opening GPU Plugin (%d)"
+msgstr "Erro ao abrir a extensão de GPU (%d)!"
+
+#: ../win32/gui/plugin.c:281
+#, c-format
+msgid "Error Opening SPU Plugin (%d)"
+msgstr "Erro ao abrir a extensão de SPU (%d)!"
+
+#: ../win32/gui/plugin.c:284
+#, c-format
+msgid "Error Opening PAD1 Plugin (%d)"
+msgstr "Erro ao abrir a extensão do controle 1 (%d)!"
+
+#: ../win32/gui/plugin.c:286
+#, c-format
+msgid "Error Opening PAD2 Plugin (%d)"
+msgstr "Erro ao abrir a extensão do controle 2 (%d)!"
+
+#: ../win32/gui/plugin.c:309
+msgid "Error Closing CDR Plugin"
+msgstr "Erro ao fechar a extensão de CDROM!"
+
+#: ../win32/gui/plugin.c:311
+msgid "Error Closing GPU Plugin"
+msgstr "Erro ao fechar a extensão de GPU!"
+
+#: ../win32/gui/plugin.c:313
+msgid "Error Closing SPU Plugin"
+msgstr "Erro ao fechar a extensão de SPU!"
+
+#: ../win32/gui/plugin.c:315
+msgid "Error Closing PAD1 Plugin"
+msgstr "Erro ao fechar a extensão do controle 1!"
+
+#: ../win32/gui/plugin.c:317
+msgid "Error Closing PAD2 Plugin"
+msgstr "Erro ao fechar a extensão do controle 2!"
+
+#: ../win32/gui/plugin.c:335
+#, c-format
+msgid "CDRinit error: %d"
+msgstr "Erro ao iniciar o CDROM: %d"
+
+#: ../win32/gui/plugin.c:337
+#, c-format
+msgid "GPUinit error: %d"
+msgstr "Erro ao iniciar a GPU: %d"
+
+#: ../win32/gui/plugin.c:339
+#, c-format
+msgid "SPUinit error: %d"
+msgstr "Erro ao iniciar a SPU: %d"
+
+#: ../win32/gui/plugin.c:341
+#, c-format
+msgid "PAD1init error: %d"
+msgstr "Erro ao iniciar o controle 1: %d"
+
+#: ../win32/gui/plugin.c:343
+#, c-format
+msgid "PAD2init error: %d"
+msgstr "Erro ao iniciar o controle 2: %d"
+
+#: ../win32/gui/plugin.c:346
+#, c-format
+msgid "NETinit error: %d"
+msgstr "Erro ao iniciar a rede: %d"
+
+#: ../win32/gui/WndMain.c:76
+msgid "Arabic"
+msgstr "Arábico"
+
+#: ../win32/gui/WndMain.c:77
+msgid "Catalan"
+msgstr "Catalão"
+
+#: ../win32/gui/WndMain.c:78
+msgid "German"
+msgstr "Alemão"
+
+#: ../win32/gui/WndMain.c:79
+msgid "Greek"
+msgstr "Grego"
+
+#: ../win32/gui/WndMain.c:80 ../win32/gui/WndMain.c:1557
+#: ../win32/gui/WndMain.c:1559
+msgid "English"
+msgstr "Inglês"
+
+#: ../win32/gui/WndMain.c:81
+msgid "Spanish"
+msgstr "Espanhol"
+
+#: ../win32/gui/WndMain.c:82
+msgid "French"
+msgstr "Francês"
+
+#: ../win32/gui/WndMain.c:83
+msgid "Italian"
+msgstr "Italiano"
+
+#: ../win32/gui/WndMain.c:84
+msgid "Portuguese"
+msgstr "Português"
+
+#: ../win32/gui/WndMain.c:85
+#, fuzzy
+msgid "Portuguese (Brazilian)"
+msgstr "Português"
+
+#: ../win32/gui/WndMain.c:86
+msgid "Romanian"
+msgstr "Romeno"
+
+#: ../win32/gui/WndMain.c:87
+msgid "Russian"
+msgstr "Russo"
+
+#: ../win32/gui/WndMain.c:88
+msgid "Simplified Chinese"
+msgstr "Chinês Simplificado"
+
+#: ../win32/gui/WndMain.c:89
+msgid "Traditional Chinese"
+msgstr "Chinês Tradicional"
+
+#: ../win32/gui/WndMain.c:90
+msgid "Japanese"
+msgstr "Japonês"
+
+#: ../win32/gui/WndMain.c:91
+msgid "Korean"
+msgstr "Coreano"
+
+#: ../win32/gui/WndMain.c:298 ../win32/gui/WndMain.c:350
+msgid "PCSX State Format"
+msgstr "Formato dos estados salvos do PCSX"
+
+#: ../win32/gui/WndMain.c:325
+#, c-format
+msgid "*PCSX*: Loaded State %s"
+msgstr "PCSX: Arquivo de estado \"%s\" carregado."
+
+#: ../win32/gui/WndMain.c:326
+#, c-format
+msgid "*PCSX*: Error Loading State %s"
+msgstr "PCSX: Erro ao carregar o arquivo de estado \"%s\"!"
+
+#: ../win32/gui/WndMain.c:377
+#, c-format
+msgid "*PCSX*: Saved State %s"
+msgstr "PCSX: Arquivo de estado \"%s\" salvo."
+
+#: ../win32/gui/WndMain.c:378
+#, c-format
+msgid "*PCSX*: Error Saving State %s"
+msgstr "PCSX: Erro ao salvar o arquivo de estado \"%s\"!"
+
+#: ../win32/gui/WndMain.c:427 ../win32/gui/WndMain.c:476 ../gui/Gtk2Gui.c:479
+#: ../gui/Gtk2Gui.c:604
+msgid "The CD does not appear to be a valid Playstation CD"
+msgstr "Esse CD não parece ser um CD de PlayStation!"
+
+#: ../win32/gui/WndMain.c:433 ../win32/gui/WndMain.c:482 ../gui/Gtk2Gui.c:487
+#: ../gui/Gtk2Gui.c:612
+msgid "Could not load CD-ROM!"
+msgstr "Não pôde carregar o CDROM!"
+
+#: ../win32/gui/WndMain.c:443
+msgid "Running BIOS is not supported with Internal HLE Bios."
+msgstr "Iniciar pela BIOS não é suportado com a BIOS HLE interna."
+
+#: ../win32/gui/WndMain.c:662 ../gui/MemcardDlg.c:59
+msgid "Title"
+msgstr "Título"
+
+#: ../win32/gui/WndMain.c:668 ../gui/MemcardDlg.c:65
+msgid "Status"
+msgstr "Estado"
+
+#: ../win32/gui/WndMain.c:674
+msgid "Game ID"
+msgstr "ID do Jogo"
+
+#: ../win32/gui/WndMain.c:680
+msgid "Game"
+msgstr "Jogo"
+
+#: ../win32/gui/WndMain.c:854
+msgid "mid link block"
+msgstr "bloco de ligação intermediário"
+
+#: ../win32/gui/WndMain.c:857
+msgid "terminiting link block"
+msgstr "bloco final da ligação"
+
+#: ../win32/gui/WndMain.c:865 ../gui/MemcardDlg.c:147 ../gui/MemcardDlg.c:244
+msgid "Deleted"
+msgstr "Apagado"
+
+#: ../win32/gui/WndMain.c:866 ../win32/gui/WndMain.c:869
+#: ../gui/MemcardDlg.c:149 ../gui/MemcardDlg.c:153 ../gui/MemcardDlg.c:246
+#: ../gui/MemcardDlg.c:250
+msgid "Free"
+msgstr "Liberado"
+
+#: ../win32/gui/WndMain.c:868 ../gui/MemcardDlg.c:151 ../gui/MemcardDlg.c:248
+msgid "Used"
+msgstr "Usado"
+
+#: ../win32/gui/WndMain.c:962
+msgid "Memcard Manager"
+msgstr "Gerenciador de cartões de memória"
+
+#: ../win32/gui/WndMain.c:966 ../win32/gui/WndMain.c:969
+msgid "Select Mcd"
+msgstr "Selecionar cartão"
+
+#: ../win32/gui/WndMain.c:967 ../win32/gui/WndMain.c:970
+msgid "Format Mcd"
+msgstr "Formatar cartão"
+
+#: ../win32/gui/WndMain.c:968 ../win32/gui/WndMain.c:971
+msgid "Reload Mcd"
+msgstr "Reiniciar cartão"
+
+#: ../win32/gui/WndMain.c:972
+msgid "-> Copy ->"
+msgstr "-> Copiar ->"
+
+#: ../win32/gui/WndMain.c:973
+msgid "<- Copy <-"
+msgstr "<- Copiar <-"
+
+#: ../win32/gui/WndMain.c:974
+msgid "Paste"
+msgstr "Colar"
+
+#: ../win32/gui/WndMain.c:975
+msgid "<- Un/Delete"
+msgstr "<- Apagar/Desfazer"
+
+#: ../win32/gui/WndMain.c:976
+msgid "Un/Delete ->"
+msgstr "Apagar/Desfazer ->"
+
+#: ../win32/gui/WndMain.c:978
+msgid "Memory Card 1"
+msgstr "Cartão de memória 1"
+
+#: ../win32/gui/WndMain.c:979
+msgid "Memory Card 2"
+msgstr "Cartão de memória 2"
+
+#: ../win32/gui/WndMain.c:1034
+msgid "Are you sure you want to paste this selection?"
+msgstr "Você tem certeza que quer colar o selecionado?"
+
+#: ../win32/gui/WndMain.c:1034 ../win32/gui/WndMain.c:1145
+#: ../win32/gui/WndMain.c:1152
+msgid "Confirmation"
+msgstr "Confirmação"
+
+#: ../win32/gui/WndMain.c:1145 ../win32/gui/WndMain.c:1152
+msgid "Are you sure you want to format this Memory Card?"
+msgstr "Você tem certeza que quer formatar esse Cartão de Memória?"
+
+#: ../win32/gui/WndMain.c:1198
+msgid "Cpu Config"
+msgstr "Configuração da CPU"
+
+#: ../win32/gui/WndMain.c:1203
+msgid "Disable Xa Decoding"
+msgstr "Desativar decodificação de XA"
+
+#: ../win32/gui/WndMain.c:1204
+msgid "Sio Irq Always Enabled"
+msgstr "IRQ SIO sempre ativado"
+
+#: ../win32/gui/WndMain.c:1205
+msgid "Black && White Movies"
+msgstr "Filmes em preto e branco"
+
+#: ../win32/gui/WndMain.c:1206
+msgid "Disable Cd audio"
+msgstr "Desativar áudio de CD"
+
+#: ../win32/gui/WndMain.c:1207 ../data/pcsx.glade2:1603
+msgid "Autodetect"
+msgstr "Detectar Automaticamente"
+
+#: ../win32/gui/WndMain.c:1208
+msgid "Enable Interpreter Cpu"
+msgstr "Ativar interpretador da CPU"
+
+#: ../win32/gui/WndMain.c:1209 ../data/pcsx.glade2:1459
+msgid "Enable Console Output"
+msgstr "Ativar saída no terminal"
+
+#: ../win32/gui/WndMain.c:1210 ../data/pcsx.glade2:1409
+msgid "Enable Debugger"
+msgstr "Ligar debugger"
+
+#: ../win32/gui/WndMain.c:1211
+msgid "Spu Irq Always Enabled"
+msgstr "IRQ da SPU sempre ligada"
+
+#: ../win32/gui/WndMain.c:1212 ../data/pcsx.glade2:1546
+msgid "Parasite Eve 2, Vandal Hearts 1/2 Fix"
+msgstr "Correção para Parasite Eve 2, Vandal Hearts..."
+
+#: ../win32/gui/WndMain.c:1213 ../data/pcsx.glade2:1561
+msgid "InuYasha Sengoku Battle Fix"
+msgstr "Correção para InuYasha, Sengoku Battle..."
+
+#: ../win32/gui/WndMain.c:1215
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:277
+#: ../plugins/dfinput/dfinput.glade2:448
+msgid "Options"
+msgstr "Opções"
+
+#: ../win32/gui/WndMain.c:1216
+msgid "Psx System Type"
+msgstr "Tipo de sistema do PSX"
+
+#: ../win32/gui/WndMain.c:1321
+msgid "Psx Mcd Format (*.mcr;*.mc;*.mem;*.vgs;*.mcd;*.gme;*.ddf)"
+msgstr "Qualquer formato (*.mcr;*.mc;*.mem;*.vgs;*.mcd;*.gme;*.ddf)"
+
+#: ../win32/gui/WndMain.c:1326
+msgid "Psx Memory Card (*.mcr;*.mc)"
+msgstr "Cartão de memória binário (*.mcr;*.mc)"
+
+#: ../win32/gui/WndMain.c:1331
+msgid "CVGS Memory Card (*.mem;*.vgs)"
+msgstr "Cartão de memória do CVGS (*.mem;*.vgs)"
+
+#: ../win32/gui/WndMain.c:1336
+msgid "Bleem Memory Card (*.mcd)"
+msgstr "Cartão de memória do Bleem (*.mcd)"
+
+#: ../win32/gui/WndMain.c:1341
+msgid "DexDrive Memory Card (*.gme)"
+msgstr "Cartão de memória do DexDrive (*.gme)"
+
+#: ../win32/gui/WndMain.c:1346
+msgid "DataDeck Memory Card (*.ddf)"
+msgstr "Cartão de memória do DataDeck (*.ddf)"
+
+#: ../win32/gui/WndMain.c:1351 ../win32/gui/WndMain.c:1432 ../gui/Cheat.c:322
+#: ../gui/Gtk2Gui.c:416 ../gui/Gtk2Gui.c:555
+msgid "All Files"
+msgstr "Todos os arquivos"
+
+#: ../win32/gui/WndMain.c:1390
+msgid "Psx Exe Format"
+msgstr "Formato executável do PSX"
+
+#: ../win32/gui/WndMain.c:1427
+msgid "Psx Isos (*.iso;*.mdf;*.img;*.bin)"
+msgstr "Imagens de CD (*.iso;*.mdf;*.img;*.bin)"
+
+#: ../win32/gui/WndMain.c:1503
+msgid "&File"
+msgstr "&Arquivo"
+
+#: ../win32/gui/WndMain.c:1504
+msgid "E&xit"
+msgstr "&Sair"
+
+#: ../win32/gui/WndMain.c:1506
+msgid "Run &EXE..."
+msgstr "Rodar &EXE..."
+
+#: ../win32/gui/WndMain.c:1507
+msgid "Run &BIOS"
+msgstr "Iniciar pela &BIOS"
+
+#: ../win32/gui/WndMain.c:1508
+msgid "Run &ISO..."
+msgstr "Rodar &imagem de CD..."
+
+#: ../win32/gui/WndMain.c:1509
+msgid "Run &CD"
+msgstr "Rodar &CD"
+
+#: ../win32/gui/WndMain.c:1511
+msgid "&Emulator"
+msgstr "&Emulador"
+
+#: ../win32/gui/WndMain.c:1512
+msgid "&States"
+msgstr "&Estados"
+
+#: ../win32/gui/WndMain.c:1514
+msgid "S&witch ISO..."
+msgstr "T&rocar de imagem de CD..."
+
+#: ../win32/gui/WndMain.c:1516
+msgid "Re&set"
+msgstr "Re&iniciar"
+
+#: ../win32/gui/WndMain.c:1517
+msgid "&Run"
+msgstr "&Executar"
+
+#: ../win32/gui/WndMain.c:1518
+msgid "&Save"
+msgstr "&Salvar"
+
+#: ../win32/gui/WndMain.c:1519
+msgid "&Load"
+msgstr "&Carregar"
+
+#: ../win32/gui/WndMain.c:1520 ../win32/gui/WndMain.c:1526
+msgid "&Other..."
+msgstr "&Outros..."
+
+#: ../win32/gui/WndMain.c:1521 ../win32/gui/WndMain.c:1527
+msgid "Slot &5"
+msgstr "Unidade &5"
+
+#: ../win32/gui/WndMain.c:1522 ../win32/gui/WndMain.c:1528
+msgid "Slot &4"
+msgstr "Unidade &4"
+
+#: ../win32/gui/WndMain.c:1523 ../win32/gui/WndMain.c:1529
+msgid "Slot &3"
+msgstr "Unidade &3"
+
+#: ../win32/gui/WndMain.c:1524 ../win32/gui/WndMain.c:1530
+msgid "Slot &2"
+msgstr "Unidade &2"
+
+#: ../win32/gui/WndMain.c:1525 ../win32/gui/WndMain.c:1531
+msgid "Slot &1"
+msgstr "Unidade &1"
+
+#: ../win32/gui/WndMain.c:1533
+msgid "&Configuration"
+msgstr "&Configuração"
+
+#: ../win32/gui/WndMain.c:1534
+msgid "Cheat &Search..."
+msgstr "Procurar por &trapaça..."
+
+#: ../win32/gui/WndMain.c:1535
+msgid "Ch&eat Code..."
+msgstr "&Código de trapaça..."
+
+#: ../win32/gui/WndMain.c:1538
+msgid "&Language"
+msgstr "&Linguagem"
+
+#: ../win32/gui/WndMain.c:1563
+msgid "&Memory cards..."
+msgstr "&Cartões de memória..."
+
+#: ../win32/gui/WndMain.c:1564
+msgid "C&PU..."
+msgstr "C&PU..."
+
+#: ../win32/gui/WndMain.c:1566
+msgid "&NetPlay..."
+msgstr "&Jogo em rede..."
+
+#: ../win32/gui/WndMain.c:1568
+msgid "&Controllers..."
+msgstr "&Controles..."
+
+#: ../win32/gui/WndMain.c:1569
+msgid "CD-&ROM..."
+msgstr "CD&ROM..."
+
+#: ../win32/gui/WndMain.c:1570
+msgid "&Sound..."
+msgstr "Á&udio..."
+
+#: ../win32/gui/WndMain.c:1571
+msgid "&Graphics..."
+msgstr "&Gráficos..."
+
+#: ../win32/gui/WndMain.c:1573
+msgid "&Plugins && Bios..."
+msgstr "&Extensões e BIOS..."
+
+#: ../win32/gui/WndMain.c:1575
+msgid "&Help"
+msgstr "&Ajuda"
+
+#: ../win32/gui/WndMain.c:1576
+msgid "&About..."
+msgstr "&Sobre..."
+
+#: ../win32/gui/WndMain.c:1762
+msgid "Pcsx Msg"
+msgstr "Mensagens do PCSX"
+
+#: ../win32/gui/WndMain.c:1765
+msgid "Error Loading Symbol"
+msgstr "Erro ao carregar símbolo"
+
+#: ../gui/Cheat.c:118 ../gui/Cheat.c:203
+msgid "Cheat Description:"
+msgstr "Descrição da trapaça:"
+
+#: ../gui/Cheat.c:307
+msgid "Open Cheat File"
+msgstr "Abrir arquivo de trapaça"
+
+#: ../gui/Cheat.c:317 ../gui/Cheat.c:357
+msgid "PCSX Cheat Code Files (*.cht)"
+msgstr "Arquivos de trapaça do PCSX (*.cht)"
+
+#: ../gui/Cheat.c:347
+msgid "Save Cheat File"
+msgstr "Salvar um arquivo de trapaça"
+
+#: ../gui/Cheat.c:362
+msgid "All Files (*.*)"
+msgstr "Todos os arquivos (*.*)"
+
+#: ../gui/Cheat.c:395 ../gui/Cheat.c:1125 ../gui/ConfDlg.c:104
+#: ../gui/ConfDlg.c:203
+msgid "Error: Glade interface could not be loaded!"
+msgstr "Erro: o ambiente Glade não pôde ser carregado!"
+
+#: ../gui/Cheat.c:400
+msgid "Cheat Codes"
+msgstr "Códigos de trapaça"
+
+#: ../gui/Cheat.c:406
+msgid "Enable"
+msgstr "Ligar"
+
+#: ../gui/Cheat.c:631
+msgid "Freeze value"
+msgstr "Congelar valor"
+
+#: ../gui/Cheat.c:730
+msgid "Modify value"
+msgstr "Modificar valor"
+
+#: ../gui/Cheat.c:738
+msgid "New value:"
+msgstr "Novo valor:"
+
+#: ../gui/Cheat.c:1135
+msgid "Search Results"
+msgstr "Resultados da busca"
+
+#: ../gui/ConfDlg.c:112 ../data/pcsx.glade2:764
+msgid "Configure PCSX"
+msgstr "Configurar PCSX"
+
+#: ../gui/ConfDlg.c:240 ../gui/ConfDlg.c:261 ../gui/ConfDlg.c:282
+#: ../gui/ConfDlg.c:303 ../gui/ConfDlg.c:358
+msgid "No configuration required"
+msgstr "Não necessita de configuração"
+
+#: ../gui/ConfDlg.c:240 ../gui/ConfDlg.c:261 ../gui/ConfDlg.c:282
+#: ../gui/ConfDlg.c:303 ../gui/ConfDlg.c:358
+msgid "This plugin doesn't need to be configured."
+msgstr "Esta extensão não pode ser configurada."
+
+#: ../gui/ConfDlg.c:586
+#, c-format
+msgid "Could not open BIOS directory: '%s'\n"
+msgstr "Não conseguiu abrir o diretório \"%s\", da BIOS!\n"
+
+#: ../gui/ConfDlg.c:616 ../gui/ConfDlg.c:709 ../gui/LnxMain.c:167
+#, c-format
+msgid "Could not open directory: '%s'\n"
+msgstr "Não conseguiu abrir o diretório \"%s\"!\n"
+
+#: ../gui/Gtk2Gui.c:109
+msgid "Ready"
+msgstr ""
+
+#: ../gui/Gtk2Gui.c:150
+msgid "Emulation Paused."
+msgstr ""
+
+#: ../gui/Gtk2Gui.c:398
+msgid "Select PSX EXE File"
+msgstr "Selecione o arquivo executável de PSX"
+
+#: ../gui/Gtk2Gui.c:412
+msgid "PlayStation Executable Files"
+msgstr "Arquivos executáveis do PlayStation"
+
+#: ../gui/Gtk2Gui.c:448
+msgid "Not a valid PSX file"
+msgstr "Não é um arquivo válido de PSX"
+
+#: ../gui/Gtk2Gui.c:448
+msgid "The file does not appear to be a valid Playstation executable"
+msgstr "Esse arquivo não parece ser um executável válido de PlayStation!"
+
+#: ../gui/Gtk2Gui.c:479 ../gui/Gtk2Gui.c:604
+msgid "CD ROM failed"
+msgstr "CDROM falhou"
+
+#: ../gui/Gtk2Gui.c:487 ../gui/Gtk2Gui.c:612
+msgid "The CD-ROM could not be loaded"
+msgstr ""
+
+#: ../gui/Gtk2Gui.c:501
+msgid "Could not run BIOS"
+msgstr "Não conseguiu iniciar a BIOS"
+
+#: ../gui/Gtk2Gui.c:501
+msgid "Running BIOS is not supported with Internal HLE BIOS."
+msgstr "Iniciar pela BIOS não é suportado com a BIOS HLE interno."
+
+#: ../gui/Gtk2Gui.c:530
+msgid "Open PSX Disc Image File"
+msgstr "Abrir arquivo de imagem de CD de PSX"
+
+#: ../gui/Gtk2Gui.c:550
+msgid "PSX Image Files (*.bin, *.img, *.mdf, *.iso)"
+msgstr "Arquivo de imagens de CD de PSX (*.bin, *.img, *.mdf, *.iso)"
+
+#: ../gui/Gtk2Gui.c:761
+#, c-format
+msgid "Loaded state %s."
+msgstr "Arquivo de estado \"%s\" carregado."
+
+#: ../gui/Gtk2Gui.c:765
+#, c-format
+msgid "Error loading state %s!"
+msgstr "Erro ao carregar o arquivo de estado \"%s\"!"
+
+#: ../gui/Gtk2Gui.c:776
+#, c-format
+msgid "Saved state %s."
+msgstr "Arquivo de estado \"%s\" salvo."
+
+#: ../gui/Gtk2Gui.c:778
+#, c-format
+msgid "Error saving state %s!"
+msgstr "Erro ao salvar o arquivo de estado \"%s\"!"
+
+#: ../gui/Gtk2Gui.c:811 ../gui/Gtk2Gui.c:838
+msgid "Select State File"
+msgstr "Selecione o arquivo de estado"
+
+#: ../gui/Gtk2Gui.c:895
+msgid "Notice"
+msgstr "Aviso"
+
+#: ../gui/LnxMain.c:62
+#, c-format
+msgid "Creating memory card: %s\n"
+msgstr "Criando cartão de memória \"%s\"\n"
+
+#: ../gui/LnxMain.c:320
+msgid ""
+" pcsx [options] [file]\n"
+"\toptions:\n"
+"\t-runcd\t\tRuns CD-ROM\n"
+"\t-cdfile FILE\tRuns a CD image file\n"
+"\t-nogui\t\tDon't open the GTK GUI\n"
+"\t-cfg FILE\tLoads desired configuration file (default: ~/.pcsx/pcsx.cfg)\n"
+"\t-psxout\t\tEnable PSX output\n"
+"\t-load STATENUM\tLoads savestate STATENUM (1-5)\n"
+"\t-h -help\tDisplay this message\n"
+"\tfile\t\tLoads file\n"
+msgstr ""
+" pcsx [opções] [arquivo]\n"
+"\topções:\n"
+"\t-runcd\t\tExecuta direto pelo CD-ROM\n"
+"\t-cdfile ARQUIVO\tRoda um arquivo de imagem de CD\n"
+"\t-nogui\t\tNão abre o GUI da GTK\n"
+"\t-cfg ARQUIVO\tCarrega uma configuração alternativa (padrão: ~/.pcsx/pcsx."
+"cfg)\n"
+"\t-psxout\t\tAtiva a saída do PSX no console\n"
+"\t-load NÚMERO_ESTADO\tCarrega um estado entre 1-5\n"
+"\t-h -help\tMostra essa mensagem\n"
+"\t[arquivo]\t\tCarrega um arquivo.\n"
+
+#: ../gui/LnxMain.c:357
+#, c-format
+msgid ""
+"PCSX cannot be configured without using the GUI -- you should restart "
+"without -nogui.\n"
+msgstr ""
+"PCSX não pode ser configurado sem o GUI -- reinicie sem a opção -nogui.\n"
+
+#: ../gui/LnxMain.c:409
+msgid "Failed loading plugins!"
+msgstr "Não conseguiu carregar as extensões!"
+
+#: ../gui/LnxMain.c:426
+#, c-format
+msgid "Could not load CD-ROM!\n"
+msgstr "Não pôde carregar o CD-ROM!\n"
+
+#: ../gui/LnxMain.c:465
+#, c-format
+msgid "PSX emulator couldn't be initialized.\n"
+msgstr "O emulador não pôde ser inicializado.\n"
+
+#: ../gui/MemcardDlg.c:53
+msgid "Icon"
+msgstr "Ícone"
+
+#: ../gui/MemcardDlg.c:71
+msgid "ID"
+msgstr "ID"
+
+#: ../gui/MemcardDlg.c:77
+msgid "Name"
+msgstr "Nome"
+
+#: ../gui/MemcardDlg.c:297
+msgid "Select A File"
+msgstr ""
+
+#: ../gui/MemcardDlg.c:338
+msgid "Format this Memory Card?"
+msgstr "Formatar esse cartão de memória?"
+
+#: ../gui/MemcardDlg.c:340
+msgid ""
+"If you format the memory card, the card will be empty, and any existing data "
+"overwritten."
+msgstr "Ao formatar o cartão de memória, todo o conteúdo será zerado."
+
+#: ../gui/MemcardDlg.c:343
+msgid "Format card"
+msgstr "Formatar cartão"
+
+#: ../gui/MemcardDlg.c:367
+msgid "Create a new Memory Card"
+msgstr ""
+
+#: ../gui/MemcardDlg.c:376
+msgid "New Memory Card.mcd"
+msgstr ""
+
+#: ../gui/MemcardDlg.c:477
+msgid "No free space on memory card"
+msgstr ""
+
+#: ../gui/MemcardDlg.c:478
+msgid ""
+"There are no free slots available on the target memory card. Please delete a "
+"slot first."
+msgstr ""
+
+#: ../gui/MemcardDlg.c:632
+msgid "Memory Card Manager"
+msgstr "Gerenciador de cartões de memória"
+
+#: ../gui/Plugin.c:204 ../data/pcsx.glade2:1495
+#, c-format
+msgid "SIO IRQ Always Enabled"
+msgstr "IRQ SIO sempre ativada"
+
+#: ../gui/Plugin.c:205
+#, c-format
+msgid "SIO IRQ Not Always Enabled"
+msgstr "IRQ SIO nem sempre ativada"
+
+#: ../gui/Plugin.c:211
+#, c-format
+msgid "Black & White Mdecs Only Enabled"
+msgstr "Mdecs apenas em preto e branco ativado"
+
+#: ../gui/Plugin.c:212
+#, c-format
+msgid "Black & White Mdecs Only Disabled"
+msgstr "Mdecs apenas em preto e branco desativado"
+
+#: ../gui/Plugin.c:218
+#, c-format
+msgid "XA Enabled"
+msgstr "XA Ligado"
+
+#: ../gui/Plugin.c:219
+#, c-format
+msgid "XA Disabled"
+msgstr "XA Desligado"
+
+#: ../gui/Plugin.c:285
+msgid "Error opening CD-ROM plugin!"
+msgstr "Erro ao abrir a extensão de CD-ROM!"
+
+#: ../gui/Plugin.c:287
+msgid "Error opening SPU plugin!"
+msgstr "Erro ao abrir a extensão de SPU!"
+
+#: ../gui/Plugin.c:290
+msgid "Error opening GPU plugin!"
+msgstr "Erro ao abrir a extensão de GPU!"
+
+#: ../gui/Plugin.c:292
+msgid "Error opening Controller 1 plugin!"
+msgstr "Erro ao abrir a extensão do Controle 1!"
+
+#: ../gui/Plugin.c:294
+msgid "Error opening Controller 2 plugin!"
+msgstr "Erro ao abrir a extensão do Controle 2!"
+
+#: ../gui/Plugin.c:374
+msgid "Error closing CD-ROM plugin!"
+msgstr "Erro ao fechar a extensão de CD-ROM!"
+
+#: ../gui/Plugin.c:376
+msgid "Error closing SPU plugin!"
+msgstr "Erro ao fechar a extensão de SPU!"
+
+#: ../gui/Plugin.c:378
+msgid "Error closing Controller 1 Plugin!"
+msgstr "Erro ao fechar a extensão do Controle 1!"
+
+#: ../gui/Plugin.c:380
+msgid "Error closing Controller 2 plugin!"
+msgstr "Erro ao fechar a extensão de Controle 2!"
+
+#: ../gui/Plugin.c:382
+msgid "Error closing GPU plugin!"
+msgstr "Erro ao fechar a extensão de GPU!"
+
+#: ../libpcsxcore/cdriso.c:644
+#, c-format
+msgid "Loaded CD Image: %s"
+msgstr "Carregou a imagem de CD \"%s\"."
+
+#: ../libpcsxcore/cheat.c:148
+#, c-format
+msgid "Cheats loaded from: %s\n"
+msgstr "Trapaças de \"%s\" carregadas.\n"
+
+#: ../libpcsxcore/cheat.c:180
+#, c-format
+msgid "Cheats saved to: %s\n"
+msgstr "Trapaças salvas para \"%s\".\n"
+
+#: ../libpcsxcore/cheat.c:323 ../libpcsxcore/cheat.c:444
+msgid "(Untitled)"
+msgstr "(Sem título)"
+
+#: ../libpcsxcore/debug.c:317
+msgid "Error allocating memory"
+msgstr "Erro ao alocar memória"
+
+#: ../libpcsxcore/debug.c:322
+msgid "Unable to start debug server.\n"
+msgstr ""
+
+#: ../libpcsxcore/debug.c:326
+msgid "Debugger started.\n"
+msgstr ""
+
+#: ../libpcsxcore/debug.c:333
+msgid "Debugger stopped.\n"
+msgstr ""
+
+#: ../libpcsxcore/misc.c:389
+#, c-format
+msgid "Error opening file: %s.\n"
+msgstr "Erro ao abrir o arquivo \"%s\"!\n"
+
+#: ../libpcsxcore/misc.c:429
+#, c-format
+msgid "Unknown CPE opcode %02x at position %08x.\n"
+msgstr "Código operacional CPE %02x desconhecido, na posição %08x.\n"
+
+#: ../libpcsxcore/misc.c:436
+msgid "COFF files not supported.\n"
+msgstr "Arquivos COFF não são suportados!\n"
+
+#: ../libpcsxcore/misc.c:440
+msgid "This file does not appear to be a valid PSX file.\n"
+msgstr "Esse arquivo não parece ser um arquivo válido de PSX!\n"
+
+#: ../libpcsxcore/plugins.c:33
+#, c-format
+msgid "Error loading %s: %s"
+msgstr "Erro carregando \"%s\": \"%s\""
+
+#: ../libpcsxcore/plugins.c:162
+#, c-format
+msgid "Could not load GPU plugin %s!"
+msgstr "Não conseguiu carregar a extensão de GPU \"%s\"!"
+
+#: ../libpcsxcore/plugins.c:228
+#, c-format
+msgid "Could not load CD-ROM plugin %s!"
+msgstr "Não conseguiu carregar a extensão de CD-ROM \"%s\"!"
+
+#: ../libpcsxcore/plugins.c:467
+#, c-format
+msgid "Could not load SPU plugin %s!"
+msgstr "Não conseguiu carregar a extensão de SPU \"%s\"!"
+
+#: ../libpcsxcore/plugins.c:616
+#, c-format
+msgid "Could not load Controller 1 plugin %s!"
+msgstr "Não conseguiu carregar a extensão do Controle 1 \"%s\"!"
+
+#: ../libpcsxcore/plugins.c:670
+#, c-format
+msgid "Could not load Controller 2 plugin %s!"
+msgstr "Não conseguiu carregar a extensão do Controle 2 \"%s\"!"
+
+#: ../libpcsxcore/plugins.c:713
+#, c-format
+msgid "Could not load NetPlay plugin %s!"
+msgstr "Não conseguiu carregar a extensão de jogo em rede \"%s\"!"
+
+#: ../libpcsxcore/plugins.c:776
+#, c-format
+msgid "Error initializing CD-ROM plugin: %d"
+msgstr "Erro ao iniciar a extensão de CD-ROM \"%d\"!"
+
+#: ../libpcsxcore/plugins.c:778
+#, c-format
+msgid "Error initializing GPU plugin: %d"
+msgstr "Erro ao iniciar a extensão de GPU \"%d\"!"
+
+#: ../libpcsxcore/plugins.c:780
+#, c-format
+msgid "Error initializing SPU plugin: %d"
+msgstr "Erro ao iniciar a extensão de SPU \"%d\"!"
+
+#: ../libpcsxcore/plugins.c:782
+#, c-format
+msgid "Error initializing Controller 1 plugin: %d"
+msgstr "Erro ao iniciar a extensão do Controle 1 \"%d\"!"
+
+#: ../libpcsxcore/plugins.c:784
+#, c-format
+msgid "Error initializing Controller 2 plugin: %d"
+msgstr "Erro ao iniciar a extensão do Controle 2 \"%d\"!"
+
+#: ../libpcsxcore/plugins.c:788
+#, c-format
+msgid "Error initializing NetPlay plugin: %d"
+msgstr "Erro ao iniciar a extensão de jogo em rede \"%d\"!"
+
+#: ../libpcsxcore/plugins.c:791
+msgid "Plugins loaded.\n"
+msgstr "Extensões carregadas.\n"
+
+#: ../libpcsxcore/psxmem.c:69
+msgid "Error allocating memory!"
+msgstr "Erro ao alocar memória!"
+
+#: ../libpcsxcore/psxmem.c:109
+#, c-format
+msgid "Could not open BIOS:\"%s\". Enabling HLE Bios!\n"
+msgstr "Não conseguiu abrir a BIOS\"%s\". Usando BIOS HLE!\n"
+
+#: ../libpcsxcore/r3000a.c:34
+#, c-format
+msgid "Running PCSX Version %s (%s).\n"
+msgstr "Rodando o PCSX Versão %s (%s).\n"
+
+#: ../libpcsxcore/sio.c:99
+msgid "Connection closed!\n"
+msgstr "Conexão encerrada!\n"
+
+#: ../libpcsxcore/sio.c:322
+#, c-format
+msgid "No memory card value was specified - creating a default card %s\n"
+msgstr "Nenhum cartão de memória foi especificado, criando um \"%s\" padrão.\n"
+
+#: ../libpcsxcore/sio.c:326
+#, c-format
+msgid "The memory card %s doesn't exist - creating it\n"
+msgstr "O cartão de memória \"%s\" não existe, será criado.\n"
+
+#: ../libpcsxcore/sio.c:342
+#, c-format
+msgid "Memory card %s failed to load!\n"
+msgstr "Cartão de memória \"%s\" falhou para carregar!\n"
+
+#: ../libpcsxcore/sio.c:346
+#, c-format
+msgid "Loading memory card %s\n"
+msgstr "Carregando cartão de memória \"%s\".\n"
+
+#: ../plugins/dfxvideo/gpu.c:55
+msgid "SoftGL Driver"
+msgstr "Extensão SoftGL"
+
+#: ../plugins/dfxvideo/gpu.c:56
+msgid ""
+"P.E.Op.S. SoftGL Driver V1.17\n"
+"Coded by Pete Bernert and the P.E.Op.S. team\n"
+msgstr ""
+
+#: ../plugins/dfxvideo/gpu.c:58
+msgid "XVideo Driver"
+msgstr "Extensão XVideo"
+
+#: ../plugins/dfxvideo/gpu.c:59
+msgid ""
+"P.E.Op.S. Xvideo Driver V1.17\n"
+"Coded by Pete Bernert and the P.E.Op.S. team\n"
+msgstr ""
+"Extensão Xvideo P.E.Op.S. V1.17\n"
+"Programada por Pete Bernert e a equipe do P.E.Op.S.\n"
+
+#: ../plugins/dfxvideo/gpu.c:62
+msgid "Pete Bernert and the P.E.Op.S. team"
+msgstr "Pete Bernert e a equipe do P.E.Op.S."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:8
+msgid "Configure X11 Video"
+msgstr "Configurar vídeo do X11"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:45
+msgid "Initial Window Size:"
+msgstr "Tamanho inicial da janela:"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:56
+msgid "Stretching:"
+msgstr "Escalonamento:"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:69
+msgid "Dithering:"
+msgstr "Colorização:"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:82
+msgid ""
+"320x240\n"
+"640x480\n"
+"800x600\n"
+"1024x768\n"
+"1152x864\n"
+"1280x1024\n"
+"1600x1200"
+msgstr ""
+"320x240\n"
+"640x480\n"
+"800x600\n"
+"1024x768\n"
+"1152x864\n"
+"1280x1024\n"
+"1600x1200"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:101
+msgid ""
+"0: None\n"
+"1: 2xSai\n"
+"2: 2xSuperSai\n"
+"3: SuperEagle\n"
+"4: Scale2x\n"
+"5: Scale3x\n"
+"6: HQ2X\n"
+"7: HQ3X"
+msgstr ""
+"0: Nenhum\n"
+"1: 2xSai\n"
+"2: 2xSuperSai\n"
+"3: SuperEagle\n"
+"4: Scale2x\n"
+"5: Scale3x\n"
+"6: HQ2X\n"
+"7: HQ3X"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:123
+msgid ""
+"0: Off (fastest)\n"
+"1: Game dependant\n"
+"2: Always"
+msgstr ""
+"0: Desligado (mais rápido)\n"
+"1: Depende do Jogo\n"
+"2: Sempre"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:146
+msgid "Maintain 4:3 Aspect Ratio"
+msgstr "Manter proporção 4:3"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:161
+#: ../plugins/peopsxgl/gpucfg/interface.c:322
+msgid "Fullscreen"
+msgstr "Tela cheia"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:165
+msgid "Toggle windowed/fullscreen mode."
+msgstr "Alternar entre tela cheia e janela."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:187
+msgid "<b>Screen</b>"
+msgstr "<b>Tela</b>"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:216
+msgid "Show FPS"
+msgstr "Mostrar taxa de FPS"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:220
+msgid "Toggle whether the FPS will be shown."
+msgstr "Ligar ou desligar a exibição da taxa de FPS."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:232
+msgid "Autodetect FPS limit"
+msgstr "Detectar automaticamente limite de FPS"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:236
+msgid "Enable this if games display too quickly."
+msgstr "Ligue isso se os jogos ficarem rápidos demais."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:249
+msgid "Enable frame skipping"
+msgstr "Ligar pulo de quadros"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:253
+msgid "Skip frames when rendering."
+msgstr "Pula quadros ao exibir."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:270
+msgid "Set FPS"
+msgstr "Limite de FPS"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:287
+msgid "200.0"
+msgstr "200.0"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:310
+msgid "<b>Framerate</b>"
+msgstr "<b>Taxa de FPS</b>"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:339
+#: ../plugins/peopsxgl/gpucfg/interface.c:568
+msgid "Use game fixes"
+msgstr "Usar consertos específicos"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:366
+msgid "better g-colors, worse textures"
+msgstr "Transparências melhores, texturas piores."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:381
+msgid "Needed by Dark Forces"
+msgstr "Necessário para Dark Forces."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:394
+msgid "Draw quads with triangles"
+msgstr "Desenhar quadrados com triângulos"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:410
+msgid "Repeated flat tex triangles"
+msgstr "Triângulos de textura plana repetidos"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:426
+msgid "Disable CPU Saving"
+msgstr "Desativar salvamento da CPU"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:442
+msgid "Odd/even bit hack"
+msgstr "Hack do bit ímpar/par"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:458
+msgid "For precise framerate"
+msgstr "Para uma taxa de FPS precisa."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:473
+msgid "Better FPS limit in some"
+msgstr "Melhor limitação de FPS em alguns jogos."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:486
+msgid "PC FPS calculation"
+msgstr "Cálculo de FPS feito pelo PC"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:504
+msgid "Pandemonium 2"
+msgstr "Para Pandemonium 2."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:517
+msgid "Lazy screen update"
+msgstr "Atualização tardia da tela"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:535
+msgid "Skip every second frame"
+msgstr "Pula cada segundo quadro de uma taxa."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:548
+#: ../plugins/peopsxgl/gpucfg/interface.c:640
+msgid "Old frame skipping"
+msgstr "Pulo de quadros antigo"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:564
+msgid "Expand screen width"
+msgstr "Expandir largura da tela"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:580
+msgid "Ignore brightness color"
+msgstr "Ignorar brilho das cores"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:596
+msgid "Disable coordinate check"
+msgstr "Desativar checagem de coordenadas"
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:614
+msgid "Chrono Cross"
+msgstr "Para Chrono Cross."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:627
+msgid "Capcom fighting games"
+msgstr "Para jogos de luta da Capcom."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:642
+msgid "Black screens in Lunar"
+msgstr "Telas pretas de Lunar."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:657
+msgid "Compatibility mode"
+msgstr "Modo de compatibilidade."
+
+#: ../plugins/dfxvideo/gpucfg-0.1df/dfxvideo.glade2:682
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:268
+msgid "<b>Compatibility</b>"
+msgstr "<b>Compatibilidade</b>"
+
+#: ../data/pcsx.glade2:7
+msgid "PCSX"
+msgstr "PCSX"
+
+#: ../data/pcsx.glade2:22
+msgid "_File"
+msgstr "_Arquivo"
+
+#: ../data/pcsx.glade2:28
+msgid "Run _CD"
+msgstr "Rodar _CD"
+
+#: ../data/pcsx.glade2:46
+msgid "Run _ISO..."
+msgstr "Rodar _imagem de CD..."
+
+#: ../data/pcsx.glade2:63
+msgid "Run _BIOS"
+msgstr "Rodar pela _BIOS"
+
+#: ../data/pcsx.glade2:80
+msgid "Run _EXE..."
+msgstr "Rodar _EXE do PSX..."
+
+#: ../data/pcsx.glade2:102
+msgid "E_xit"
+msgstr "_Sair"
+
+#: ../data/pcsx.glade2:124
+msgid "_Emulator"
+msgstr "_Emulador"
+
+#: ../data/pcsx.glade2:130
+msgid "_Continue"
+msgstr "_Continue"
+
+#: ../data/pcsx.glade2:147
+msgid "_Reset"
+msgstr "_Reiniciar"
+
+#: ../data/pcsx.glade2:169
+msgid "S_witch ISO..."
+msgstr "_Trocar de imagem de CD..."
+
+#: ../data/pcsx.glade2:191
+msgid "_Save State"
+msgstr "_Salvar estado"
+
+#: ../data/pcsx.glade2:200 ../data/pcsx.glade2:281
+msgid "Slot _1"
+msgstr "Unidade _1"
+
+#: ../data/pcsx.glade2:209 ../data/pcsx.glade2:290
+msgid "Slot _2"
+msgstr "Unidade _2"
+
+#: ../data/pcsx.glade2:218 ../data/pcsx.glade2:299
+msgid "Slot _3"
+msgstr "Unidade _3"
+
+#: ../data/pcsx.glade2:227 ../data/pcsx.glade2:308
+msgid "Slot _4"
+msgstr "Unidade _4"
+
+#: ../data/pcsx.glade2:236 ../data/pcsx.glade2:317
+msgid "Slot _5"
+msgstr "Unidade _5"
+
+#: ../data/pcsx.glade2:244 ../data/pcsx.glade2:325
+msgid "_Other..."
+msgstr "_Outros..."
+
+#: ../data/pcsx.glade2:272
+msgid "_Load State"
+msgstr "_Carregar estado"
+
+#: ../data/pcsx.glade2:358
+msgid "_Configuration"
+msgstr "C_onfiguração"
+
+#: ../data/pcsx.glade2:364
+msgid "_Plugins & BIOS..."
+msgstr "_Extensões e BIOS..."
+
+#: ../data/pcsx.glade2:386
+msgid "_Graphics..."
+msgstr "_Gráficos..."
+
+#: ../data/pcsx.glade2:401
+msgid "_Sound..."
+msgstr "Á_udio..."
+
+#: ../data/pcsx.glade2:416
+msgid "CD-_ROM..."
+msgstr "CD_ROM..."
+
+#: ../data/pcsx.glade2:431
+msgid "C_ontrollers..."
+msgstr "C_ontroles..."
+
+#: ../data/pcsx.glade2:451
+msgid "_CPU..."
+msgstr "_CPU..."
+
+#: ../data/pcsx.glade2:467
+msgid "_Memory Cards..."
+msgstr "Cartões de _memória..."
+
+#: ../data/pcsx.glade2:484
+msgid "_Netplay..."
+msgstr "Jogo em _rede..."
+
+#: ../data/pcsx.glade2:505
+msgid "Chea_t"
+msgstr "T_rapaça"
+
+#: ../data/pcsx.glade2:514
+msgid "_Browse..."
+msgstr "_Navegar..."
+
+#: ../data/pcsx.glade2:529
+msgid "_Search..."
+msgstr "_Buscar..."
+
+#: ../data/pcsx.glade2:560
+msgid "_Help"
+msgstr "_Ajuda"
+
+#: ../data/pcsx.glade2:566
+msgid "_About PCSX..."
+msgstr "_Sobre o PCSX..."
+
+#: ../data/pcsx.glade2:599 ../data/pcsx.glade2:600
+msgid "Run CD"
+msgstr ""
+
+#: ../data/pcsx.glade2:612
+msgid "Run ISO Image"
+msgstr ""
+
+#: ../data/pcsx.glade2:613
+msgid "Run ISO..."
+msgstr ""
+
+#: ../data/pcsx.glade2:634
+msgid "Continue Emulation"
+msgstr ""
+
+#: ../data/pcsx.glade2:635
+msgid "Continue..."
+msgstr ""
+
+#: ../data/pcsx.glade2:647
+msgid "Switch ISO Image"
+msgstr ""
+
+#: ../data/pcsx.glade2:648
+msgid "Switch ISO..."
+msgstr ""
+
+#: ../data/pcsx.glade2:669 ../data/pcsx.glade2:1853
+msgid "Configure Memory Cards"
+msgstr "Configurar cartões de memória"
+
+#: ../data/pcsx.glade2:670
+msgid "Memcards..."
+msgstr "Cartões de memória..."
+
+#: ../data/pcsx.glade2:682
+msgid "Configure Graphics"
+msgstr ""
+
+#: ../data/pcsx.glade2:683
+msgid "Graphics..."
+msgstr "Gráficos..."
+
+#: ../data/pcsx.glade2:695 ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:8
+msgid "Configure Sound"
+msgstr "Configurar áudio"
+
+#: ../data/pcsx.glade2:696
+msgid "Sound..."
+msgstr "Áudio..."
+
+#: ../data/pcsx.glade2:708
+msgid "Configure CD-ROM"
+msgstr "Configurar CD-ROM"
+
+#: ../data/pcsx.glade2:709
+msgid "CD-ROM..."
+msgstr "CD-ROM..."
+
+#: ../data/pcsx.glade2:721
+msgid "Configure Controllers"
+msgstr ""
+
+#: ../data/pcsx.glade2:722
+msgid "Controllers..."
+msgstr "Controles..."
+
+#: ../data/pcsx.glade2:867
+msgid "Select Folder to Search"
+msgstr "Selecione o diretório para a busca"
+
+#: ../data/pcsx.glade2:883
+msgid "Search in:"
+msgstr "Buscar em:"
+
+#: ../data/pcsx.glade2:1156
+msgid "Graphics:"
+msgstr "Gráficos:"
+
+#: ../data/pcsx.glade2:1169
+msgid "Sound:"
+msgstr "Áudio:"
+
+#: ../data/pcsx.glade2:1184
+msgid "Controller 1:   "
+msgstr "Controle 1:"
+
+#: ../data/pcsx.glade2:1199
+msgid "Controller 2:"
+msgstr "Controle 2:"
+
+#: ../data/pcsx.glade2:1214
+msgid "CD-ROM:"
+msgstr "CD-ROM:"
+
+#: ../data/pcsx.glade2:1252
+msgid "<b>Plugins</b>"
+msgstr "<b>Extensões</b>"
+
+#: ../data/pcsx.glade2:1313
+msgid "<b>BIOS</b>"
+msgstr "<b>BIOS</b>"
+
+#: ../data/pcsx.glade2:1380
+msgid "Configure CPU"
+msgstr "Configurar CPU"
+
+#: ../data/pcsx.glade2:1427
+msgid "SPU IRQ Always Enabled"
+msgstr "IRQ da SPU sempre ativada"
+
+#: ../data/pcsx.glade2:1443
+msgid "Black & White Movies"
+msgstr "Filmes em preto e branco"
+
+#: ../data/pcsx.glade2:1477
+msgid "Enable Interpreter CPU"
+msgstr "Ativar interpretador da CPU"
+
+#: ../data/pcsx.glade2:1511
+msgid "Disable CD Audio"
+msgstr "Desativar áudio de CD"
+
+#: ../data/pcsx.glade2:1527
+msgid "Disable XA Decoding"
+msgstr "Desativar decodificação de XA"
+
+#: ../data/pcsx.glade2:1579
+msgid "<b>Options</b>"
+msgstr "<b>Opções</b>"
+
+#: ../data/pcsx.glade2:1620
+msgid ""
+"NTSC\n"
+"PAL"
+msgstr ""
+"NTSC\n"
+"PAL"
+
+#: ../data/pcsx.glade2:1634
+msgid "<b>System Type</b>"
+msgstr "<b>Tipo do sistema</b>"
+
+#: ../data/pcsx.glade2:1698
+msgid "Configure NetPlay"
+msgstr "Configurar jogo em rede"
+
+#: ../data/pcsx.glade2:1786
+msgid "<b>NetPlay</b>"
+msgstr "<b>Jogo em rede</b>"
+
+#: ../data/pcsx.glade2:1932 ../data/pcsx.glade2:2330
+msgid "New"
+msgstr ""
+
+#: ../data/pcsx.glade2:1982 ../data/pcsx.glade2:2380
+msgid "Format"
+msgstr "Formatar"
+
+#: ../data/pcsx.glade2:2032 ../data/pcsx.glade2:2430
+msgid "Un/Delete"
+msgstr "Apagar/Desfazer"
+
+#: ../data/pcsx.glade2:2125
+msgid "<b>Memory Card 1</b>"
+msgstr "<b>Cartão de memória 1</b>"
+
+#: ../data/pcsx.glade2:2186 ../data/pcsx.glade2:2236 ../data/pcsx.glade2:3115
+msgid "Copy"
+msgstr "Copiar"
+
+#: ../data/pcsx.glade2:2523
+msgid "<b>Memory Card 2</b>"
+msgstr "<b>Cartão de memória 2</b>"
+
+#: ../data/pcsx.glade2:2586
+msgid ""
+"(C) 1999-2003  PCSX Team\n"
+"(C) 2005-2006 Ryan Schultz\n"
+"(C) 2005-2006 Andrew Burton\n"
+"(C) 2008-2009 Wei Mingzhi"
+msgstr ""
+"(C) 1999-2003 Equipe do PCSX\n"
+"(C) 2005-2006 Ryan Schultz\n"
+"(C) 2005-2006 Andrew Burton\n"
+"(C) 2008-2009 Wei Mingzhi"
+
+#: ../data/pcsx.glade2:2590
+msgid "A PlayStation emulator."
+msgstr "Um emulador de PlayStation."
+
+#: ../data/pcsx.glade2:2593
+msgid ""
+"This program is free software; you can redistribute it\n"
+"and/or modify it under the terms of the GNU General\n"
+"Public License as published by the Free Software\n"
+"Foundation; either version 2 of the License, or (at your\n"
+"option) any later version.\n"
+"\n"
+"This program is distributed in the hope that it will be\n"
+"useful, but WITHOUT ANY WARRANTY; without even\n"
+"the implied warranty of MERCHANTABILITY or\n"
+"FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+"GNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General\n"
+"Public License along with this program; if not, write to\n"
+"the Free Software Foundation, Inc."
+msgstr ""
+"This program is free software; you can redistribute it\n"
+"and/or modify it under the terms of the GNU General\n"
+"Public License as published by the Free Software\n"
+"Foundation; either version 2 of the License, or (at your\n"
+"option) any later version.\n"
+"\n"
+"This program is distributed in the hope that it will be\n"
+"useful, but WITHOUT ANY WARRANTY; without even\n"
+"the implied warranty of MERCHANTABILITY or\n"
+"FITNESS FOR A PARTICULAR PURPOSE.  See the\n"
+"GNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General\n"
+"Public License along with this program; if not, write to\n"
+"the Free Software Foundation, Inc."
+
+#: ../data/pcsx.glade2:2622
+msgid "translator-credits"
+msgstr ""
+"Tradução para português brasileiro por Tibério Vítor (tvtoon@gmail.com)"
+
+#: ../data/pcsx.glade2:2684
+msgid "<b>Cheat Codes</b>"
+msgstr "<b>Códigos de trapaça</b>"
+
+#: ../data/pcsx.glade2:2850
+msgid ""
+"8-bit\n"
+"16-bit\n"
+"32-bit"
+msgstr ""
+"8-bit\n"
+"16-bit\n"
+"32-bit"
+
+#: ../data/pcsx.glade2:2913
+msgid ""
+"Equal Value\n"
+"Not Equal Value\n"
+"Range\n"
+"Increased By\n"
+"Decreased By\n"
+"Increased\n"
+"Decreased\n"
+"Different\n"
+"No Change"
+msgstr ""
+"Valor igual à\n"
+"Valor diferente de\n"
+"Intervalo\n"
+"Somado por\n"
+"Subtraído por\n"
+"Aumentado\n"
+"Diminuído\n"
+"Diferente\n"
+"Sem mudanças"
+
+#: ../data/pcsx.glade2:2945
+msgid ""
+"Decimal\n"
+"Hexadecimal"
+msgstr ""
+"Decimal\n"
+"Hexadecimal"
+
+#: ../data/pcsx.glade2:3148
+msgid "label_resultsfound"
+msgstr "Resultados encontrados:"
+
+#: ../data/pcsx.glade2:3183
+msgid "Search"
+msgstr "Buscar"
+
+#: ../data/pcsx.glade2:3219
+msgid "Restart"
+msgstr "Reiniciar"
+
+#: ../data/pcsx.glade2:3248
+msgid "<b>Cheat Search</b>"
+msgstr "<b>Busca de trapaças</b>"
+
+#: ../plugins/dfsound/spu.c:38
+msgid "ALSA Sound"
+msgstr "Sistema ALSA"
+
+#: ../plugins/dfsound/spu.c:40
+msgid "Mac OS X Sound"
+msgstr ""
+
+#: ../plugins/dfsound/spu.c:42
+msgid "OSS Sound"
+msgstr "Sistema OSS"
+
+#: ../plugins/dfsound/spu.c:44
+msgid "NULL Sound"
+msgstr "Sem som"
+
+#: ../plugins/dfsound/spu.c:47
+msgid ""
+"P.E.Op.S. OSS Driver V1.7\n"
+"Coded by Pete Bernert and the P.E.Op.S. team\n"
+msgstr ""
+"Extensão OSS P.E.Op.S. V1.7\n"
+"Programada por Pete Bernert e a equipe do P.E.Op.S.\n"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:42
+msgid "Volume:"
+msgstr "Volume:"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:54
+msgid "Interpolation:"
+msgstr "Interpolação:"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:68
+msgid "Reverb:"
+msgstr "Reversão:"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:81
+msgid ""
+"Low\n"
+"Medium\n"
+"Loud\n"
+"Loudest"
+msgstr ""
+"Mínimo\n"
+"Médio\n"
+"Alto\n"
+"Máximo"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:95
+msgid ""
+"Off\n"
+"Simple\n"
+"Playstation"
+msgstr ""
+"Desligada\n"
+"Simples\n"
+"PlayStation"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:111
+msgid ""
+"None\n"
+"Simple\n"
+"Gaussian\n"
+"Cubic"
+msgstr ""
+"Nenhuma\n"
+"Simples\n"
+"Gaussiana\n"
+"Cúbica"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:132
+msgid "<b>General</b>"
+msgstr "<b>Geral</b>"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:163
+msgid "Adjust XA speed"
+msgstr "Ajustar velocidade da XA"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:167
+msgid "Choose this if XA music is played too quickly."
+msgstr "Selecione isso se a música XA estiver tocando rápido demais."
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:184
+msgid "<b>XA Music</b>"
+msgstr "<b>Música XA</b>"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:215
+msgid "High compatibility mode"
+msgstr "Modo de alta compatibilidade"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:219
+msgid "Use the asynchronous SPU interface."
+msgstr "Usar o ambiente assíncrono da SPU."
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:231
+msgid "SPU IRQ Wait"
+msgstr "Esperar pela IRQ da SPU"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:235
+msgid "Wait for CPU; only useful for some games."
+msgstr "Esperar pela CPU; útil apenas em alguns jogos."
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:247
+msgid "Single channel sound"
+msgstr "Som em canal único"
+
+#: ../plugins/dfsound/spucfg-0.1df/dfsound.glade2:251
+msgid "Play only one channel for a performance boost."
+msgstr "Tocar apenas um canal para melhorar o desempenho."
+
+#: ../plugins/dfcdrom/cdr-linux.c:60
+msgid "CD-ROM Drive Reader"
+msgstr "Leitor de unidade de CDROM"
+
+#: ../plugins/dfcdrom/cdr-null.c:10
+msgid "CDR NULL Plugin"
+msgstr "Sem unidade de CDROM"
+
+#: ../plugins/dfcdrom/cdrcfg-0.1df/main.c:175
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:8
+msgid "CDR configuration"
+msgstr "Configuração do CDROM"
+
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:33
+msgid "Choose your CD-ROM device or type its path if it's not listed"
+msgstr ""
+"Escolha sua unidade de CDROM ou digite o dispositivo caso não esteja listado."
+
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:44
+msgid "Select CD-ROM device"
+msgstr "Selecione uma unidade de CDROM"
+
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:72
+msgid "Select read mode:"
+msgstr "Selecione o modo de leitura:"
+
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:83
+msgid ""
+"Normal (No Cache)\n"
+"Threaded - Faster (With Cache)"
+msgstr ""
+
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:114
+msgid "Cache Size (Def. 64):"
+msgstr "Tamanho do armazenamento (o padrão é 64):"
+
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:159
+msgid "Spindown Time:"
+msgstr ""
+
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:170
+msgid ""
+"Default\n"
+"125ms\n"
+"250ms\n"
+"500ms\n"
+"1s\n"
+"2s\n"
+"4s\n"
+"8s\n"
+"16s\n"
+"32s\n"
+"1min\n"
+"2min\n"
+"4min\n"
+"8min\n"
+"16min\n"
+"32min"
+msgstr ""
+
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:216
+msgid "Cdrom Speed (Def. 0 = MAX):"
+msgstr "Velocidade do CDROM (o padrão é 0, ou seja, o máximo):"
+
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:248
+msgid "hseparator"
+msgstr ""
+
+#: ../plugins/dfcdrom/cdrcfg-0.1df/dfcdrom.glade2:258
+msgid "Enable subchannel read"
+msgstr "Ligar leitura de subcanal"
+
+#: ../plugins/peopsxgl/gpu.c:61
+msgid "OpenGL Driver"
+msgstr "Extensão OpenGL"
+
+#: ../plugins/peopsxgl/gpu.c:63
+msgid "Pete Bernert"
+msgstr "Pete Bernert"
+
+#: ../plugins/peopsxgl/gpu.c:64
+msgid ""
+"Based on P.E.Op.S. MesaGL Driver V1.78\n"
+"Coded by Pete Bernert\n"
+msgstr ""
+"Baseada na extensão MesaGL P.E.Op.S. V1.78\n"
+"Programada por Pete Bernert\n"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:118
+msgid "OpenGL Driver configuration"
+msgstr "Configuração da extensão OpenGL"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:138
+msgid "Textures"
+msgstr "Texturas"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:161
+msgid "Quality:"
+msgstr "Qualidade:"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:178
+#: ../plugins/peopsxgl/gpucfg/interface.c:191
+msgid "0: don't care - Use driver's default textures"
+msgstr "0: tanto faz - usar textura padrão da placa"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:179
+msgid "1: 4444 - Fast, but less colorful"
+msgstr "1: 4444 - Rápido, mas sem muitas cores"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:180
+msgid "2: 5551 - Nice colors, bad transparency"
+msgstr "2: 5551 - Cores bonitas, transparência ruim"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:181
+msgid "3: 8888 - Best colors, more ram needed"
+msgstr "3: 8888 - Melhor padrão, o que mais usa RAM"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:182
+msgid "4: BGR8888 - Faster on some cards"
+msgstr "4: BGR8888 - Mais rápido em algumas placas"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:193
+msgid "VRam size in MBytes (0..1024, 0=auto):"
+msgstr "Tamanho da VRAM em MBytes (0..1024, 0=automático):"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:210
+#: ../plugins/peopsxgl/gpucfg/interface.c:225
+msgid "0: None"
+msgstr "0: Nenhum"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:211
+msgid "1: Standard - Glitches will happen"
+msgstr "1: Padrão - Problemas vão acontecer"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:212
+msgid "2: Extended - No black borders"
+msgstr "2: Extendido - Sem bordas escuras"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:213
+msgid "3: Standard without sprites - unfiltered 2D"
+msgstr "3: Padrão sem sprites - 2D sem filtro"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:214
+msgid "4: Extended without sprites - unfiltered 2D"
+msgstr "4: Extendido sem sprites - 2D sem filtro"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:215
+msgid "5: Standard + smoothed sprites"
+msgstr "5: Padrão mais sprites filtrados"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:216
+msgid "6: Extended + smoothed sprites"
+msgstr "6: Extendido mais sprites filtrados"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:227
+msgid "Filtering:"
+msgstr "Filtragem:"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:235
+msgid "HiRes Tex:"
+msgstr "Textura em alta resolução:"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:252
+#: ../plugins/peopsxgl/gpucfg/interface.c:263
+msgid "0: None (standard)"
+msgstr "0: Nenhuma (padrão)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:253
+msgid "1: 2xSaI (much vram needed)"
+msgstr "1: 2xSaI (muita VRAM usada)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:254
+msgid "2: Scaled (needs tex filtering)"
+msgstr "2: Escalonado (precisa ativar filtragem)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:265
+msgid "Window options"
+msgstr "Opções da janela"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:296
+msgid "Width:"
+msgstr "Largura:"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:305
+msgid "Height:"
+msgstr "Altura:"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:314
+msgid "Keep psx aspect ratio"
+msgstr "Manter proporção do PSX"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:330
+msgid "Dithering"
+msgstr "Colorização"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:346
+msgid "Framerate"
+msgstr "Taxa de FPS"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:369
+msgid "FPS"
+msgstr "FPS"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:377
+msgid "FPS limit manual"
+msgstr "Limite manual de FPS"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:386
+msgid "Show FPS display on startup"
+msgstr "Mostrar taxa de FPS ao iniciar"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:394
+msgid "Use FPS limit"
+msgstr "Usar limite de FPS"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:402
+msgid "FPS limit auto-detection"
+msgstr "Autodetecção do limite de FPS"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:411
+msgid "Use Frame skipping"
+msgstr "Usar pulo de quadros"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:419
+msgid "Compatibility"
+msgstr "Compatibilidade"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:434
+msgid "Advanced blending (Accurate psx color emulation)"
+msgstr "Mesclagem avançada (emulação precisa das cores do PSX)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:442
+msgid "Framebuffer textures:"
+msgstr "Texturas do framebuffer:"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:450
+msgid "Offscreen Drawing:"
+msgstr "Desenhos de fora da tela:"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:458
+msgid "Framebuffer access:"
+msgstr "Acesso ao framebuffer:"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:466
+msgid "Alpha Multipass (correct opaque texture areas)"
+msgstr "Multipassagem dos canais alfa (áreas opacas de texturas corretas)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:474
+msgid "Mask bit detection (needed by a few games, zbuffer)"
+msgstr "Detecção do bit mascarador (necessário para alguns jogos, zbuffer)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:491
+#: ../plugins/peopsxgl/gpucfg/interface.c:504
+msgid "0: None - Fastest, most glitches"
+msgstr "0: Nenhuma - Mais rápido e mais problemas"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:492
+msgid "1: Minimum - Missing screens"
+msgstr "1: Mínimo - Perde algumas telas"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:493
+msgid "2: Standard - OK for most games"
+msgstr "2: Padrão - Bom para a maioria dos jogos"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:494
+msgid "3: Enhanced - Shows more stuff"
+msgstr "3: Aumentado - Mostra mais coisas"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:495
+msgid "4: Extended - Causing garbage"
+msgstr "4: Extendido - Pode causar lixo na tela"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:515
+#: ../plugins/peopsxgl/gpucfg/interface.c:527
+msgid "0: Emulated vram - Needs FVP"
+msgstr "0: VRAM emulada - precisa do FVP"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:516
+msgid "1: Black - Fast, no effects"
+msgstr "1: Preto - Rápido, sem efeitos"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:517
+msgid "2: Gfx card buffer - Can be slow"
+msgstr "2: Usar buffer da placa - Pode ficar lento"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:518
+msgid "3: Gfx card & soft - slow"
+msgstr "3: Placa e software - Lento"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:538
+#: ../plugins/peopsxgl/gpucfg/interface.c:551
+msgid "0: Emulated vram - ok most times"
+msgstr "0: VRAM Emulada - bom na maioria das vezes"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:539
+msgid "1: Gfx card buffer reads"
+msgstr "1: Leitura do buffer da placa"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:540
+msgid "2: Gfx card buffer moves"
+msgstr "2: Escrita no buffer da placa"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:541
+msgid "3: Gfx buffer reads & moves"
+msgstr "3: Leitura e Escrita no buffer da placa"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:542
+msgid "4: Full Software (FVP)"
+msgstr "4: Todo em software (FVP)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:553
+msgid "Special game fixes"
+msgstr "Consertos específicos para jogos"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:576
+msgid "Battle cursor (FF7)"
+msgstr "Cursor da batalha (Final Fantasy 7)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:584
+msgid "Direct FB updates"
+msgstr "Atualização direta do framebuffer"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:592
+msgid "Black brightness (Lunar)"
+msgstr "Brilho no mínimo (Lunar)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:600
+msgid "Swap front detection"
+msgstr "Detecção da inversão frontal"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:608
+msgid "Disable coord check"
+msgstr "Desligar checagem de coordenadas"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:616
+msgid "No blue glitches (LoD)"
+msgstr "Sem sujeira azul (Legend of Dragoon)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:624
+msgid "Soft FB access"
+msgstr "Acesso ao framebuffer por software"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:632
+msgid "PC fps calculation"
+msgstr "Cálculo do FPS feito pelo PC"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:648
+msgid "Yellow rect (FF9)"
+msgstr "Retângulo amarelo (Final Fantasy 9)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:656
+msgid "No subtr. blending"
+msgstr "Sem subtração na mesclagem"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:664
+msgid "Lazy upload (DW7)"
+msgstr "Atualização tardia (Dragon Warrior 7)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:672
+msgid "Odd/even hack"
+msgstr "Hack do ímpar/par"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:680
+msgid "Adjust screen width"
+msgstr "Ajustar largura da tela"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:688
+msgid "Old texture filtering"
+msgstr "Filtragem de textura antiga"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:696
+msgid "Additional uploads"
+msgstr "Envio de dados adicionais"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:704
+msgid "unused"
+msgstr "Não usado"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:712
+msgid "Fake 'gpu busy'"
+msgstr "Imitar estado 'GPU ocupada'"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:720
+msgid "Misc"
+msgstr "Miscelânea"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:743
+msgid "Scanlines"
+msgstr "Scanlines"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:751
+msgid "Blending (0..255, -1=dot):"
+msgstr "Mesclagem (0..255, -1=por ponto):"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:759
+msgid "Screen smoothing (can be slow or unsupported)"
+msgstr "Filtragem da tela inteira (pode ser lenta ou não suportada)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:767
+msgid "Use OpenGL extensions (recommended)"
+msgstr "Usar extensões OpenGL (recomendado)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:775
+msgid "Polygon anti-aliasing (slow with most cards)"
+msgstr "Anti-aliasing de polígonos (lento com a maioria das placas)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:783
+msgid "Line mode (polygons will not get filled)"
+msgstr "Modo de linhas (polígonos não serão tratados)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:791
+msgid "Force 15 bit framebuffer updates (faster movies)"
+msgstr "Forçar atualizações do framebuffer em 15 bit (filmes mais rápidos)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:799
+msgid "Unfiltered MDECs (small movie speedup)"
+msgstr "MDECs sem filtragem (pequeno ganho de velocidade nos filmes)"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:852
+msgid "Adapted from P.E.Op.S OpenGL GPU by Pete Bernert"
+msgstr "Adaptado da extensão de GPU OpenGL P.E.Op.S por Pete Bernert"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:861
+msgid "Homepage: http://www.pbernert.com"
+msgstr "Página: http://www.pbernert.com"
+
+#: ../plugins/peopsxgl/gpucfg/interface.c:879
+msgid "Version: 1.78"
+msgstr "Versão: 1.78"
+
+#: ../plugins/dfinput/cfg-gtk2.c:48
+msgid "D-Pad Up"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:49
+msgid "D-Pad Down"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:50
+msgid "D-Pad Left"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:51
+msgid "D-Pad Right"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:52
+msgid "Cross"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:53
+msgid "Circle"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:54
+msgid "Square"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:55
+msgid "Triangle"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:56
+msgid "L1"
+msgstr "L1"
+
+#: ../plugins/dfinput/cfg-gtk2.c:57
+msgid "R1"
+msgstr "R1"
+
+#: ../plugins/dfinput/cfg-gtk2.c:58
+msgid "L2"
+msgstr "L2"
+
+#: ../plugins/dfinput/cfg-gtk2.c:59
+msgid "R2"
+msgstr "R2"
+
+#: ../plugins/dfinput/cfg-gtk2.c:60
+msgid "Select"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:61
+msgid "Start"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:62
+msgid "L3"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:63
+msgid "R3"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:67
+msgid "L-Stick Right"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:68
+msgid "L-Stick Left"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:69
+msgid "L-Stick Down"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:70
+msgid "L-Stick Up"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:71
+msgid "R-Stick Right"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:72
+msgid "R-Stick Left"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:73
+msgid "R-Stick Down"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:74
+msgid "R-Stick Up"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:103 ../plugins/dfinput/cfg-gtk2.c:142
+msgid "Centered"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:103 ../plugins/dfinput/cfg-gtk2.c:142
+msgid "Up"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:103 ../plugins/dfinput/cfg-gtk2.c:142
+msgid "Right"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:103 ../plugins/dfinput/cfg-gtk2.c:142
+msgid "Rightup"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:104 ../plugins/dfinput/cfg-gtk2.c:143
+msgid "Down"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:104 ../plugins/dfinput/cfg-gtk2.c:143
+msgid "Rightdown"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:104 ../plugins/dfinput/cfg-gtk2.c:143
+msgid "Left"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:104 ../plugins/dfinput/cfg-gtk2.c:143
+msgid "Leftup"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:105 ../plugins/dfinput/cfg-gtk2.c:144
+msgid "Leftdown"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:109 ../plugins/dfinput/cfg-gtk2.c:148
+#, c-format
+msgid "Joystick: Button %d"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:113 ../plugins/dfinput/cfg-gtk2.c:152
+#, c-format
+msgid "Joystick: Axis %d%c"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:118 ../plugins/dfinput/cfg-gtk2.c:157
+#, c-format
+msgid "Joystick: Hat %d %s"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:133 ../plugins/dfinput/cfg-gtk2.c:172
+msgid "Keyboard:"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:137 ../plugins/dfinput/cfg-gtk2.c:176
+msgid "(Not Set)"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:546
+msgid "None"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:588
+msgid "Gamepad/Keyboard Input Configuration"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:594 ../plugins/dfinput/cfg-gtk2.c:614
+msgid "Key"
+msgstr ""
+
+#: ../plugins/dfinput/cfg-gtk2.c:600 ../plugins/dfinput/cfg-gtk2.c:620
+msgid "Button"
+msgstr ""
+
+#: ../plugins/dfinput/pad.c:22
+msgid "Gamepad/Keyboard Input"
+msgstr "Entrada do gamepad ou teclado"
+
+#: ../plugins/dfinput/dfinput.glade2:35 ../plugins/dfinput/dfinput.glade2:232
+msgid "Device:"
+msgstr ""
+
+#: ../plugins/dfinput/dfinput.glade2:66 ../plugins/dfinput/dfinput.glade2:263
+msgid "Type:"
+msgstr ""
+
+#: ../plugins/dfinput/dfinput.glade2:78 ../plugins/dfinput/dfinput.glade2:275
+msgid ""
+"Digital Pad\n"
+"Analog Pad"
+msgstr ""
+
+#: ../plugins/dfinput/dfinput.glade2:149 ../plugins/dfinput/dfinput.glade2:346
+msgid "Change"
+msgstr ""
+
+#: ../plugins/dfinput/dfinput.glade2:185 ../plugins/dfinput/dfinput.glade2:382
+msgid "Reset"
+msgstr ""
+
+#: ../plugins/dfinput/dfinput.glade2:210
+msgid "Controller 1"
+msgstr "Controle 1"
+
+#: ../plugins/dfinput/dfinput.glade2:412
+msgid "Controller 2"
+msgstr "Controle 2"
+
+#: ../plugins/dfinput/dfinput.glade2:427
+msgid "Multi-Threaded (Recommended)"
+msgstr ""

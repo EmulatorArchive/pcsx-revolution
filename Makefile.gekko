@@ -1,0 +1,28 @@
+ifeq ($(strip $(DEVKITPRO)),)
+$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=<path to>devkitPro)
+endif
+ 
+export TOPDIR	:=	$(CURDIR)"/Gamecube/"
+
+default: release
+
+release: cube wii
+
+cube:
+	cd "./Gamecube" && $(MAKE) -f Makefile.gc BUILD=cube-release
+
+wii:
+	cd "./Gamecube" && $(MAKE) -f Makefile.Wii BUILD=release
+
+debug: cube-debug wii-debug
+
+cube-debug:
+	cd "./Gamecube" && $(MAKE) -f Makefile.gc BUILD=cube-debug
+
+wii-debug:
+	cd "./Gamecube" && $(MAKE) -f Makefile.Wii BUILD=debug
+
+clean:
+	cd "./Gamecube" && $(MAKE) -f Makefile.gc clean
+	cd "./Gamecube" && $(MAKE) -f Makefile.Wii clean
+
