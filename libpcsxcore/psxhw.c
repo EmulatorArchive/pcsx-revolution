@@ -494,7 +494,6 @@ void psxHwWrite16(u32 add, u16 value) {
 }
 
 #define DmaExec(n) { \
-	if (SWAPu32(HW_DMA##n##_CHCR) & 0x01000000) return; \
 	HW_DMA##n##_CHCR = SWAPu32(value); \
  \
 	if (SWAPu32(HW_DMA##n##_CHCR) & 0x01000000 && SWAPu32(HW_DMA_PCR) & (8 << (n * 4))) { \

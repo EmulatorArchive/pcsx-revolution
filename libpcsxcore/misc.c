@@ -549,7 +549,8 @@ int LoadState(char *file) {
 	SPU_freeze(0, spufP);
 	free(spufP);
 
-	sioFreeze(f, 0);
+	//sioFreeze(f, 0);
+	gzread(f, (void*)&sio, sizeof(sio));
 	cdrFreeze(f, 0);
 	psxHwFreeze(f, 0);
 	psxRcntFreeze(f, 0);

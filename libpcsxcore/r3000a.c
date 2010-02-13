@@ -49,8 +49,10 @@ int psxInit() {
 }
 
 void psxReset() {
+#ifndef GEKKO
 	FreeCheatSearchResults();
 	FreeCheatSearchMem();
+#endif
 
 	psxCpu->Reset();
 
@@ -80,10 +82,11 @@ void psxShutdown() {
 	psxBiosShutdown();
 
 	psxCpu->Shutdown();
-
+#ifndef GEKKO
 	ClearAllCheats();
 	FreeCheatSearchResults();
 	FreeCheatSearchMem();
+#endif
 }
 
 void psxException(u32 code, u32 bd) {

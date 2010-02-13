@@ -22,7 +22,7 @@ void Config_menu()
 		}
 		if(GetInput(DOWN, DOWN, DOWN))
 		{
-			if(index < Config.Cpu ? 5 : 6) index++;
+			if(index < (Config.Cpu ? 5 : 6)) index++;
 		}
 			
 		if(GetInput(A, A, A)) 
@@ -51,7 +51,7 @@ void Config_menu()
 
 				case 5:
 					if(!Config.Cpu) {
-						Settings.Jump ^= 1;
+						Settings.Lw ^= 1;
 						break;
 					}
 
@@ -90,14 +90,14 @@ void Config_menu()
 		printf("\x1b[%um", (index == 5) ? 32 : 37);
 
 		if(!Config.Cpu) {
-			printf("\tRecompiler: %s\n", Settings.Jump ? "Fast" : "Normal");
+			printf("\tRecompiler: %s\n", Settings.Lw ? "Fast" : "Normal");
 
 			printf("\x1b[%um", (index == 6) ? 32 : 37);
 		}
 
 		printf("\n\tReturn\n\n");
 
-		if((!Config.Cpu) && Settings.Jump)
+		if((!Config.Cpu) && Settings.Lw)
 		{
 			printf("\x1b[36m");
 			printf("\tFast: Speedup in some games, but may cause freezes.");
