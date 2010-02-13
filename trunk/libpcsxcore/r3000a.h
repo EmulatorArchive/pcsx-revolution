@@ -83,28 +83,11 @@ typedef union
 	s32 sd;
 } PAIR;
 
-#define NEW_GTE
-
-#ifndef NEW_GTE
-typedef union {
-	u32 r[32];
-} psxCP2Data;
-
-typedef union {
-	u32 r[32];
-} psxCP2Ctrl;
-#endif
-
 typedef struct {
 	psxGPRRegs GPR;		/* General Purpose Registers */
 	psxCP0Regs CP0;		/* Coprocessor0 Registers */
-#ifndef NEW_GTE
-	psxCP2Data CP2D; 	/* Cop2 data registers */
-	psxCP2Ctrl CP2C; 	/* Cop2 control registers */
-#else
-	PAIR cp2d[32]; 	/* Cop2 data registers */
-	PAIR cp2c[32]; 	/* Cop2 ctrl registers */
-#endif
+	PAIR cp2d[32];	 	/* Cop2 data registers */
+	PAIR cp2c[32]; 		/* Cop2 ctrl registers */
     u32 pc;				/* Program counter */
     u32 code;			/* The instruction */
 	u32 cycle;

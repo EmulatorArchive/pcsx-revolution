@@ -173,7 +173,9 @@ void psxRcntUpdate() {
 			psxRcntUpd(3);
 			GPU_updateLace(); // updateGPU
 			SysUpdate();
+#ifndef GEKKO
 			ApplyCheats();
+#endif
 #ifdef GTE_LOG
 			GTE_LOG("VSync\n");
 #endif

@@ -56,8 +56,8 @@ int            iMaintainAspect = 0;
 //int	iResX_Max=640;	//Max FB Width
 int		iResX_Max=1024;	//Vmem width
 int		iResY_Max=512;
-char *	GXtexture;
-char *	Xpixels;
+static char *	GXtexture;
+static char *	Xpixels;
 char *	pCaptionText;
 
 extern u32* xfb[2];	/*** Framebuffers ***/

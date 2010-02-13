@@ -8,4 +8,25 @@ enum {
 ,	DEVICE_DVD
 };
 
+#ifdef HW_RVL
+
+#define DEVICES			3
+
+static const char *device[DEVICES] = {
+	"sd:/"
+,	"usb:/"
+,	"smb:/"
+};
+
+#else	//!HW_RVL
+
+#define DEVICES			2
+
+static const char *device[DEVICES] = {
+	"carda:/"
+,	"cardb:/"
+};
+
+#endif	//HW_RVL
+
 #endif

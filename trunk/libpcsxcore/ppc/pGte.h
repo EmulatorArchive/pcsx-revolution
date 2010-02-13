@@ -89,17 +89,14 @@ if(_Rt_ != 30) { //TODO
 				case 0x1f801070: case 0x1f801074:
 				case 0x1f8010f0: case 0x1f8010f4:
 					LWMtoR(r3, (uptr)&psxH[addr & 0xffff]);
-					//STWRtoPR(&psxRegs.GPR.r[_Rt_], r3);
 					B_L(b32Ptr[0]);
 
 				case 0x1f801810:
 					CALLFunc((uptr)GPU_readData);
-					//STWRtoPR(&psxRegs.GPR.r[_Rt_], r3);
 					B_L(b32Ptr[0]);
 
 				case 0x1f801814:
 					CALLFunc((uptr)GPU_readStatus);
-					//STWRtoPR(&psxRegs.GPR.r[_Rt_], r3);
 					B_L(b32Ptr[0]);
 			}
 		}

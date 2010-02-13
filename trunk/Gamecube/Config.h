@@ -40,7 +40,7 @@ typedef struct {
 typedef struct {
 	char filename[255];
 	int device;
-	int Jump;
+	int Lw;
 	video_config GPU;
 	audio_config SPU;
 	smb_settings smb;

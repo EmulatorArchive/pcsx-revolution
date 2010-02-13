@@ -189,6 +189,9 @@ void Main_menu()
 						clrscr();
 						draw = 1;
 					}
+					else psxCpu->Execute();
+					//clrscr();
+					//draw = 1;
 					break;
 
 				case 6: 

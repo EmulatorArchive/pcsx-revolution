@@ -390,13 +390,9 @@ static void iBranch(u32 branchPC, int savectx) {
 	STWRtoPR(&psxRegs.cycle, r9);
 	StackRes();
 
-#ifndef GEKKO
+#if 1
 	Return();
 #else
-if(!Settings.Jump) {
-	Return();
-} 
-else {
 	LIW(r0, branchPC);
 	LWPRtoR(r9, &psxRegs.pc);
 	CMPLW(r9, r0);
@@ -408,13 +404,12 @@ else {
 	CMPLWI(r3, 0);
 	BEQ_L(b32Ptr[2]);
 
-	move_to_mem(PC_REC(branchPC));
+// 	move_to_mem(PC_REC(branchPC));
 	BCTR();
 
 	B_DST(b32Ptr[1]);
 	B_DST(b32Ptr[2]);
 	Return();
-}
 #endif
 	pc -= 4;
 	if (savectx) {

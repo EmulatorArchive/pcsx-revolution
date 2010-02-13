@@ -452,7 +452,7 @@ long CALLBACK GPUshutdown()                            // GPU SHUTDOWN
 	return 0;                                             // nothinh to do
 }
 
-#define NEW_FRAMESKIP
+//#define NEW_FRAMESKIP		// not finished
 
 #ifdef NEW_FRAMESKIP
 static uint32_t consec_skipped =  0, consec_drawn = 0;

@@ -11,27 +11,6 @@
 						|| strstr(x, ".mdf") || strstr(x, ".MDF") \
 						|| strstr(x, ".img") || strstr(x, ".IMG"))
 
-#ifdef HW_RVL
-
-#define DEVICES			3
-
-static const char *device[DEVICES] = {
-	"sd:/"
-,	"usb:/"
-,	"smb:/"
-};
-
-#else	//!HW_RVL
-
-#define DEVICES			2
-
-static const char *device[DEVICES] = {
-	"carda:/"
-,	"cardb:/"
-};
-
-#endif	//HW_RVL
-
 enum {
 	BROWSER_CANCELED = -2,
 	BROWSER_FILE_NOT_FOUND = -1,
@@ -63,7 +42,7 @@ static int textFileBrowser(file_browser_st *file_struct){
 	dir_ent* dir = malloc( num_entries * sizeof(dir_ent) );
 	// Read each entry of the directory
 	while( dirnext(dp, filename, &fstat) == 0 ){
-		if((strcmp(filename, ".") != 0 && (fstat.st_mode & S_IFDIR)) || (file_struct->filter ? TYPE_FILTER(filename) : 1))
+		if((strcmp(filename, ".") != 0 && (fstat.st_mode & S_IFDIR)) || (file_struct->filter ? TYPE_FILTER(filename) : 1) )
 		{
 			// Make sure we have room for this one
 			if(i == num_entries){
