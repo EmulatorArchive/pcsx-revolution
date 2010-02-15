@@ -468,11 +468,11 @@ static void ProcessCommands() {
             if (!arguments) {
                 reply[0] = 0;
                 for (i = 0; i < 32; i++) {
-                    sprintf(reply, "%s211 %02X=%08X\r\n", reply, i, psxRegs.GPR.r[i]);
+                    sprintf(reply, "%s211 %02X=%08X\r\n", reply, i, psxRegs.GPR.r[i].d);
                 }
             } else {
                 if ((code >= 0) && (code < 32)) {
-                    sprintf(reply, "211 %02X=%08X\r\n", code, psxRegs.GPR.r[code]);
+                    sprintf(reply, "211 %02X=%08X\r\n", code, psxRegs.GPR.r[code].d);
                 } else {
                     sprintf(reply, "511 Invalid GPR register: %X\r\n", code);
                 }
@@ -560,7 +560,7 @@ static void ProcessCommands() {
             }
 
             if (reg < 32) {
-                psxRegs.GPR.r[reg] = value;
+                psxRegs.GPR.r[reg].d = value;
                 sprintf(reply, "221 %02X=%08X\r\n", reg, value);
             } else {
                 sprintf(reply, "512 Invalid GPR register: %02X\r\n", reg);
@@ -580,7 +580,7 @@ static void ProcessCommands() {
             if (sscanf(arguments + 3, "%08X", &value) != 1) {
                 sprintf(reply, "500 Malformed 122 command '%s'\r\n", arguments);
             } else {
-                psxRegs.GPR.r[reg] = value;
+                psxRegs.GPR.r[reg].d = value;
                 sprintf(reply, "222 LO=%08X HI=%08X\r\n", psxRegs.GPR.n.lo, psxRegs.GPR.n.hi);
             }
             break;
@@ -591,7 +591,7 @@ static void ProcessCommands() {
             }
 
             if (reg < 32) {
-                psxRegs.CP0.r[reg] = value;
+                psxRegs.CP0.r[reg].d = value;
                 sprintf(reply, "223 %02X=%08X\r\n", reg, value);
             } else {
                 sprintf(reply, "512 Invalid COP0 register: %02X\r\n", reg);

@@ -227,23 +227,23 @@ static void setcp2cr( int reg, u32 value )
 
 void gteMFC2() {
 	if (!_Rt_) return;
-	_rRt_ = MFC2(_Rd_);
+	psxRegs.GPR.r[_Rt_].d = MFC2(_Rd_);
 }
 
 void gteCFC2() {
 	if (!_Rt_) return;
-	_rRt_ = psxRegs.cp2c[_Rd_].d;
+	psxRegs.GPR.r[_Rt_].d = psxRegs.cp2c[_Rd_].d;
 }
 
 void gteMTC2() {
-	MTC2(_rRt_, _Rd_);
+	MTC2(psxRegs.GPR.r[_Rt_].d, _Rd_);
 }
 
 void gteCTC2() {
-	setcp2cr( _Rd_, _rRt_ );
+	setcp2cr( _Rd_, psxRegs.GPR.r[_Rt_].d );
 }
 
-#define _oB_ (psxRegs.GPR.r[_Rs_] + _Imm_)
+#define _oB_ (psxRegs.GPR.r[_Rs_].d + _Imm_)
 
 void gteLWC2() {
 	MTC2(psxMemRead32(_oB_), _Rt_);

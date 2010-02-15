@@ -241,7 +241,7 @@ static void SetBranch() {
 		return;
 	}
 
-	recBSC[psxRegs.code>>26]();
+	recBSC[_Op_]();
 
 	iFlushRegs();
 	LWMtoR(r3, (uptr)&target);
@@ -302,7 +302,7 @@ static void iJump(u32 branchPC) {
 		return;
 	}
 
-	recBSC[psxRegs.code>>26]();
+	recBSC[_Op_]();
 
 	iFlushRegs();
 	LIW(r9, branchPC);
@@ -376,7 +376,7 @@ static void iBranch(u32 branchPC, int savectx) {
 
 	if(branchPC == pc) branchPC+=4;
 	pc += 4;
-	recBSC[psxRegs.code>>26]();
+	recBSC[_Op_]();
 	
 	iFlushRegs();
 
@@ -704,7 +704,7 @@ static void recRecompile() {
 
 		pc+=4; count++;
 
-		recBSC[psxRegs.code>>26]();
+		recBSC[_Op_]();
 
 		if (branch) {
 			branch = 0;

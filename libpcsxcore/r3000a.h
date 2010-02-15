@@ -42,30 +42,6 @@ extern R3000Acpu psxRec;
 #define PSXREC
 #endif
 
-typedef union {
-	struct {
-		u32   r0, at, v0, v1, a0, a1, a2, a3,
-						t0, t1, t2, t3, t4, t5, t6, t7,
-						s0, s1, s2, s3, s4, s5, s6, s7,
-						t8, t9, k0, k1, gp, sp, s8, ra, lo, hi;
-	} n;
-	u32 r[34]; /* Lo, Hi in r[32] and r[33] */
-} psxGPRRegs;
-
-typedef union {
-	struct {
-		u32	Index,     Random,    EntryLo0,  EntryLo1,
-						Context,   PageMask,  Wired,     Reserved0,
-						BadVAddr,  Count,     EntryHi,   Compare,
-						Status,    Cause,     EPC,       PRid,
-						Config,    LLAddr,    WatchLO,   WatchHI,
-						XContext,  Reserved1, Reserved2, Reserved3,
-						Reserved4, Reserved5, ECC,       CacheErr,
-						TagLo,     TagHi,     ErrorEPC,  Reserved6;
-	} n;
-	u32 r[32];
-} psxCP0Regs;
-
 typedef union
 {
 #if defined(__BIGENDIAN__) || defined(GEKKO)
@@ -83,6 +59,30 @@ typedef union
 	s32 sd;
 } PAIR;
 
+typedef union {
+	struct {
+		u32   r0, at, v0, v1, a0, a1, a2, a3,
+						t0, t1, t2, t3, t4, t5, t6, t7,
+						s0, s1, s2, s3, s4, s5, s6, s7,
+						t8, t9, k0, k1, gp, sp, s8, ra, lo, hi;
+	} n;
+	PAIR r[34]; /* Lo, Hi in r[32] and r[33] */
+} psxGPRRegs;
+
+typedef union {
+	struct {
+		u32	Index,     Random,    EntryLo0,  EntryLo1,
+						Context,   PageMask,  Wired,     Reserved0,
+						BadVAddr,  Count,     EntryHi,   Compare,
+						Status,    Cause,     EPC,       PRid,
+						Config,    LLAddr,    WatchLO,   WatchHI,
+						XContext,  Reserved1, Reserved2, Reserved3,
+						Reserved4, Reserved5, ECC,       CacheErr,
+						TagLo,     TagHi,     ErrorEPC,  Reserved6;
+	} n;
+	PAIR r[32];
+} psxCP0Regs;
+
 typedef struct {
 	psxGPRRegs GPR;		/* General Purpose Registers */
 	psxCP0Regs CP0;		/* Coprocessor0 Registers */
@@ -96,30 +96,6 @@ typedef struct {
 } psxRegisters;
 
 extern psxRegisters psxRegs;
-
-#if defined(__BIGENDIAN__) || defined(GEKKO)
-
-#define _i32(x) *(s32 *)&x
-#define _u32(x) x
-
-#define _i16(x) (((short *)&x)[1])
-#define _u16(x) (((unsigned short *)&x)[1])
-
-#define _i8(x) (((char *)&x)[3])
-#define _u8(x) (((unsigned char *)&x)[3])
-
-#else
-
-#define _i32(x) *(s32 *)&x
-#define _u32(x) x
-
-#define _i16(x) *(short *)&x
-#define _u16(x) *(unsigned short *)&x
-
-#define _i8(x) *(char *)&x
-#define _u8(x) *(unsigned char *)&x
-
-#endif
 
 /**** R3000A Instruction Macros ****/
 #define _PC_       psxRegs.pc       // The next PC to be executed
@@ -148,24 +124,24 @@ extern psxRegisters psxRegs;
 #define _Imm_	 _fImm_(psxRegs.code)
 #define _ImmU_	 _fImmU_(psxRegs.code)
 
-#define _rRs_   psxRegs.GPR.r[_Rs_]   // Rs register
-#define _rRt_   psxRegs.GPR.r[_Rt_]   // Rt register
-#define _rRd_   psxRegs.GPR.r[_Rd_]   // Rd register
-#define _rSa_   psxRegs.GPR.r[_Sa_]   // Sa register
-#define _rFs_   psxRegs.CP0.r[_Rd_]   // Fs register
-
-#define _c2dRs_ psxRegs.cp2d[_Rs_],d  // Rs cop2 data register
-#define _c2dRt_ psxRegs.cp2d[_Rt_],d  // Rt cop2 data register
-#define _c2dRd_ psxRegs.cp2d[_Rd_].d  // Rd cop2 data register
-#define _c2dSa_ psxRegs.cp2d[_Sa_].d  // Sa cop2 data register
-
-#define _rHi_   psxRegs.GPR.n.hi   // The HI register
-#define _rLo_   psxRegs.GPR.n.lo   // The LO register
-
 #define _JumpTarget_    ((_Target_ * 4) + (_PC_ & 0xf0000000))   // Calculates the target during a jump instruction
 #define _BranchTarget_  ((s16)_Im_ * 4 + _PC_)                 // Calculates the target during a branch instruction
 
-#define _SetLink(x)     psxRegs.GPR.r[x] = _PC_ + 4;       // Sets the return address in the link register
+#define _SetLink(x)     psxRegs.GPR.r[x].d = _PC_ + 4;       // Sets the return address in the link register
+
+#define _rRtU_	(psxRegs.GPR.r[_Rt_].d)
+#define _rRsU_	(psxRegs.GPR.r[_Rs_].d)
+#define _rRdU_	(psxRegs.GPR.r[_Rd_].d)
+#define _rFsU_	(psxRegs.CP0.r[_Rd_].d)
+#define _rLoU_	(psxRegs.GPR.r[32].d)
+#define _rHiU_	(psxRegs.GPR.r[33].d)
+
+#define _rRtS_	(psxRegs.GPR.r[_Rt_].sd)
+#define _rRsS_	(psxRegs.GPR.r[_Rs_].sd)
+#define _rRdS_	(psxRegs.GPR.r[_Rd_].sd)
+#define _rFsS_	(psxRegs.CP0.r[_Rd_].sd)
+#define _rLoS_	(psxRegs.GPR.r[32].sd)
+#define _rHiS_	(psxRegs.GPR.r[33].sd)
 
 int  psxInit();
 void psxReset();

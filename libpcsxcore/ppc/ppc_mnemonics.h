@@ -103,15 +103,12 @@ void STWBRX(int, int, int);
 }
 
 // Load PsxMem to HWReg
-#if 1
 #define LWMtoR(REG, MEM) { \
 	LI(r0, 0); \
 	LIW((REG), (MEM)); \
 	LWBRX((REG), r0, (REG)); \
 }
-#else
-void LWMtoR(int reg, uptr mem);
-#endif
+
 // Store HWReg to PsxMem
 #define STWRtoM(MEM, REG) { \
 	LI(r0, 0); \
@@ -434,7 +431,7 @@ void MULLI (int, int, s32);
 	{int _reg1 = (REG1), _reg2 = (REG2); int _dst=(REG_DST); \
         Write32(0x7C000038 | (_reg1 << 21) | (_dst << 16) | (_reg2 << 11));}
 
-#define bgNOR(REG_DST, REG1, REG2) \
+#define NOR(REG_DST, REG1, REG2) \
 	{int _reg1 = (REG1), _reg2 = (REG2); int _dst=(REG_DST); \
         Write32(0x7C0000f8 | (_reg1 << 21) | (_dst << 16) | (_reg2 << 11));}
 
