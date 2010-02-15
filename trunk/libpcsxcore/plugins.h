@@ -142,7 +142,7 @@ struct SubQ {
 	unsigned char TrackRelativeAddress[3];
 	unsigned char Filler;
 	unsigned char AbsoluteAddress[3];
-	char res1[72];
+	char res1[71];
 };
 typedef unsigned char* (CALLBACK* CDRgetBufferSub)(void);
 

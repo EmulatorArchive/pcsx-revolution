@@ -203,7 +203,7 @@ typedef struct {
 typedef struct {
 	s32 status;
 	s32 mode;
-	u32 reg[32];
+	PAIR reg[32];
 	u32 func;
 } TCB;
 
@@ -322,7 +322,7 @@ void psxBios_setjmp() { // 13
 	jmp_buf[1] = sp;
 	jmp_buf[2] = fp;
 	for (i=0; i<8; i++) // s0-s7
-		jmp_buf[3+i] = psxRegs.GPR.r[16+i];
+		jmp_buf[3+i] = psxRegs.GPR.r[16+i].d;
 	jmp_buf[11] = gp;
 
 	v0 = 0; pc0 = ra;
@@ -340,7 +340,7 @@ void psxBios_longjmp() { //14
 	sp = jmp_buf[1]; /* sp */
 	fp = jmp_buf[2]; /* fp */
 	for (i=0; i<8; i++) // s0-s7
-	   psxRegs.GPR.r[16+i] = jmp_buf[3+i];		
+		 psxRegs.GPR.r[16+i].d = jmp_buf[3+i];
 	gp = jmp_buf[11]; /* gp */
 
 	v0 = a1; pc0 = ra;
@@ -1149,9 +1149,8 @@ void psxBios_OpenTh() { // 0e
 
 	Thread[th].status = 1;
 	Thread[th].func    = a0;
-	Thread[th].reg[29] = a1;
-	Thread[th].reg[28] = a2;
-
+	Thread[th].reg[29].d = a1;
+	Thread[th].reg[28].d = a2;
 	v0 = th; pc0 = ra;
 }
 
@@ -2368,7 +2367,7 @@ void psxBiosException() {
 				sp = jmp_int[1];
 				fp = jmp_int[2];
 				for (i=0; i<8; i++) // s0-s7
-					 psxRegs.GPR.r[16+i] = jmp_int[3+i];
+					 psxRegs.GPR.r[16+i].d = jmp_int[3+i];
 				gp = jmp_int[11];
 
 				v0 = 1;
