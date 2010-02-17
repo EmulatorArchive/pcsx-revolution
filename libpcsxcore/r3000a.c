@@ -235,6 +235,7 @@ __inline void psxTestIntc()
 
 	psx_int_add( PsxEvt_Exception, 0 );
 }
+#endif
 
 __inline void psxRaiseExtInt( uint irq )
 {
@@ -242,9 +243,12 @@ __inline void psxRaiseExtInt( uint irq )
 	SysPrintf("ExtInt: %ld\n", irq);
 #endif
 	psxHu32ref(0x1070) |= SWAPu32(1 << irq);
+#ifdef NEW_EVENTS
 	psxTestIntc();
-}
+#else
+	psxRegs.interrupt|= 0x80000000;
 #endif
+}
 
 void psxReset() {
 #ifndef GEKKO

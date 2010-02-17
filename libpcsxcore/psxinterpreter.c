@@ -789,7 +789,7 @@ __inline void MTC0(int reg, u32 val) {
 #ifndef NEW_EVENTS
 			psxRegs.interrupt|= 0x80000000;
 #else
-			psxRaiseExtInt(PsxInt_Exception);
+			psxTestIntc();
 #endif
 			break;
 

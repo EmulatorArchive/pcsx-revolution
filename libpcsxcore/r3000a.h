@@ -42,8 +42,6 @@ extern R3000Acpu psxRec;
 #define PSXREC
 #endif
 
-// Issues:	GT1 - opening movie, 
-//			Tekken3 - freeze on loading battle (sometimes), slowness.
 #define NEW_EVENTS
 
 #ifdef NEW_EVENTS

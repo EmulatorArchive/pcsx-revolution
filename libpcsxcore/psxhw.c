@@ -417,7 +417,7 @@ void psxHwWrite16(u32 add, u16 value) {
 #endif
 			psxHu16ref(0x1074) = SWAPu16(value);
 #ifdef NEW_EVENTS
-			//psxTestIntc();
+			psxTestIntc();
 #else
 			psxRegs.interrupt |= 0x80000000;
 #endif
@@ -538,7 +538,7 @@ void psxHwWrite32(u32 add, u32 value) {
 #endif
 			psxHu32ref(0x1074) = SWAPu32(value);
 #ifdef NEW_EVENTS
-			//psxTestIntc();
+			psxTestIntc();
 #else
 			psxRegs.interrupt|= 0x80000000;
 #endif

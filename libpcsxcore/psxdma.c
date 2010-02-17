@@ -32,12 +32,7 @@ void psxDmaInterrupt(u32 channel) {
 	if (SWAPu32(HW_DMA_ICR) & (1 << (16 + channel))) {
 		HW_DMA_ICR|= SWAP32(1 << (24 + channel));
 		psxRegs.CP0.n.Cause |= 1 << (9 + channel);
-#ifdef NEW_EVENTS	
 		psxRaiseExtInt( PsxInt_DMA );
-#else
-		psxHu32ref(0x1070) |= SWAP32(8);
-		psxRegs.interrupt|= 0x80000000;
-#endif
 	}
 }
 
@@ -45,9 +40,10 @@ void psxDma4(u32 madr, u32 bcr, u32 chcr) { // SPU
 	u16 *ptr;
 
 	u32 size = (bcr >> 16);
-	if(size == 0)
+	if(size == 0) 
 		size = 0x10000;
 	 size *= (bcr & 0xFFFF);
+	 size *= 2;
 
 	switch (chcr) {
 		case 0x01000201: //cpu to spu transfer
@@ -61,7 +57,7 @@ void psxDma4(u32 madr, u32 bcr, u32 chcr) { // SPU
 #endif
 				break;
 			}
-			SPU_writeDMAMem(ptr, size * 2);
+			SPU_writeDMAMem(ptr, size);
 			break;
 
 		case 0x01000200: //spu to cpu transfer
@@ -75,7 +71,7 @@ void psxDma4(u32 madr, u32 bcr, u32 chcr) { // SPU
 #endif
 				break;
 			}
-			size *= 2;
+			
     		SPU_readDMAMem(ptr, size);
 			psxCpu->Clear(madr, size);
 			break;
