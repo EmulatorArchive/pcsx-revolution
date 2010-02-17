@@ -45,6 +45,21 @@ uptr* psxRecLUT;
 
 #define RECMEM_SIZE		(PTRMULT*8*1024*1024)
 
+#ifdef NEW_EVENTS
+
+#define REC_TEST_BRANCH() { \
+	CMP32ItoM((uptr)&psxRegs.evtCycleCountdown, 0); \
+	j8Ptr[0] = JG8(0); \
+	CALLFunc((uptr)psxBranchTest); \
+	x86SetJ8(j8Ptr[0]); \
+}
+
+#else
+
+#define REC_TEST_BRANCH() CALLFunc((uptr)psxBranchTest);
+
+#endif
+
 static char *recMem;	/* the recompiled blocks will be here */
 static char *recRAM;	/* and the ptr to the blocks here */
 static char *recROM;	/* and here */
@@ -188,7 +203,7 @@ static void SetBranch() {
 	iFlushRegs();
 	MOV32MtoR(EAX, (uptr)&target);
 	MOV32RtoM((uptr)&psxRegs.pc, EAX);
-	CALLFunc((uptr)psxBranchTest);
+	REC_TEST_BRANCH();
 
 	iRet();
 }
@@ -220,7 +235,7 @@ static void iJump(u32 branchPC) {
 
 	iFlushRegs();
 	MOV32ItoM((uptr)&psxRegs.pc, branchPC);
-	CALLFunc((uptr)psxBranchTest);
+	REC_TEST_BRANCH();
 	/* store cycle */
 	count = (pc - pcold)/4;
 	UpdateCycle(count);
@@ -285,7 +300,7 @@ static void iBranch(u32 branchPC, int savectx) {
 
 	iFlushRegs();
 	MOV32ItoM((uptr)&psxRegs.pc, branchPC);
-	CALLFunc((uptr)psxBranchTest);
+	REC_TEST_BRANCH();
 	/* store cycle */
 	count = (pc - pcold)/4;
 	UpdateCycle(count);
