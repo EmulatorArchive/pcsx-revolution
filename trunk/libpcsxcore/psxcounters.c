@@ -24,6 +24,7 @@
 
 #include "psxcounters.h"
 #include "cheat.h"
+#include "psxhw.h"
 
 static int cnts = 4;
 psxCounter psxCounters[5];
@@ -38,10 +39,16 @@ typedef struct {
 static vSyncRate_t vSyncRate;
 static void CalcRate(u32 region);
 
+// We need it because of PixelClock rate - 13.5MHz.
 static const PsxFixedBits = 12;
 
 static void psxRcntUpd(unsigned long index) {
-	psxCounters[index].sCycle = psxRegs.cycle;
+#ifndef NEW_EVENTS
+u32 cycle = psxRegs.cycle;
+#else
+u32 cycle = psxGetCycle();
+#endif
+	psxCounters[index].sCycle = cycle;
 	if (((!(psxCounters[index].mode & 1)) || (index!=2)) &&
 		psxCounters[index].mode & 0x30) {
 		if (psxCounters[index].mode & 0x10) { // Interrupt on target
@@ -60,24 +67,46 @@ static void psxRcntReset(unsigned long index) {
 
 //	if (index == 2) SysPrintf("rcnt2 %x\n", psxCounters[index].mode);
 	psxHu32ref(0x1070)|= SWAPu32(psxCounters[index].interrupt);
+#ifndef NEW_EVENTS
 	psxRegs.interrupt|= 0x80000000;
+#else
+	psxTestIntc();
+#endif
 	if (!(psxCounters[index].mode & 0x40)) { // Only 1 interrupt
 		psxCounters[index].Cycle = 0xffffffff;
 	} // else Continuos interrupt mode
 }
 
+#ifdef SEPARATE_CNTS
+
+static void psxRcntSet(u32 index) {
+	if (psxCounters[index].Cycle == 0xffffffff) return;
+
+	s32 count = psxCounters[index].Cycle - (psxGetCycle() - psxCounters[index].sCycle);
+
+	if (count < 0) return;
+	psx_int_add(index, count);
+
+}
+
+#else
+
 static void psxRcntSet() {
 	int i;
-
+#ifndef NEW_EVENTS
+u32 cycle = psxRegs.cycle;
+#else
+u32 cycle = psxGetCycle();
+#endif
 	psxNextCounter = 0x7fffffff;
-	psxNextsCounter = psxRegs.cycle;
+	psxNextsCounter = cycle;
 
 	for (i=0; i<cnts; i++) {
 		s32 count;
 
 		if (psxCounters[i].Cycle == 0xffffffff) continue;
 
-		count = psxCounters[i].Cycle - (psxRegs.cycle - psxCounters[i].sCycle);
+		count = psxCounters[i].Cycle - (cycle - psxCounters[i].sCycle);
 
 		if (count < 0) {
 			psxNextCounter = 0; break;
@@ -87,7 +116,12 @@ static void psxRcntSet() {
 			psxNextCounter = count;
 		}
 	}
+#ifdef NEW_EVENTS
+	psx_int_add(0, psxNextCounter);
+#endif
 }
+
+#endif
 
 void psxRcntInit() {
 
@@ -111,8 +145,11 @@ void psxRcntInit() {
 		psxCounters[4].mode = 0x58;
 	} else cnts = 4;
 
-	psxRcntUpd(0); psxRcntUpd(1); psxRcntUpd(2); psxRcntUpd(3);
-	psxRcntSet();
+// 	psxRcntUpd(0); psxRcntUpd(1); psxRcntUpd(2); psxRcntUpd(3);
+// 	psxRcntSet();
+int i;
+	for (i=0; i<5; i++)
+		psxCounters[i].sCycle = psxRegs.cycle;
 }
 
 #define NEWRATE
@@ -121,11 +158,11 @@ static void CalcRate(u32 region) {
 	u32 rate;
 #ifndef NEWRATE
 	if(region) { // PAL
-		rate = (PSXCLK / 50);
+		rate = (PSXCLK << PsxFixedBits / 50);
 	}
 	else
 	{
-		rate = (PSXCLK / 60);
+		rate = (PSXCLK << PsxFixedBits / 60);
 	}
 	vSyncRate.Blank = (rate / 262) * 22;
 /*
@@ -133,25 +170,24 @@ static void CalcRate(u32 region) {
   Region: NTSC  Render: 517092;         Blank: 47388;
 */
 #else
-	if(region) { // PAL
+	if(region & PSX_TYPE_PAL) {
 		rate = ((PSXCLK << PsxFixedBits) / 50);
 		vSyncRate.scans = 625;
 	}
-	else
-	{
-		rate = (((PSXCLK << PsxFixedBits) * 100) / 5994);
+	else {
+		rate = (((PSXCLK << PsxFixedBits) / 5994) * 100);
 		vSyncRate.scans = 525;
 	}
-	vSyncRate.Blank = (rate / vSyncRate.scans) * 2;
+	vSyncRate.Blank = (rate / vSyncRate.scans) * BIAS;
 	
 /*
-  Region: PAL   Render: 675210;         Blank: 2166;
-  Region: NTSC  Render: 562893;         Blank: 2152;
+  Region: PAL   Render: 675208;         Blank: 2167;
+  Region: NTSC  Render: 562892;         Blank: 2152;
 */
 #endif
 	vSyncRate.Render = rate - vSyncRate.Blank;
 	vSyncRate.region = region;
-	//SysPrintf("Region: %s\t Render: %d;\t Blank: %d;\n", vSyncRate.region ? "PAL" : "NTSC", vSyncRate.Render, vSyncRate.Blank);
+	//SysPrintf("Region: %s\t Render: %d;\t Blank: %d;\n", vSyncRate.region ? "PAL" : "NTSC", vSyncRate.Render >> PsxFixedBits, vSyncRate.Blank >> PsxFixedBits);
 }
 
 void psxUpdateVSyncRate() {
@@ -160,9 +196,55 @@ void psxUpdateVSyncRate() {
 }
 
 void psxUpdateVSyncRateEnd() {
+	psxRaiseExtInt(PsxInt_VBlank);
 	psxCounters[3].rate = vSyncRate.Blank;
 	if (Config.VSyncWA) psxCounters[3].rate/= 2;
 }
+
+#ifdef SEPARATE_CNTS
+void psxRcntUpdate3() {
+	if(Config.PsxType != vSyncRate.region) CalcRate(Config.PsxType);
+	if (psxCounters[3].mode & 0x10000) { // VSync End (22 hsyncs)
+		psxCounters[3].mode&=~0x10000;
+		psxUpdateVSyncRate();
+		GPU_updateLace(); // updateGPU
+		SysUpdate();
+#ifndef GEKKO
+		ApplyCheats();
+#endif
+#ifdef GTE_LOG
+		GTE_LOG("VSync\n");
+#endif
+	} else { // VSync Start (240 hsyncs) 
+		psxCounters[3].mode|= 0x10000;
+		psxUpdateVSyncRateEnd();
+		
+	}
+	psx_int_add(3, psxCounters[3].rate / (BIAS << PsxFixedBits));
+}
+
+void psxRcntUpdate0() {
+	psxRcntReset(0);
+	psxRcntSet(0);
+}
+
+void psxRcntUpdate1() {
+	psxRcntReset(1);
+	psxRcntSet(1);
+}
+
+void psxRcntUpdate2() {
+	psxRcntReset(2);
+	psxRcntSet(2);
+}
+
+void psxRcntUpdate4() {
+	if (SPU_async) {
+		SPU_async((psxRegs.cycle - psxCounters[4].sCycle) * BIAS);
+	}
+	psx_int_add(4, psxCounters[4].rate / (BIAS << PsxFixedBits));
+}
+#else
 
 void psxRcntUpdate() {
 	if ((psxRegs.cycle - psxCounters[3].sCycle) >= psxCounters[3].Cycle) {
@@ -184,7 +266,11 @@ void psxRcntUpdate() {
 			psxUpdateVSyncRateEnd();
 			psxRcntUpd(3);
 			psxHu32ref(0x1070)|= SWAPu32(1);
+#ifndef NEW_EVENTS
 			psxRegs.interrupt|= 0x80000000;
+#else
+			psxTestIntc();
+#endif
 		}
 	}
 
@@ -212,11 +298,16 @@ void psxRcntUpdate() {
 	DebugVSync();
 #endif
 }
+#endif
 
 void psxRcntWcount(u32 index, u32 value) {
 	psxCounters[index].count = value;
 	psxRcntUpd(index);
+#ifdef SEPARATE_CNTS
+	psxRcntSet(index);
+#else
 	psxRcntSet();
+#endif
 }
 
 void psxRcntWmode(u32 index, u32 value)  {
@@ -240,7 +331,7 @@ void psxRcntWmode(u32 index, u32 value)  {
 		switch (value & 0x300) {
 			case 0x100:
 #ifdef NEWRATE
-				psxCounters[index].rate = ((vSyncRate.Render) / vSyncRate.scans) * 2;
+				psxCounters[index].rate = ((vSyncRate.Render) / vSyncRate.scans) * BIAS;
 #else
 				psxCounters[index].rate = (psxCounters[3].rate /** BIAS*/) / 262; // seems ok
 #endif
@@ -261,36 +352,45 @@ void psxRcntWmode(u32 index, u32 value)  {
 
 	// Need to set a rate and target
 	psxRcntUpd(index);
+#ifdef SEPARATE_CNTS
+	psxRcntSet(index);
+#else
 	psxRcntSet();
+#endif
 }
 
 void psxRcntWtarget(u32 index, u32 value) {
 //	SysPrintf("writeCtarget[%ld] = %lx\n", index, value);
 	psxCounters[index].target = value;
 	psxRcntUpd(index);
+#ifdef SEPARATE_CNTS
+	psxRcntSet(index);
+#else
 	psxRcntSet();
+#endif
 }
 
 u32 psxRcntRcount(u32 index) {
-	u32 ret;
-
-//	if ((!(psxCounters[index].mode & 1)) || (index!=2)) {
-		if (psxCounters[index].mode & 0x08) { // Wrap at target
-			if (Config.RCntFix) { // Parasite Eve 2
-				ret = (psxCounters[index].count + /*BIAS **/ (((psxRegs.cycle - psxCounters[index].sCycle) << PsxFixedBits) / psxCounters[index].rate)) & 0xffff;
-			} else {
-				ret = (psxCounters[index].count + BIAS * (((psxRegs.cycle - psxCounters[index].sCycle) << PsxFixedBits) / psxCounters[index].rate)) & 0xffff;
-			}
-		} else { // Wrap at 0xffff
-			ret = (psxCounters[index].count + BIAS * ((psxRegs.cycle << PsxFixedBits) / psxCounters[index].rate)) & 0xffff;
-			if (Config.RCntFix) { // Vandal Hearts 1/2
-				ret/= 16;
-			}
+	u32 ret = psxCounters[index].count;
+#ifndef NEW_EVENTS
+u32 cycle = psxRegs.cycle;
+#else
+u32 cycle = psxGetCycle();
+#endif
+	if (psxCounters[index].mode & 0x08) { // Wrap at target
+		if (Config.RCntFix) { // Parasite Eve 2
+			ret += (/*BIAS **/ (((cycle - psxCounters[index].sCycle) << PsxFixedBits) / psxCounters[index].rate)) & 0xffff;
+		} else {
+			ret += (BIAS * (((cycle - psxCounters[index].sCycle) << PsxFixedBits) / psxCounters[index].rate)) & 0xffff;
 		}
-//		return (psxCounters[index].count + BIAS * ((psxRegs.cycle - psxCounters[index].sCycle) / psxCounters[index].rate)) & 0xffff;
-//	} else return 0;
+	} else { // Wrap at 0xffff
+		ret += (BIAS * ((cycle << PsxFixedBits) / psxCounters[index].rate)) & 0xffff;
+		if (Config.RCntFix) { // Vandal Hearts 1/2
+			ret/= 16;
+		}
+	}
 
-//	SysPrintf("readCcount[%ld] = %lx (mode %lx, target %lx, cycle %lx)\n", index, ret, psxCounters[index].mode, psxCounters[index].target, psxRegs.cycle);
+	//SysPrintf("readCcount[%ld] = %lx (mode %lx, target %lx, cycle %lx)\n", index, ret, psxCounters[index].mode, psxCounters[index].target, psxRegs.cycle);
 
 	return ret;
 }

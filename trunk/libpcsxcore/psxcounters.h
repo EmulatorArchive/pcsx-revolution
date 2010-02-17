@@ -29,11 +29,26 @@
 typedef struct {
 	u32 count, mode, target;
 	u32 sCycle, Cycle, rate, interrupt;
+	u32 IsCounting:1;
+	u32 FutureTarget:1;
 } psxCounter;
 
 extern psxCounter psxCounters[5];
 
 u32 psxNextCounter, psxNextsCounter;
+
+#ifdef NEW_EVENTS
+// We can separate them only with new interrupt system.
+#	define SEPARATE_CNTS
+#endif
+
+#ifdef SEPARATE_CNTS
+void psxRcntUpdate0();
+void psxRcntUpdate1();
+void psxRcntUpdate2();
+void psxRcntUpdate3();
+void psxRcntUpdate4();
+#endif
 
 void psxRcntInit();
 void psxRcntUpdate();
@@ -41,6 +56,7 @@ void psxRcntWcount(u32 index, u32 value);
 void psxRcntWmode(u32 index, u32 value);
 void psxRcntWtarget(u32 index, u32 value);
 u32 psxRcntRcount(u32 index);
+u32 psxRcntRmode(u32 index);
 int psxRcntFreeze(gzFile f, int Mode);
 
 void psxUpdateVSyncRate();

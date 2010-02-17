@@ -23,6 +23,7 @@
 */
 
 #include "psxdma.h"
+#include "psxhw.h"
 
 // Dma0/1 in Mdec.c
 // Dma3   in CdRom.c
@@ -31,8 +32,12 @@ void psxDmaInterrupt(u32 channel) {
 	if (SWAPu32(HW_DMA_ICR) & (1 << (16 + channel))) {
 		HW_DMA_ICR|= SWAP32(1 << (24 + channel));
 		psxRegs.CP0.n.Cause |= 1 << (9 + channel);
+#ifdef NEW_EVENTS	
+		psxRaiseExtInt( PsxInt_DMA );
+#else
 		psxHu32ref(0x1070) |= SWAP32(8);
 		psxRegs.interrupt|= 0x80000000;
+#endif
 	}
 }
 
@@ -121,7 +126,11 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 				break;
 			}
 			GPU_writeDataMem(ptr, size);
+#ifdef NEW_EVENTS
+			psx_int_add(PsxEvt_GPU, (size / 4) / BIAS);
+#else
 			GPUDMA_INT((size / 4) / BIAS);
+#endif
 			return;
 //			break;
 

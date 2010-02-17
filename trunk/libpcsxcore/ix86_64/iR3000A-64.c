@@ -109,10 +109,18 @@ static void iFlushRegs() {
 	}
 }
 
+static void UpdateCycle(u32 amount) {
+#ifdef NEW_EVENTS
+	SUB32ItoM((uptr)&psxRegs.evtCycleCountdown, amount);
+#else
+	ADD32ItoM((uptr)&psxRegs.cycle, amount);
+#endif
+}
+
 static void iRet() {
 	/* store cycle */
 	count = (pc - pcold)/4;
-	ADD32ItoM((uptr)&psxRegs.cycle, count);
+	UpdateCycle(count);
 	StackRes();
 	RET();
 }
@@ -163,7 +171,7 @@ static void SetBranch() {
 		MOV32ItoM((uptr)&psxRegs.code, psxRegs.code);
 		/* store cycle */
 		count = (pc - pcold)/4;
-		ADD32ItoM((uptr)&psxRegs.cycle, count);
+		UpdateCycle(count);
 
 		//PUSH64M((uptr)&target);
 		MOV32MtoR(X86ARG2, (uptr)&target);
@@ -195,7 +203,7 @@ static void iJump(u32 branchPC) {
 		MOV32ItoM((uptr)&psxRegs.code, psxRegs.code);
 		/* store cycle */
 		count = (pc - pcold)/4;
-		ADD32ItoM((uptr)&psxRegs.cycle, count);
+		UpdateCycle(count);
 
 		//PUSHI(branchPC);
 		MOV64ItoR(X86ARG2, branchPC);
@@ -215,7 +223,7 @@ static void iJump(u32 branchPC) {
 	CALLFunc((uptr)psxBranchTest);
 	/* store cycle */
 	count = (pc - pcold)/4;
-	ADD32ItoM((uptr)&psxRegs.cycle, count);
+	UpdateCycle(count);
 	StackRes();
 
 		RET();
@@ -259,7 +267,7 @@ static void iBranch(u32 branchPC, int savectx) {
 		MOV32ItoM((uptr)&psxRegs.code, psxRegs.code);
 		/* store cycle */
 		count = ((pc+4) - pcold)/4;
-		ADD32ItoM((uptr)&psxRegs.cycle, count);
+		UpdateCycle(count);
 		//if (resp) ADD32ItoR(ESP, resp);
 
 		//PUSHI(branchPC);
@@ -280,7 +288,7 @@ static void iBranch(u32 branchPC, int savectx) {
 	CALLFunc((uptr)psxBranchTest);
 	/* store cycle */
 	count = (pc - pcold)/4;
-	ADD32ItoM((uptr)&psxRegs.cycle, count);
+	UpdateCycle(count);
 	
 	StackRes();
 
@@ -1531,8 +1539,8 @@ static void recLW() {
 //	ADD32ItoR(ESP, 4);
 }
 
-extern u32 LWL_MASK[4];
-extern u32 LWL_SHIFT[4];
+u32 LWL_MASK[4] = { 0xffffff, 0xffff, 0xff, 0 };
+u32 LWL_SHIFT[4] = { 24, 16, 8, 0 };
 
 void iLWLk(u32 shift) {
 	if (IsConst(_Rt_)) {
@@ -1690,8 +1698,8 @@ static void recLWBlock(int count) {
 }
 */
 
-extern u32 LWR_MASK[4];
-extern u32 LWR_SHIFT[4];
+u32 LWR_MASK[4] = { 0, 0xff000000, 0xffff0000, 0xffffff00 };
+u32 LWR_SHIFT[4] = { 0, 8, 16, 24 };
 
 void iLWRk(u32 shift) {
 	if (IsConst(_Rt_)) {
@@ -2012,8 +2020,8 @@ static void recSWBlock(int count) {
 }
 */
 
-extern u32 SWL_MASK[4];
-extern u32 SWL_SHIFT[4];
+u32 SWL_MASK[4] = { 0xffffff00, 0xffff0000, 0xff000000, 0 };
+u32 SWL_SHIFT[4] = { 24, 16, 8, 0 };
 
 void iSWLk(u32 shift) {
 	if (IsConst(_Rt_)) {
@@ -2090,8 +2098,8 @@ void recSWL() {
 	//resp+= 8;
 }
 
-extern u32 SWR_MASK[4];
-extern u32 SWR_SHIFT[4];
+u32 SWR_MASK[4] = { 0, 0xff, 0xffff, 0xffffff };
+u32 SWR_SHIFT[4] = { 0, 8, 16, 24 };
 
 void iSWRk(u32 shift) {
 	if (IsConst(_Rt_)) {
@@ -2773,7 +2781,11 @@ static void recMTC0() {
 		MOV32ItoM((uptr)&psxRegs.pc, (u32)pc);
 		CALLFunc((uptr)psxTestSWInts);
 		if (_Rd_ == 12)
+#ifndef NEW_EVENTS
 			OR32ItoM((uptr)&psxRegs.interrupt, 0x80000000);
+#else
+			CALLFunc((uptr)psxTestIntc);
+#endif
 		if (branch == 0) {
 			branch = 2;
 			iRet();

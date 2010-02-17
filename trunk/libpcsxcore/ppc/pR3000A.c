@@ -152,12 +152,22 @@ static void Return()
 	}
 }
 
+static void UpdateCycle(u32 amount) {
+#ifdef NEW_EVENTS
+	LWPRtoR(r9, &psxRegs.evtCycleCountdown);
+	ADDI(r9, r9, -amount);
+	STWRtoPR(&psxRegs.evtCycleCountdown, r9);
+#else
+	LWPRtoR(r9, &psxRegs.cycle);
+	ADDI(r9, r9, amount);
+	STWRtoPR(&psxRegs.cycle, r9);
+#endif
+}
+
 static void iRet() {
     /* store cycle */
 	count = idlecyclecount + (pc - pcold) / 4;
-	LWPRtoR(r9, &psxRegs.cycle);
-	ADDI(r9, r9, count);
-	STWRtoPR(&psxRegs.cycle, r9);
+	UpdateCycle(count);
 	StackRes();
 	Return();
 }
@@ -225,9 +235,7 @@ static void SetBranch() {
 		STWRtoPR(&psxRegs.code, r3);
 		// store cycle 
 		count = idlecyclecount + (pc - pcold) / 4;
-		LWPRtoR(r3, &psxRegs.cycle);
-		ADDI(r3, r3, count);
-		STWRtoPR(&psxRegs.cycle, r3);
+		UpdateCycle(count);
 
 		//LIW(r9, (uptr)&target);
 		//LWZ(PPCARG2, r0, r9);
@@ -287,9 +295,7 @@ static void iJump(u32 branchPC) {
 		STWRtoPR(&psxRegs.code, r3);
 
 		count = idlecyclecount + (pc - pcold) / 4;
-		LWPRtoR(r9, &psxRegs.cycle);
-		ADDI(r9, r9, count);
-		STWRtoPR(&psxRegs.cycle, r9);
+		UpdateCycle(count);
 
 		LIW(PPCARG2, branchPC);
 		LIW(PPCARG1, _Rt_);
@@ -311,9 +317,7 @@ static void iJump(u32 branchPC) {
 	REC_TEST_BRANCH();
  
 	count = idlecyclecount + (pc - pcold) / 4;
-	LWPRtoR(r9, &psxRegs.cycle);
-	ADDI(r9, r9, count);
-	STWRtoPR(&psxRegs.cycle, r9);
+	UpdateCycle(count);
 	StackRes();
 
 #if 1
@@ -360,9 +364,7 @@ static void iBranch(u32 branchPC, int savectx) {
 		STWRtoPR(&psxRegs.code, r3);
 
 		count = idlecyclecount + (pc + 4 - pcold) / 4;
-		LWPRtoR(r9, &psxRegs.cycle);
-		ADDI(r9, r9, count);
-		STWRtoPR(&psxRegs.cycle, r9);
+		UpdateCycle(count);
 
 		LIW(PPCARG2, branchPC);
 		LIW(PPCARG1, _Rt_);
@@ -385,9 +387,7 @@ static void iBranch(u32 branchPC, int savectx) {
 	REC_TEST_BRANCH();
 
 	count = idlecyclecount + (pc - pcold) / 4;
-	LWPRtoR(r9, &psxRegs.cycle);
-	ADDI(r9, r9, count);
-	STWRtoPR(&psxRegs.cycle, r9);
+	UpdateCycle(count);
 	StackRes();
 
 #if 1

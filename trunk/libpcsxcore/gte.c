@@ -317,9 +317,9 @@ void gteRTPT() {
 		gteIR2 = Lm_B2( gteMAC2, 0 );
 		gteIR3 = Lm_B3( gteMAC3, 0 );
 		fSZ( v ) = Lm_D( gteMAC3 );
-		h_over_sz3 = Lm_E(gteH * 65536 / (fSZ( v ) + 0.5));
-		fSX( v ) = Lm_G1( F( ( (s64) gteOFX + ( (s64) gteIR1 * h_over_sz3 ) ) >> 16 ) );
-		fSY( v ) = Lm_G2( F( ( (s64) gteOFY + ( (s64) gteIR2 * h_over_sz3 ) ) >> 16 ) );
+		h_over_sz3 = Lm_E((gteH * 65536) / (fSZ( v ) + 0.5));
+		fSX( v ) = Lm_G1( F( (s64) gteOFX + ( (s64) gteIR1 * h_over_sz3 ) ) >> 16 );
+		fSY( v ) = Lm_G2( F( (s64) gteOFY + ( (s64) gteIR2 * h_over_sz3 ) ) >> 16 );
 	}
 	gteMAC0 = F( (s64) (gteDQB + ( (s64) gteDQA * h_over_sz3 )) >> 12 );
 	gteIR0 = Lm_H( gteMAC0 );
@@ -400,9 +400,9 @@ void gteSQR() {
 	gteMAC1 = A1( ( gteIR1 * gteIR1 ) >> shift );
 	gteMAC2 = A2( ( gteIR2 * gteIR2 ) >> shift );
 	gteMAC3 = A3( ( gteIR3 * gteIR3 ) >> shift );
-	gteIR1 = Lm_B1( gteMAC1, lm );
-	gteIR2 = Lm_B2( gteMAC2, lm );
-	gteIR3 = Lm_B3( gteMAC3, lm );
+	gteIR1 = Lm_B1( gteMAC1 >> shift, lm );
+	gteIR2 = Lm_B2( gteMAC2 >> shift, lm );
+	gteIR3 = Lm_B3( gteMAC3 >> shift, lm );
 }
 
 void gteNCCS() {

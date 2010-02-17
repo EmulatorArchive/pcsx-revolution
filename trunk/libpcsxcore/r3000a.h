@@ -42,6 +42,54 @@ extern R3000Acpu psxRec;
 #define PSXREC
 #endif
 
+// Issues:	GT1 - opening movie, 
+//			Tekken3 - freeze on loading battle (sometimes), slowness.
+#define NEW_EVENTS
+
+#ifdef NEW_EVENTS
+enum PsxEventType
+{
+	PsxEvt_Counter0 = 0,
+
+	PsxEvt_Counter1,
+	PsxEvt_Counter2,
+	PsxEvt_Counter3,
+	PsxEvt_Counter4,
+
+	PsxEvt_Exception,		// 5
+	PsxEvt_SIO,				// 6
+	PsxEvt_GPU,				// 7
+
+	PsxEvt_Cdrom,			// 8
+	PsxEvt_CdromRead,		// 9
+	PsxEvt_SPU,				// 10
+	
+	PsxEvt_MDEC,			// 11
+
+	PsxEvt_CountNonIdle,
+
+	// Idle state, no events scheduled.  Placed at -1 since it has no actual
+	// entry in the Event System's event schedule table.
+	PsxEvt_Idle = PsxEvt_CountNonIdle,
+
+	PsxEvt_CountAll		// total number of schedulable event types in the Psx
+};
+
+typedef struct int_timer {
+	u32 time;
+	u32 cycle;
+	void (*Execute)();
+	struct int_timer *next;
+} events_t;
+
+typedef struct {
+	events_t list[PsxEvt_CountAll];
+	events_t *next;
+} Events_t;
+
+Events_t Events;
+#endif
+
 typedef union
 {
 #if defined(__BIGENDIAN__) || defined(GEKKO)
@@ -91,8 +139,29 @@ typedef struct {
     u32 pc;				/* Program counter */
     u32 code;			/* The instruction */
 	u32 cycle;
+#ifdef NEW_EVENTS
+	u32 IsDelaySlot:1;
+
+	// marks the original duration of time for the current pending event.  This is
+	// typically used to determine the amount of time passed since the last update
+	// to psxRegs.cycle:
+	//  currentcycle = cycle + ( evtCycleDuration - evtCycleCountdown );
+	s32 evtCycleDuration;
+
+	// marks the *current* duration of time until the current pending event. In
+	// other words: counts down from evtCycleDuration to 0; event is raised when 0
+	// is reached.
+	s32 evtCycleCountdown;
+
+	// number of cycles pending on the current div unit instruction (mult and div both run in the same
+	// unit).  Any zero-or-negative values mean the unit is free and no stalls incurred for executing
+	// a new instruction on the pipeline.  Negative values are flushed to 0 during PendingEvent executions.
+	// (faster than flushing to zero on every cycle update).
+	s32 DivUnitCycles;
+#else
 	u32 interrupt;
 	u32 intCycle[32];
+#endif
 } psxRegisters;
 
 extern psxRegisters psxRegs;
@@ -154,5 +223,18 @@ void psxDelayTest(int reg, u32 bpc);
 void psxTestSWInts();
 void psxTestHWInts();
 void psxJumpTest();
+
+#ifdef NEW_EVENTS
+u32 psxGetCycle();
+s32 GetPendingCycles();
+void AddCycles( int amount );
+
+void psx_int_add(int n, s32 ecycle);
+void psx_int_remove(int n);
+void psxRaiseExtInt( uint irq );
+
+void advance_pc(s32 offset);
+void psxTestIntc();
+#endif
 
 #endif /* __R3000A_H__ */

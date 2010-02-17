@@ -75,22 +75,28 @@ char *CmdName[0x100]= {
     "CdlReset",    NULL,           "CDlReadToc", NULL
 };
 
-unsigned char Test04[] = { 0 };
-unsigned char Test05[] = { 0 };
-unsigned char Test20[] = { 0x98, 0x06, 0x10, 0xC3 };
-unsigned char Test22[] = { 0x66, 0x6F, 0x72, 0x20, 0x45, 0x75, 0x72, 0x6F };
-unsigned char Test23[] = { 0x43, 0x58, 0x44, 0x32, 0x39 ,0x34, 0x30, 0x51 };
+static unsigned char Test04[] = { 0 };
+static unsigned char Test05[] = { 0 };
+static unsigned char Test20[] = { 0x98, 0x06, 0x10, 0xC3 };
+static unsigned char Test22[] = { 0x66, 0x6F, 0x72, 0x20, 0x45, 0x75, 0x72, 0x6F };
+static unsigned char Test23[] = { 0x43, 0x58, 0x44, 0x32, 0x39 ,0x34, 0x30, 0x51 };
 
 // 1x = 75 sectors per second
 // PSXCLK = 1 sec in the ps
 // so (PSXCLK / 75) / BIAS = cdr read time (linuzappz)
-#define cdReadTime ((PSXCLK / 75) / BIAS)
+static const u32 cdReadTime = ((PSXCLK / 75) / BIAS);	// 0x37200
 
 #define btoi(b)     ((b)/16*10 + (b)%16)    /* BCD to u_char */
 #define itob(i)     ((i)/10*16 + (i)%10)    /* u_char to BCD */
 
 static struct CdrStat stat;
 static struct SubQ *subq;
+
+#ifdef NEW_EVENTS
+#	define CDR_INT(eCycle)    psx_int_add(PsxEvt_Cdrom, eCycle);
+#	define CDREAD_INT(eCycle) psx_int_add(PsxEvt_CdromRead, eCycle);
+
+#else
 
 #define CDR_INT(eCycle) { \
 	psxRegs.interrupt |= 0x4; \
@@ -102,32 +108,57 @@ static struct SubQ *subq;
 	psxRegs.intCycle[2 + 16 + 1] = eCycle; \
 	psxRegs.intCycle[2 + 16] = psxRegs.cycle; }
 
-#define StartReading(type) { \
-   	cdr.Reading = type; \
-  	cdr.FirstSector = 1; \
-  	cdr.Readed = 0xff; \
-	AddIrqQueue(READ_ACK, 0x800); \
+#endif
+
+static __inline void StartReading(type) {
+   	cdr.Reading = type;
+  	cdr.FirstSector = 1;
+  	cdr.Readed = 0xff;
+	AddIrqQueue(READ_ACK, 0x800);
 }	
 
-#define StopReading() { \
-	if (cdr.Reading) { \
-		cdr.Reading = 0; \
-		psxRegs.interrupt &= ~0x40000; \
-	} \
+static __inline void StopReading() {
+	if (cdr.Reading) {
+		cdr.Reading = 0;
+#ifdef NEW_EVENTS
+		psx_int_remove(PsxEvt_CdromRead);
+#else
+		psxRegs.interrupt &= ~0x40000;
+#endif
+	}
+	cdr.StatP &= ~0x20;
 }
 
-#define StopCdda() { \
-	if (cdr.Play) { \
-		if (!Config.Cdda) CDR_stop(); \
-		cdr.StatP &= ~0x80; \
-		cdr.Play = 0; \
-	} \
+static __inline void StopCdda() {
+	if (cdr.Play) {
+		if (!Config.Cdda) CDR_stop();
+		cdr.StatP &= ~0x80;
+		cdr.Play = 0;
+	}
 }
 
-#define SetResultSize(size) { \
-    cdr.ResultP = 0; \
-	cdr.ResultC = size; \
-	cdr.ResultReady = 1; \
+static __inline void SetResultSize(size) {
+    cdr.ResultP = 0;
+	cdr.ResultC = size;
+	cdr.ResultReady = 1;
+}
+
+static char cdr_localTime[3];
+void Convert_LocalTime( char *time )
+{
+  cdr_localTime[0] = btoi(time[0]);
+  cdr_localTime[1] = btoi(time[1]) - 2;
+  cdr_localTime[2] = time[2];
+
+  // m:s adjustment
+  if( cdr_localTime[1] < 0 )
+  {
+    cdr_localTime[1] += 60;
+    cdr_localTime[0] -= 1;
+  }
+
+  cdr_localTime[1] = itob(cdr_localTime[1]);
+  cdr_localTime[0] = itob(cdr_localTime[0]);
 }
 
 void ReadTrack() {
@@ -311,14 +342,14 @@ void cdrInterrupt() {
         	break;
 
     	case CdlGetmode:
-			SetResultSize(6);
+			SetResultSize(5);
 			cdr.StatP |= 0x2;
         	cdr.Result[0] = cdr.StatP;
         	cdr.Result[1] = cdr.Mode;
-        	cdr.Result[2] = cdr.File;
-        	cdr.Result[3] = cdr.Channel;
-        	cdr.Result[4] = 0;
-        	cdr.Result[5] = 0;
+        	cdr.Result[2] = 0x00;
+        	cdr.Result[3] = cdr.File;
+        	cdr.Result[4] = cdr.Channel;
+        	//cdr.Result[5] = 0;
         	cdr.Stat = Acknowledge;
         	break;
 
@@ -333,22 +364,35 @@ void cdrInterrupt() {
 
     	case CdlGetlocP:
 			SetResultSize(8);
-			subq = (struct SubQ *)CDR_getBufferSub();
+			subq = (struct SubQ*) CDR_getBufferSub();
+
+			Convert_LocalTime( cdr.Prev );
+
 			if (subq != NULL) {
 				cdr.Result[0] = subq->TrackNumber;
 				cdr.Result[1] = subq->IndexNumber;
-		    	memcpy(cdr.Result + 2, subq->TrackRelativeAddress, 3);
-		    	memcpy(cdr.Result + 5, subq->AbsoluteAddress, 3);
+				memcpy(cdr.Result+2, subq->TrackRelativeAddress, 3);
+				memcpy(cdr.Result+5, subq->AbsoluteAddress, 3);
+
+				// subQ integrity check
+				if( cdr_localTime[0] != cdr.Result[2] ||
+					cdr_localTime[1] != cdr.Result[3] ||
+					cdr_localTime[2] != cdr.Result[4] ||
+					cdr.Prev[0] != cdr.Result[5] ||
+					cdr.Prev[1] != cdr.Result[6] ||
+					cdr.Prev[2] != cdr.Result[7] )
+				{
+					// wipe out time data
+					memset( cdr.Result+2, 0, 3+3 );
+				}
 			} else {
-	        	cdr.Result[0] = 1;
-	        	cdr.Result[1] = 1;
-	        	cdr.Result[2] = cdr.Prev[0];
-	        	cdr.Result[3] = itob((btoi(cdr.Prev[1])) - 2);
-	        	cdr.Result[4] = cdr.Prev[2];
-		    	memcpy(cdr.Result + 5, cdr.Prev, 3);
+				cdr.Result[0] = 1;
+				cdr.Result[1] = 1;
+				memcpy( cdr.Result+2, cdr_localTime, 3 );
+				memcpy( cdr.Result+5, cdr.Prev, 3 );
 			}
-        	cdr.Stat = Acknowledge;
-        	break;
+			cdr.Stat = Acknowledge;
+			break;
 
     	case CdlGetTN:
 			cdr.CmdProcess = 0;
@@ -368,17 +412,18 @@ void cdrInterrupt() {
     	case CdlGetTD:
 			cdr.CmdProcess = 0;
         	cdr.Track = btoi(cdr.Param[0]);
-			SetResultSize(4);
+			SetResultSize(3);
 			cdr.StatP|= 0x2;
+			cdr.Result[0] = cdr.StatP;
         	if (CDR_getTD(cdr.Track, cdr.ResultTD) == -1) {
 				cdr.Stat = DiskError;
 				cdr.Result[0] |= 0x01;
         	} else {
         		cdr.Stat = Acknowledge;
-				cdr.Result[0] = cdr.StatP;
+				//cdr.Result[0] = cdr.StatP;
 	    		cdr.Result[1] = itob(cdr.ResultTD[2]);
         	    cdr.Result[2] = itob(cdr.ResultTD[1]);
-				cdr.Result[3] = itob(cdr.ResultTD[0]);
+				//cdr.Result[3] = itob(cdr.ResultTD[0]);
 	    	}
 			break;
 
@@ -446,7 +491,7 @@ void cdrInterrupt() {
 		case CdlID + 0x20:
 			SetResultSize(8);
         	if (CDR_getStatus(&stat) == -1) {
-        		cdr.Result[0] = 0x00; // 0x08 and cdr.Result[1]|0x10 : audio cd, enters cd player
+        		cdr.Result[0] = 0x02; // 0x08 and cdr.Result[1]|0x10 : audio cd, enters cd player
                 cdr.Result[1] = 0x00; // 0x80 leads to the menu in the bios, else loads CD
         	}
         	else {
@@ -455,12 +500,12 @@ void cdrInterrupt() {
                     cdr.Result[1] = 0x10;
 	        	}
 	        	else {
-                    cdr.Result[0] = 0x00;
+                    cdr.Result[0] = 0x02;
                     cdr.Result[1] = 0x00;
 	        	}
         	}
 			cdr.Result[1] |= 0x80;
-			cdr.Result[2] = 0x00;
+			cdr.Result[2] = 0x20;
 			cdr.Result[3] = 0x00;
 			strncpy((char *)&cdr.Result[4], "PCSX", 4);
 			cdr.Stat = Complete;
@@ -514,10 +559,10 @@ void cdrInterrupt() {
 			cdr.StatP |= 0x20;
         	cdr.Stat = Acknowledge;
 
-			ReadTrack();
+			//ReadTrack();
 
-//			CDREAD_INT((cdr.Mode & 0x80) ? (cdReadTime / 2) : cdReadTime);
-			CDREAD_INT(0x40000);
+			CDREAD_INT((cdr.Mode & 0x80) ? (cdReadTime / 2) : cdReadTime);
+			//CDREAD_INT(0x40000);
 			break;
 
 		case REPPLAY_ACK:
@@ -553,8 +598,12 @@ void cdrInterrupt() {
 	}
 
 	if (cdr.Stat != NoIntr && cdr.Reg2 != 0x18) {
+#ifdef NEW_EVENTS
+		psxRaiseExtInt( PsxInt_CDROM );
+#else
 		psxHu32ref(0x1070) |= SWAP32((u32)0x4);
 		psxRegs.interrupt |= 0x80000000;
+#endif
 	}
 
 #ifdef CDR_LOG
@@ -583,6 +632,7 @@ void cdrReadInterrupt() {
 	cdr.StatP &= ~0x40;
     cdr.Result[0] = cdr.StatP;
 
+	ReadTrack();
 	buf = CDR_getBuffer();
 	if (buf == NULL)
 		cdr.RErr = -1;
@@ -594,7 +644,7 @@ void cdrReadInterrupt() {
 		memset(cdr.Transfer, 0, 2340);
 		cdr.Stat = DiskError;
 		cdr.Result[0] |= 0x01;
-		ReadTrack();
+		//ReadTrack();
 		CDREAD_INT((cdr.Mode & 0x80) ? (cdReadTime / 2) : cdReadTime);
 		return;
 	}
@@ -640,11 +690,15 @@ void cdrReadInterrupt() {
 		AddIrqQueue(CdlPause, 0x800);
 	}
 	else {
-		ReadTrack();
+		//ReadTrack();
 		CDREAD_INT((cdr.Mode & 0x80) ? (cdReadTime / 2) : cdReadTime);
 	}
-	psxHu32ref(0x1070) |= SWAP32((u32)0x4);
-	psxRegs.interrupt |= 0x80000000;
+#ifdef NEW_EVENTS
+		psxRaiseExtInt( PsxInt_CDROM );
+#else
+		psxHu32ref(0x1070) |= SWAP32((u32)0x4);
+		psxRegs.interrupt |= 0x80000000;
+#endif
 }
 
 /*
@@ -947,11 +1001,16 @@ void cdrWrite1(unsigned char rt) {
 #ifdef CDR_LOG
 			CDR_LOG("cdrWrite1() Log: Unknown command: %x\n", cdr.Cmd);
 #endif
+			SysPrintf("cdrWrite1() Log: Unknown command: %x\n", cdr.Cmd);
 			return;
     }
 	if (cdr.Stat != NoIntr) {
+#ifdef NEW_EVENTS
+		psxRaiseExtInt( PsxInt_CDROM );
+#else
 		psxHu32ref(0x1070) |= SWAP32((u32)0x4);
 		psxRegs.interrupt |= 0x80000000;
+#endif
 	}
 }
 
@@ -1021,8 +1080,8 @@ void cdrWrite3(unsigned char rt) {
 		}
         if (cdr.Irq)
 			CDR_INT(cdr.eCycle);
-        if (cdr.Reading && !cdr.ResultReady) 
-            CDREAD_INT((cdr.Mode & 0x80) ? (cdReadTime / 2) : cdReadTime);
+//         if (cdr.Reading && !cdr.ResultReady) 
+//             CDREAD_INT((cdr.Mode & 0x80) ? (cdReadTime / 2) : cdReadTime);
 
 		return;
 	}
