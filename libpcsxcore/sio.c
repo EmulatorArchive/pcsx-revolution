@@ -23,6 +23,7 @@
 */
 
 #include "sio.h"
+#include "psxhw.h"
 #include <sys/stat.h>
 
 // *** FOR WORKS ON PADS AND MEMORY CARDS *****
@@ -39,6 +40,9 @@ char Mcd1Data[MCD_SIZE], Mcd2Data[MCD_SIZE];
 // 4us * 8bits = ((PSXCLK / 1000000) * 32) / BIAS; (linuzappz)
 
 // (PSXCLK / SIOCLK) * BIAS = 270; (SIOCLK = 250Hz) (Firnis)
+#ifdef NEW_EVENTS
+#define SIO_INT() psx_int_add(PsxEvt_SIO, 270 );
+#else
 #define SIO_INT() { \
 	if (!Config.Sio) { \
 		psxRegs.interrupt|= 0x80; \
@@ -46,6 +50,7 @@ char Mcd1Data[MCD_SIZE], Mcd2Data[MCD_SIZE];
 		psxRegs.intCycle[7] = psxRegs.cycle; \
 	} \
 }
+#endif
 
 void sioInit()
 {
@@ -298,7 +303,11 @@ void sioWriteCtrl16(unsigned short value) {
 	if ((sio.CtrlReg & SIO_RESET) || (!sio.CtrlReg)) {
 		sio.padst = 0; sio.mcdst = 0; sio.parp = 0;
 		sio.StatReg = TX_RDY | TX_EMPTY;
+#ifdef NEW_EVENTS
+		psx_int_remove(PsxEvt_SIO);
+#else
 		psxRegs.interrupt &= ~0x80;
+#endif
 	}
 }
 
@@ -308,8 +317,12 @@ void sioInterrupt() {
 #endif
 //	SysPrintf("Sio Interrupt\n");
 	sio.StatReg|= IRQ;
+#ifdef NEW_EVENTS
+	psxRaiseExtInt( PsxInt_SIO0 );
+#else
 	psxHu32ref(0x1070)|= SWAPu32(0x80);
 	psxRegs.interrupt|= 0x80000000;
+#endif
 }
 
 void LoadMcd(int mcd, char *str) {

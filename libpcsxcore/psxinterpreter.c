@@ -30,7 +30,14 @@
 static int branch = 0;
 static int branch2 = 0;
 static u32 branchPC;
-
+#ifdef NEW_EVENTS
+#define TEST_BRANCH() \
+	if (psxRegs.evtCycleCountdown <= 0) \
+		psxBranchTest();
+#else
+#define TEST_BRANCH() \
+		psxBranchTest();
+#endif
 // These macros are used to assemble the repassembler functions
 
 #ifdef PSXCPU_LOG
@@ -59,13 +66,16 @@ static void delayRead(int reg, u32 bpc) {
 
 	psxRegs.pc = bpc;
 
-	psxBranchTest();
+	TEST_BRANCH();
 
 	psxRegs.GPR.r[reg].d = rold;
 	execI(); // first branch opcode
 	psxRegs.GPR.r[reg].d = rnew;
-
+#ifdef NEW_EVENTS
+	psxRegs.IsDelaySlot = 0;
+#else
 	branch = 0;
+#endif
 }
 
 static void delayWrite(int reg, u32 bpc) {
@@ -79,10 +89,14 @@ static void delayWrite(int reg, u32 bpc) {
 
 	psxBSC[_Op_]();
 
+#ifdef NEW_EVENTS
+	psxRegs.IsDelaySlot = 0;
+#else
 	branch = 0;
+#endif
 	psxRegs.pc = bpc;
 
-	psxBranchTest();
+	TEST_BRANCH();
 }
 
 static void delayReadWrite(int reg, u32 bpc) {
@@ -91,10 +105,14 @@ static void delayReadWrite(int reg, u32 bpc) {
 
 	// the branch delay load is skipped
 
+#ifdef NEW_EVENTS
+	psxRegs.IsDelaySlot = 0;
+#else
 	branch = 0;
+#endif
 	psxRegs.pc = bpc;
 
-	psxBranchTest();
+	TEST_BRANCH();
 }
 
 // this defines shall be used with the tmp 
@@ -255,7 +273,11 @@ void psxDelayTest(int reg, u32 bpc) {
 
 	code = (u32 *)PSXM(bpc);
 	tmp = ((code == NULL) ? 0 : GETLE32(code));
+#ifdef NEW_EVENTS
+	psxRegs.IsDelaySlot = 1;
+#else
 	branch = 1;
+#endif
 
 	switch (psxTestLoadDelay(reg, tmp)) {
 		case 1:
@@ -267,17 +289,24 @@ void psxDelayTest(int reg, u32 bpc) {
 	}
 	psxBSC[_Op_]();
 
+#ifdef NEW_EVENTS
+	psxRegs.IsDelaySlot = 0;
+#else
 	branch = 0;
+#endif
 	psxRegs.pc = bpc;
 
-	psxBranchTest();
+	TEST_BRANCH();
 }
 
 __inline void doBranch(u32 tar) {
 	u32 *code;
 	u32 tmp;
-
+#ifdef NEW_EVENTS
+	branch2 = psxRegs.IsDelaySlot = 1;
+#else
 	branch2 = branch = 1;
+#endif
 	branchPC = tar;
 
 	code = (u32 *)PSXM(psxRegs.pc);
@@ -286,7 +315,11 @@ __inline void doBranch(u32 tar) {
 	debugI();
 
 	psxRegs.pc += 4;
+#ifndef NEW_EVENTS
 	psxRegs.cycle++;
+#else
+	psxRegs.evtCycleCountdown--;
+#endif
 
 	// check for load delay
 	tmp = psxRegs.code >> 26;
@@ -324,10 +357,14 @@ __inline void doBranch(u32 tar) {
 
 	psxBSC[_Op_]();
 
+#ifdef NEW_EVENTS
+	psxRegs.IsDelaySlot = 0;
+#else
 	branch = 0;
+#endif
 	psxRegs.pc = branchPC;
 
-	psxBranchTest();
+	TEST_BRANCH();
 }
 
 /*********************************************************
@@ -553,7 +590,12 @@ void psxBREAK() {
 
 void psxSYSCALL() {
 	psxRegs.pc -= 4;
+#ifdef NEW_EVENTS
+	psxException(0x20, psxRegs.IsDelaySlot);
+#else
 	psxException(0x20, branch);
+#endif
+	
 }
 
 void psxRFE() {
@@ -640,9 +682,6 @@ void psxLW() {
 	}
 }
 
-u32 LWL_MASK[4] = { 0xffffff, 0xffff, 0xff, 0 };
-u32 LWL_SHIFT[4] = { 24, 16, 8, 0 };
-
 __inline void psxLWL() {
 	const u32 addr = _oB_;
 	const u32 shift = (addr & 3) << 3;
@@ -660,9 +699,6 @@ __inline void psxLWL() {
 	3   1234   (mem      ) | (reg & 0x00000000)
 	*/
 }
-
-u32 LWR_MASK[4] = { 0, 0xff000000, 0xffff0000, 0xffffff00 };
-u32 LWR_SHIFT[4] = { 0, 8, 16, 24 };
 
 __inline void psxLWR() {
 	const u32 addr = _oB_;
@@ -686,9 +722,6 @@ void psxSB() { psxMemWrite8 (_oB_, (psxRegs.GPR.r[_Rt_].b.l)); }
 void psxSH() { psxMemWrite16(_oB_, (psxRegs.GPR.r[_Rt_].w.l)); }
 void psxSW() { psxMemWrite32(_oB_, _rRtU_); }
 
-u32 SWL_MASK[4] = { 0xffffff00, 0xffff0000, 0xff000000, 0 };
-u32 SWL_SHIFT[4] = { 24, 16, 8, 0 };
-
 __inline void psxSWL() {
 	const u32 addr = _oB_;
 	const u32 shift = (addr & 3) << 3;
@@ -707,9 +740,6 @@ __inline void psxSWL() {
 	3   abcd   (reg      ) | (mem & 0x00000000)
 	*/
 }
-
-u32 SWR_MASK[4] = { 0, 0xff, 0xffff, 0xffffff };
-u32 SWR_SHIFT[4] = { 0, 8, 16, 24 };
 
 __inline void psxSWR() {
 	const u32 addr = _oB_;
@@ -742,7 +772,11 @@ void psxTestSWInts() {
 	// tell me if it works ok or not (linuzappz)
 	if (psxRegs.CP0.n.Cause & psxRegs.CP0.n.Status & 0x0300 &&
 		psxRegs.CP0.n.Status & 0x1) {
+#ifdef NEW_EVENTS
+		psxException(psxRegs.CP0.n.Cause, psxRegs.IsDelaySlot);
+#else
 		psxException(psxRegs.CP0.n.Cause, branch);
+#endif
 	}
 }
 #if 1
@@ -751,7 +785,11 @@ __inline void MTC0(int reg, u32 val) {
 	switch (reg) {
 		case 12: // Status
 			psxTestSWInts();
+#ifndef NEW_EVENTS
 			psxRegs.interrupt|= 0x80000000;
+#else
+			psxTestIntc();
+#endif
 			break;
 
 		case 13: // Cause
@@ -902,7 +940,11 @@ inline void execI() {
 	if (Config.Debug) ProcessDebug();
 #endif
 	psxRegs.pc += 4;
+#ifndef NEW_EVENTS
 	psxRegs.cycle++;
+#else
+	psxRegs.evtCycleCountdown--;
+#endif
 
 	psxBSC[_Op_]();
 }
