@@ -37,10 +37,8 @@ extern psxCounter psxCounters[5];
 
 u32 psxNextCounter, psxNextsCounter;
 
-#ifdef NEW_EVENTS
 // We can separate them only with new interrupt system.
-#	define SEPARATE_CNTS
-#endif
+#define SEPARATE_CNTS
 
 #ifdef SEPARATE_CNTS
 void psxRcntUpdate0();
