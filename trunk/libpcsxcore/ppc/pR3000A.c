@@ -58,6 +58,22 @@ u32 *psxRecLUT;
 #define RECMEM_SIZE		(8*1024*1024)
 #endif
 
+#ifdef NEW_EVENTS
+
+#define REC_TEST_BRANCH() { \
+	LWPRtoR(r4, (uptr)&psxRegs.evtCycleCountdown); \
+	CMPWI(r4, 0); \
+	BGT_L(b32Ptr[6]); \
+	CALLFunc((uptr)psxBranchTest); \
+	B_DST(b32Ptr[6]); \
+}
+
+#else
+
+#define REC_TEST_BRANCH() CALLFunc((uptr)psxBranchTest);
+
+#endif
+
 static char *recMem;	/* the recompiled blocks will be here */
 static char *recRAM;	/* and the ptr to the blocks here */
 static char *recROM;	/* and here */
@@ -219,9 +235,6 @@ static int iLoadTest() {
 	}
 	return 0;
 }
-
-#define REC_TEST_BRANCH() \
-	CALLFunc((uptr)psxBranchTest);
 
 /* set a pending branch */
 static void SetBranch() {
