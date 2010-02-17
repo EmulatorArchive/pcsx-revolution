@@ -19,7 +19,7 @@
  ***************************************************************************/
 
 /*
-* Miscellaneous functions, including savesates and CD-ROM loading.
+* Miscellaneous functions, including savestates and CD-ROM loading.
 */
 
 #include "misc.h"
@@ -452,9 +452,11 @@ int Load(char *ExePath) {
 }
 
 // STATES
-
+#ifdef NEW_EVENTS
+const char PcsxHeader[32] = "STv4 PCSX v" PACKAGE_VERSION;
+#else
 const char PcsxHeader[32] = "STv3 PCSX v" PACKAGE_VERSION;
-
+#endif
 int SaveState(char *file) {
 	gzFile f;
 	GPUFreeze_t *gpufP;
@@ -480,7 +482,9 @@ int SaveState(char *file) {
 	gzwrite(f, psxR, 0x00080000);
 	gzwrite(f, psxH, 0x00010000);
 	gzwrite(f, (void*)&psxRegs, sizeof(psxRegs));
-
+#ifdef NEW_EVENTS
+	gzwrite(f, (void*)&Events, sizeof(Events));
+#endif
 	// gpu
 	gpufP = (GPUFreeze_t *) malloc(sizeof(GPUFreeze_t));
 	gpufP->ulFreezeVersion = 1;
@@ -523,16 +527,20 @@ int LoadState(char *file) {
 	psxCpu->Reset();
 
 	gzread(f, header, 32);
-
+#ifdef NEW_EVENTS
+	if (strncmp("STv4 PCSX", header, 9)) { gzclose(f); return -1; }
+#else
 	if (strncmp("STv3 PCSX", header, 9)) { gzclose(f); return -1; }
-
+#endif
 	gzseek(f, 128*96*3, SEEK_CUR);
 
 	gzread(f, psxM, 0x00200000);
 	gzread(f, psxR, 0x00080000);
 	gzread(f, psxH, 0x00010000);
 	gzread(f, (void*)&psxRegs, sizeof(psxRegs));
-
+#ifdef NEW_EVENTS
+	gzread(f, (void*)&Events, sizeof(Events));
+#endif
 	if (Config.HLE)
 		psxBiosFreeze(0);
 
@@ -573,9 +581,11 @@ int CheckState(char *file) {
 	gzread(f, header, 32);
 
 	gzclose(f);
-
+#ifdef NEW_EVENTS
+	if (strncmp("STv4 PCSX", header, 9)) return -1;
+#else
 	if (strncmp("STv3 PCSX", header, 9)) return -1;
-
+#endif
 	return 0;
 }
 

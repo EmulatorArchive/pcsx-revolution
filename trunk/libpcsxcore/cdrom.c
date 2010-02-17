@@ -598,12 +598,7 @@ void cdrInterrupt() {
 	}
 
 	if (cdr.Stat != NoIntr && cdr.Reg2 != 0x18) {
-#ifdef NEW_EVENTS
 		psxRaiseExtInt( PsxInt_CDROM );
-#else
-		psxHu32ref(0x1070) |= SWAP32((u32)0x4);
-		psxRegs.interrupt |= 0x80000000;
-#endif
 	}
 
 #ifdef CDR_LOG
@@ -693,12 +688,7 @@ void cdrReadInterrupt() {
 		//ReadTrack();
 		CDREAD_INT((cdr.Mode & 0x80) ? (cdReadTime / 2) : cdReadTime);
 	}
-#ifdef NEW_EVENTS
 		psxRaiseExtInt( PsxInt_CDROM );
-#else
-		psxHu32ref(0x1070) |= SWAP32((u32)0x4);
-		psxRegs.interrupt |= 0x80000000;
-#endif
 }
 
 /*
@@ -1005,12 +995,7 @@ void cdrWrite1(unsigned char rt) {
 			return;
     }
 	if (cdr.Stat != NoIntr) {
-#ifdef NEW_EVENTS
 		psxRaiseExtInt( PsxInt_CDROM );
-#else
-		psxHu32ref(0x1070) |= SWAP32((u32)0x4);
-		psxRegs.interrupt |= 0x80000000;
-#endif
 	}
 }
 

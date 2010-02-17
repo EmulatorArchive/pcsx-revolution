@@ -67,13 +67,11 @@ static void psxRcntReset(unsigned long index) {
 
 //	if (index == 2) SysPrintf("rcnt2 %x\n", psxCounters[index].mode);
 	if (psxCounters[index].mode & 0x30) {
-#ifndef NEW_EVENTS
-		psxHu32ref(0x1070)|= SWAPu32(psxCounters[index].interrupt);
-		psxRegs.interrupt|= 0x80000000;
-#else
-		psxRaiseExtInt(psxCounters[index].interrupt);
+#ifndef SEPARATE_CNTS
+		if(index != 4)
 #endif
-}
+			psxRaiseExtInt(psxCounters[index].interrupt);
+	}
 	if (!(psxCounters[index].mode & 0x40)) { // Only 1 interrupt
 		psxCounters[index].Cycle = 0xffffffff;
 	} // else Continuos interrupt mode
@@ -128,17 +126,12 @@ u32 cycle = psxGetCycle();
 void psxRcntInit() {
 
 	memset(psxCounters, 0, sizeof(psxCounters));
-#ifndef NEW_EVENTS
-	psxCounters[0].rate = 1 << PsxFixedBits; psxCounters[0].interrupt = 0x10;
-	psxCounters[1].rate = 1 << PsxFixedBits; psxCounters[1].interrupt = 0x20;
-	psxCounters[2].rate = 1 << PsxFixedBits; psxCounters[2].interrupt = 0x40;
-	psxCounters[3].interrupt = 1;
-#else
-	psxCounters[0].rate = 1 << PsxFixedBits; psxCounters[0].interrupt = 4;
-	psxCounters[1].rate = 1 << PsxFixedBits; psxCounters[1].interrupt = 5;
-	psxCounters[2].rate = 1 << PsxFixedBits; psxCounters[2].interrupt = 6;
-	psxCounters[3].interrupt = 0;
-#endif
+
+	psxCounters[0].rate = 1 << PsxFixedBits; psxCounters[0].interrupt = PsxInt_RTC0;
+	psxCounters[1].rate = 1 << PsxFixedBits; psxCounters[1].interrupt = PsxInt_RTC1;
+	psxCounters[2].rate = 1 << PsxFixedBits; psxCounters[2].interrupt = PsxInt_RTC2;
+	psxCounters[3].interrupt = PsxInt_VBlank;
+
 	psxCounters[3].mode = 0x58; // The VSync counter mode
 	psxCounters[3].target = 1;
 	CalcRate(Config.PsxType);
@@ -146,16 +139,19 @@ void psxRcntInit() {
 
 	if (SPU_async != NULL) {
 		cnts = 5;
-
+#ifndef SEPARATE_CNTS
 		psxCounters[4].rate = (768 * 64) << PsxFixedBits;
 		psxCounters[4].target = 1;
 		psxCounters[4].mode = 0x58;
+#else
+		psxCounters[4].rate = (768 * 64);	// Where did it came from?
+#endif
 	} else cnts = 4;
 
 // 	psxRcntUpd(0); psxRcntUpd(1); psxRcntUpd(2); psxRcntUpd(3);
 // 	psxRcntSet();
 int i;
-	for (i=0; i<5; i++)
+	for (i = 0; i < cnts; i++)
 		psxCounters[i].sCycle = psxRegs.cycle;
 }
 
@@ -198,6 +194,7 @@ static void CalcRate(u32 region) {
 }
 
 void psxUpdateVSyncRate() {
+	//psxRaiseExtInt(PsxInt_VBlankEnd);		// Should be here, but cause only troubles.
 	psxCounters[3].rate = vSyncRate.Render;
 	if (Config.VSyncWA) psxCounters[3].rate/= 2;
 }
@@ -230,26 +227,29 @@ void psxRcntUpdate3() {
 	psx_int_add(3, psxCounters[3].rate / (BIAS << PsxFixedBits));
 }
 
+static __inline void update_cnt(u32 index) {
+	if (psxCounters[index].mode & 1) return;
+	psxRcntReset(index);
+	psxRcntSet(index);
+}
+
 void psxRcntUpdate0() {
-	psxRcntReset(0);
-	psxRcntSet(0);
+	update_cnt(0);
 }
 
 void psxRcntUpdate1() {
-	psxRcntReset(1);
-	psxRcntSet(1);
+	update_cnt(1);
 }
 
 void psxRcntUpdate2() {
-	psxRcntReset(2);
-	psxRcntSet(2);
+	update_cnt(2);
 }
 
 void psxRcntUpdate4() {
 	if (SPU_async) {
-		SPU_async((psxRegs.cycle - psxCounters[4].sCycle) * BIAS);
+		SPU_async((psxCounters[4].rate) * BIAS);		// Peops SPU doesn't really matter what we send.
+		psx_int_add(4, psxCounters[4].rate / BIAS);
 	}
-	psx_int_add(4, psxCounters[4].rate / (BIAS << PsxFixedBits));
 }
 #else
 
@@ -272,12 +272,6 @@ void psxRcntUpdate() {
 			psxCounters[3].mode|= 0x10000;
 			psxUpdateVSyncRateEnd();
 			psxRcntUpd(3);
-			psxHu32ref(0x1070)|= SWAPu32(psxCounters[3].interrupt);
-#ifndef NEW_EVENTS
-			psxRegs.interrupt|= 0x80000000;
-#else
-			psxTestIntc();
-#endif
 		}
 	}
 

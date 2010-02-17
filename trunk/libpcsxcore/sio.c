@@ -317,12 +317,7 @@ void sioInterrupt() {
 #endif
 //	SysPrintf("Sio Interrupt\n");
 	sio.StatReg|= IRQ;
-#ifdef NEW_EVENTS
 	psxRaiseExtInt( PsxInt_SIO0 );
-#else
-	psxHu32ref(0x1070)|= SWAPu32(0x80);
-	psxRegs.interrupt|= 0x80000000;
-#endif
 }
 
 void LoadMcd(int mcd, char *str) {

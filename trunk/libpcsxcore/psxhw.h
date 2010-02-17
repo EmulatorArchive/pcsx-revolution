@@ -56,21 +56,21 @@
 
 enum PsxInterrupts
 {
-	PsxInt_VBlank	= 0,
-	PsxInt_GPU		= 1,
-	PsxInt_CDROM	= 2,
-	PsxInt_DMA		= 3,
-	PsxInt_RTC0		= 4,
-	PsxInt_RTC1		= 5,
-	PsxInt_RTC2		= 6,
-	PsxInt_SIO0		= 7,
-	PsxInt_SPU		= 8,
-	PsxInt_PIO		= 9,
-	PsxInt_SIO		= 10,
-	PsxInt_Exception = 11,	// VBlank_End?
-	PsxInt_Mcd1		= 12,
-	PsxInt_Mcd2		= 13,
-	PsxInt_Mcd3		= 14,
+	PsxInt_VBlank		= 0,
+	PsxInt_GPU			= 1,
+	PsxInt_CDROM		= 2,
+	PsxInt_DMA			= 3,
+	PsxInt_RTC0			= 4,
+	PsxInt_RTC1			= 5,
+	PsxInt_RTC2			= 6,
+	PsxInt_SIO0			= 7,
+	PsxInt_SIO1			= 8,
+	PsxInt_SPU			= 9,
+	PsxInt_PIO			= 10,
+	PsxInt_VBlankEnd	= 11,
+	PsxInt_Mcd1			= 12,
+	PsxInt_Mcd2			= 13,
+	PsxInt_Mcd3			= 14,
 };
 
 void psxHwReset();
