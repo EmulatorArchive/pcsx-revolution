@@ -26,6 +26,7 @@
 #include "r3000a.h"
 #include "gte.h"
 #include "psxhle.h"
+#include "psxhw.h"
 
 static int branch = 0;
 static int branch2 = 0;
@@ -788,7 +789,7 @@ __inline void MTC0(int reg, u32 val) {
 #ifndef NEW_EVENTS
 			psxRegs.interrupt|= 0x80000000;
 #else
-			psxTestIntc();
+			psxRaiseExtInt(PsxInt_Exception);
 #endif
 			break;
 
