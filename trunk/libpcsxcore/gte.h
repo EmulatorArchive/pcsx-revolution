@@ -24,7 +24,9 @@
 #include "psxcommon.h"
 #include "r3000a.h"
 
+#ifdef GTE_TIMING
 u32 GteStall;
+#endif
 
 #define VX( n ) ( n < 3 ? psxRegs.cp2d[ n << 1 ].sw.l : psxRegs.cp2d[ 9 ].sw.l )
 #define VY( n ) ( n < 3 ? psxRegs.cp2d[ n << 1 ].sw.h : psxRegs.cp2d[ 10 ].sw.l )
