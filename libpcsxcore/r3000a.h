@@ -151,11 +151,11 @@ typedef struct {
 	// is reached.
 	s32 evtCycleCountdown;
 
-	// number of cycles pending on the current div unit instruction (mult and div both run in the same
-	// unit).  Any zero-or-negative values mean the unit is free and no stalls incurred for executing
-	// a new instruction on the pipeline.  Negative values are flushed to 0 during PendingEvent executions.
+	// number of cycles pending on the current GTE instruction 
+	// Any zero-or-negative values mean the unit is free and no stalls incurred for executing
+	// a new instruction on the pipeline.  Negative values are flushed to 0 during BranchTest executions.
 	// (faster than flushing to zero on every cycle update).
-	s32 DivUnitCycles;
+	s32 GteUnitCycles;
 #else
 	u32 interrupt;
 	u32 intCycle[32];

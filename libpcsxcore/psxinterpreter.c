@@ -31,14 +31,20 @@
 static int branch = 0;
 static int branch2 = 0;
 static u32 branchPC;
+
 #ifdef NEW_EVENTS
+
 #define TEST_BRANCH() \
 	if (psxRegs.evtCycleCountdown <= 0) \
 		psxBranchTest();
+
 #else
+
 #define TEST_BRANCH() \
 		psxBranchTest();
+
 #endif
+
 // These macros are used to assemble the repassembler functions
 
 #ifdef PSXCPU_LOG
@@ -56,6 +62,26 @@ void (*psxREG[32])();
 void (*psxCP0[32])();
 void (*psxCP2[64])();
 void (*psxCP2BSC[32])();
+
+#ifndef NEW_EVENTS
+/*
+	If an instruction that reads a GTE register or a GTE command is executed
+	before the current GTE command is finished, the cpu will hold until the
+	instruction has finished.
+	GTE instructions and functions should not be used in delay slots of jumps and branches
+*/
+__inline void GteUnitStall( u32 newStall )
+{
+	if( newStall == 0 ) return;		// not a GTE instruction?
+
+	if( psxRegs.GteUnitCycles > 0 )
+	{
+		psxRegs.evtCycleCountdown -= psxRegs.GteUnitCycles;
+		//SysPrintf("Psx GTE Stall for %d cycles.\n", psxRegs.GteUnitCycles );
+	}
+	psxRegs.GteUnitCycles = newStall;
+}
+#endif
 
 static void delayRead(int reg, u32 bpc) {
 	u32 rold, rnew;
@@ -319,7 +345,7 @@ __inline void doBranch(u32 tar) {
 #ifndef NEW_EVENTS
 	psxRegs.cycle++;
 #else
-	psxRegs.evtCycleCountdown--;
+	AddCycles(1);;
 #endif
 
 	// check for load delay
@@ -430,18 +456,11 @@ __inline void psxDIVU() {
 		_rLoU_ = (u32)(-1);	    // unsigned div by zero always returns Rs, 0xffffffff
 		return;
 	}
-	/*if( Rs == 0x80000000 && Rt == 0xffffffff )
-	{
-		SysPrintf("divu: Rs == 0x80000000 && Rt == 0xffffffff\n ");
-		//_i32(_rHiU_) = 0;
-		//_i32(_rLoU_) = 0x80000000;
-		return;
-	}*/
 	_rHiU_ = Rs % Rt;
 	_rLoU_ = Rs / Rt;
 }
 
-#ifdef MAME_MULLT
+#ifdef MAME_MULT
 static inline void
 unsigned_multiply (u32 v1, u32 v2)
 {
@@ -509,7 +528,7 @@ __inline void MultHelper( u64 result )
 #endif
 __inline void psxMULT()
 {
-#ifdef MAME_MULLT
+#ifdef MAME_MULT
 	signed_multiply( _rRsS_, _rRtS_ );
 #else
 	MultHelper( (s64)_rRsS_ * _rRtS_ );
@@ -518,7 +537,7 @@ __inline void psxMULT()
 
 __inline void psxMULTU()
 {
-#ifdef MAME_MULLT
+#ifdef MAME_MULT
 	unsigned_multiply( _rRsU_, _rRtU_ );
 #else
 	MultHelper( (u64)_rRsU_ * _rRtU_ );
@@ -933,6 +952,7 @@ static void intShutdown() {
 
 // interpreter execution
 inline void execI() { 
+	GteStall = 0;
 	u32 *code = (u32 *)PSXM(psxRegs.pc); 
 	psxRegs.code = ((code == NULL) ? 0 : GETLE32(code));
 
@@ -944,10 +964,13 @@ inline void execI() {
 #ifndef NEW_EVENTS
 	psxRegs.cycle++;
 #else
-	psxRegs.evtCycleCountdown--;
+	AddCycles(1);;
 #endif
 
 	psxBSC[_Op_]();
+#ifndef NEW_EVENTS
+	GteUnitStall(GteStall);
+#endif
 }
 
 R3000Acpu psxInt = {
