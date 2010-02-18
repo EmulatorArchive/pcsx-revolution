@@ -57,24 +57,13 @@ static void _evthandler_Exception()
 	// Note: Re-test conditions here under the assumption that something else might have
 	// cleared the condition masks between the time the exception was raised and the time
 	// it's being handled here.
-	//if( psxHu32(0x1078) == 0 ) return;
 	if( (psxHu32(0x1070) & psxHu32(0x1074)) == 0 ) return;
-#if 0
-	if ((psxRegs.CP0.n.Status & 0xFE01) >= 0x401)
-	{
-		psxException( 0, psxRegs.IsDelaySlot );
-		psxRegs.pc += 4;
-		//advance_pc(4);
-		psxRegs.IsDelaySlot = 0;
-	}
-#else
 	if ((psxRegs.CP0.n.Status & 0x401) == 0x401) {
 #ifdef PSXCPU_LOG
 		PSXCPU_LOG("Interrupt: %x %x\n", psxHu32(0x1070), psxHu32(0x1074));
 #endif
 		psxException(0x400, 0);
 	}
-#endif
 }
 
 static void _evthandler_Idle()
@@ -122,7 +111,7 @@ static void ResetEvents()
 void AddCycles( int amount )
 {
 	psxRegs.evtCycleCountdown	-= amount;
-	psxRegs.DivUnitCycles		-= amount;
+	psxRegs.GteUnitCycles		-= amount;
 }
 
 u32 __inline psxGetCycle()
@@ -230,7 +219,6 @@ __inline void psx_int_remove( int n )
 
 __inline void psxTestIntc()
 {
-	//if( psxHu32(0x1078) == 0 ) return;
 	if( (psxHu32(0x1070) & psxHu32(0x1074)) == 0 ) return;
 
 	psx_int_add( PsxEvt_Exception, 0 );
@@ -355,13 +343,10 @@ void psxBranchTest() {
 		if( psxRegs.evtCycleCountdown > 0 ) break;
 	}
 
-	// TODO: Get rid of this
-	//psxTestHWInts();
-	
-	// Periodic culling of DivStallCycles, prevents it from overflowing in the unlikely event that
-	// running code doesn't invoke a DIV or MUL in 2 billion cycles. ;)
-	if( psxRegs.DivUnitCycles < 0 )
-		psxRegs.DivUnitCycles = 0;
+	// Periodic culling of GteStallCycles, prevents it from overflowing in the unlikely event that
+	// running code doesn't invoke a GTE command in 2 billion cycles.
+	if( psxRegs.GteUnitCycles < 0 )
+		psxRegs.GteUnitCycles = 0;
 }
 #else
 

@@ -75,11 +75,6 @@ u16 psxHwRead16(u32 add) {
 			return psxHu16(0x1074);
 #endif
 
-#ifdef PSXHW_LOG
-		case 0x1f801078:
-			PSXHW_LOG("ICTRL 16bit write %n", value);
-			return psxHu16(0x1078);
-#endif
 		case 0x1f801040:
 			hard = sioRead8();
 			hard|= sioRead8() << 8;
@@ -422,14 +417,6 @@ void psxHwWrite16(u32 add, u16 value) {
 			psxRegs.interrupt |= 0x80000000;
 #endif
 			return;
-			
-		case 0x1f801078:	// see the 32-bit version for notes!
-#ifdef PSXHW_LOG
-			PSXHW_LOG("ICTRL 16bit write %n", value);
-#endif
-			psxHu16ref(0x1078) = SWAPu16(value);
-			//psxTestIntc();
-			return;
 
 		case 0x1f801100:
 #ifdef PSXHW_LOG
@@ -542,14 +529,6 @@ void psxHwWrite32(u32 add, u32 value) {
 #else
 			psxRegs.interrupt|= 0x80000000;
 #endif
-			return;
-			
-		case 0x1f801078: 
-#ifdef PSXHW_LOG
-			PSXHW_LOG("ICTRL 32bit write %lx", value);
-#endif
-			psxHu32ref(0x1078) = SWAPu32(value); //1;	//According to pSXAuthor this always becomes 1 on write, but MHPB won't boot if value is not writen ;p
-			//psxTestIntc();
 			return;
 
 #ifdef PSXHW_LOG

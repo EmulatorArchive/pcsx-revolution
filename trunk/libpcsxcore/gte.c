@@ -226,11 +226,13 @@ static void setcp2cr( int reg, u32 value )
 }
 
 void gteMFC2() {
+	GteStall = 1;
 	if (!_Rt_) return;
 	psxRegs.GPR.r[_Rt_].d = MFC2(_Rd_);
 }
 
 void gteCFC2() {
+	GteStall = 1;
 	if (!_Rt_) return;
 	psxRegs.GPR.r[_Rt_].d = psxRegs.cp2c[_Rd_].d;
 }
@@ -250,6 +252,7 @@ void gteLWC2() {
 }
 
 void gteSWC2() {
+	//GteStall = 1;
 	psxMemWrite32(_oB_, MFC2(_Rt_));
 }
 
@@ -269,6 +272,7 @@ if( gteop != 0x0180001 )
 	return;
 }
 #endif
+	GteStall = 15;
 	gteFLAG = 0;
 
 	int h_over_sz3;
@@ -298,6 +302,7 @@ void gteRTPT() {
 #ifdef PRINT_INST
 	SysPrintf("RTPT\n");
 #endif
+	GteStall = 23;
 	gteFLAG = 0;
 
 	int h_over_sz3;
@@ -336,6 +341,8 @@ void gteMVMVA() {
 		return;
 	}
 #endif
+	GteStall = 8;
+	gteFLAG = 0;
 	int shift = 12 * GTE_SF( gteop );
 	int mx = GTE_MX( gteop );
 	int v = GTE_V( gteop );
@@ -350,8 +357,6 @@ void gteMVMVA() {
 	gteMAC2 = A2(( ( (s64) CV2( cv ) << 12 ) + ( MX21( mx ) * vx ) + ( MX22( mx ) * vy ) + ( MX23( mx ) * vz ) ) >> shift);
 	gteMAC3 = A3(( ( (s64) CV3( cv ) << 12 ) + ( MX31( mx ) * vx ) + ( MX32( mx ) * vy ) + ( MX33( mx ) * vz ) ) >> shift);
 
-	gteFLAG = 0;
-
 	gteIR1 = Lm_B1( gteMAC1, lm );
 	gteIR2 = Lm_B2( gteMAC2, lm );
 	gteIR3 = Lm_B3( gteMAC3, lm );
@@ -361,6 +366,7 @@ void gteNCLIP() {
 #ifdef PRINT_INST
 	SysPrintf("NCLIP\n");
 #endif
+	GteStall = 8;
 	gteFLAG = 0;
 
 	gteMAC0 = F( (s64)gteSX0 * (gteSY1 - gteSY2) +
@@ -372,6 +378,7 @@ void gteAVSZ3() {
 #ifdef PRINT_INST
 	SysPrintf("AVSZ3\n");
 #endif
+	GteStall = 5;
 	gteFLAG = 0;
 
 	gteMAC0 = F( (s64) ( gteZSF3 * gteSZ1 ) + ( gteZSF3 * gteSZ2 ) + ( gteZSF3 * gteSZ3 ) >> 12 );
@@ -382,6 +389,7 @@ void gteAVSZ4() {
 #ifdef PRINT_INST
 	SysPrintf("AVSZ4\n");
 #endif
+	GteStall = 6;
 	gteFLAG = 0;
 
 	gteMAC0 = F( (s64) ( gteZSF4 * (gteSZ0 + gteSZ1 + gteSZ2 + gteSZ3 ) ) >> 12 );
@@ -392,6 +400,7 @@ void gteSQR() {
 #ifdef PRINT_INST
 	SysPrintf("SQR\n");
 #endif
+	GteStall = 5;
 	gteFLAG = 0;
 
 	int shift = 12 * GTE_SF( gteop );
@@ -409,6 +418,7 @@ void gteNCCS() {
 #ifdef PRINT_INST
 	SysPrintf("NCCS\n");
 #endif
+	GteStall = 17;
 	gteFLAG = 0;
 
 	gteMAC1 = A1( ( ( (s64) gteL11 * gteVX0 ) + ( gteL12 * gteVY0 ) + ( gteL13 * gteVZ0 ) ) >> 12 );
@@ -442,6 +452,7 @@ void gteNCCT() {
 #ifdef PRINT_INST
 	SysPrintf("NCCT\n");
 #endif
+	GteStall = 39;
     gteFLAG = 0;
 
 	int v;
@@ -491,6 +502,7 @@ if( gteop != 0x0e80413 )
 	return;
 }
 #endif
+	GteStall = 19;
     gteFLAG = 0;
 
 	gteMAC1 = A1( ( ( (s64) gteL11 * gteVX0 ) + ( gteL12 * gteVY0 ) + ( gteL13 * gteVZ0 ) ) >> 12 );
@@ -524,6 +536,7 @@ void gteNCDT() {
 #ifdef PRINT_INST
 	SysPrintf("NCDT\n");
 #endif
+	GteStall = 44;
     gteFLAG = 0;
 
 	int v;
@@ -567,6 +580,7 @@ void gteOP() {
 #ifdef PRINT_INST
 	SysPrintf("OP\n");
 #endif
+	GteStall = 6;
 	gteFLAG = 0;
 
 	int shift = 12 * GTE_SF( gteop );
@@ -584,6 +598,7 @@ void gteDCPL() {
 #ifdef PRINT_INST
 	SysPrintf("DCPL\n");
 #endif
+	GteStall = 8;
 	gteFLAG=0;
 
 	int shift = 12 * GTE_SF( gteop );
@@ -617,6 +632,7 @@ void gteGPF() {
 #ifdef PRINT_INST
 	SysPrintf("GPF\n");
 #endif
+	GteStall = 5;
 	gteFLAG = 0;
 
 	int shift = 12 * GTE_SF( gteop );
@@ -640,6 +656,7 @@ void gteGPL() {
 #ifdef PRINT_INST
 	SysPrintf("GPL\n");
 #endif
+	GteStall = 5;
 	gteFLAG = 0;
 
 	int shift = 12 * GTE_SF( gteop );
@@ -663,6 +680,7 @@ void gteDPCS() {
 #ifdef PRINT_INST
 	SysPrintf("DPCS\n");
 #endif
+	GteStall = 8;
 	gteFLAG = 0;
 
 	int shift = 12 * GTE_SF( gteop );
@@ -687,6 +705,7 @@ void gteDPCT() {
 #ifdef PRINT_INST
 	SysPrintf("DPCT\n");
 #endif
+	GteStall = 17;
 	gteFLAG = 0;
 
 	int shift = 12 * GTE_SF( gteop );
@@ -716,6 +735,7 @@ void gteNCS() {
 #ifdef PRINT_INST
 	SysPrintf("NCS\n");
 #endif
+	GteStall = 14;
 	gteFLAG = 0;
 
 	gteMAC1 = A1( ( ( (s64) gteL11 * gteVX0 ) + ( gteL12 * gteVY0 ) + ( gteL13 * gteVZ0 ) ) >> 12 );
@@ -743,6 +763,7 @@ void gteNCT() {
 #ifdef PRINT_INST
 	SysPrintf("NCT\n");
 #endif
+	GteStall = 30;
 	gteFLAG = 0;
 
 	int v;
@@ -777,6 +798,7 @@ void gteCC() {
 #ifdef PRINT_INST
 	SysPrintf("CC\n");
 #endif
+	GteStall = 11;
 	gteFLAG = 0;
 
 	gteMAC1 = A1( ( ( (s64) gteRBK << 12 ) + ( gteLR1 * gteIR1 ) + ( gteLR2 * gteIR2 ) + ( gteLR3 * gteIR3 ) ) >> 12 );
@@ -804,6 +826,7 @@ void gteINTPL() {
 #ifdef PRINT_INST
 	SysPrintf("INTPL\n");
 #endif
+	GteStall = 8;
 	gteFLAG = 0;
 
 	int shift = 12 * GTE_SF( gteop );
@@ -841,7 +864,7 @@ if( gteop == 0x1280414 )
 	return;
 }
 #endif
-
+	GteStall = 13;
 	gteFLAG = 0;
 
 	gteMAC1 = A1( ( ( (s64) gteRBK << 12 ) + ( gteLR1 * gteIR1 ) + ( gteLR2 * gteIR2 ) + ( gteLR3 * gteIR3 ) ) >> 12 );
