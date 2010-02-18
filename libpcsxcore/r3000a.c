@@ -108,12 +108,6 @@ static void ResetEvents()
 #endif
 }
 
-void AddCycles( int amount )
-{
-	psxRegs.evtCycleCountdown	-= amount;
-	psxRegs.GteUnitCycles		-= amount;
-}
-
 u32 __inline psxGetCycle()
 {
 	return psxRegs.cycle + (psxRegs.evtCycleDuration - psxRegs.evtCycleCountdown);
@@ -342,11 +336,12 @@ void psxBranchTest() {
 		psxRegs.evtCycleCountdown	 = oldtime + Events.next->time;
 		if( psxRegs.evtCycleCountdown > 0 ) break;
 	}
-
+#ifdef GTE_TIMING
 	// Periodic culling of GteStallCycles, prevents it from overflowing in the unlikely event that
 	// running code doesn't invoke a GTE command in 2 billion cycles.
 	if( psxRegs.GteUnitCycles < 0 )
 		psxRegs.GteUnitCycles = 0;
+#endif
 }
 #else
 

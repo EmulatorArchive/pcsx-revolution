@@ -45,6 +45,9 @@ extern R3000Acpu psxRec;
 #define NEW_EVENTS
 
 #ifdef NEW_EVENTS
+
+//#define GTE_TIMING
+
 enum PsxEventType
 {
 	PsxEvt_Counter0 = 0,
@@ -151,11 +154,13 @@ typedef struct {
 	// is reached.
 	s32 evtCycleCountdown;
 
+#ifdef GTE_TIMING
 	// number of cycles pending on the current GTE instruction 
 	// Any zero-or-negative values mean the unit is free and no stalls incurred for executing
 	// a new instruction on the pipeline.  Negative values are flushed to 0 during BranchTest executions.
 	// (faster than flushing to zero on every cycle update).
 	s32 GteUnitCycles;
+#endif
 #else
 	u32 interrupt;
 	u32 intCycle[32];
@@ -225,7 +230,6 @@ void psxJumpTest();
 #ifdef NEW_EVENTS
 u32 psxGetCycle();
 s32 GetPendingCycles();
-void AddCycles( int amount );
 
 void psx_int_add(int n, s32 ecycle);
 void psx_int_remove(int n);

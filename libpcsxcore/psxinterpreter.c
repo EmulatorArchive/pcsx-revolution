@@ -63,14 +63,14 @@ void (*psxCP0[32])();
 void (*psxCP2[64])();
 void (*psxCP2BSC[32])();
 
-#ifndef NEW_EVENTS
+#ifdef GTE_TIMING
 /*
 	If an instruction that reads a GTE register or a GTE command is executed
 	before the current GTE command is finished, the cpu will hold until the
 	instruction has finished.
 	GTE instructions and functions should not be used in delay slots of jumps and branches
 */
-__inline void GteUnitStall( u32 newStall )
+static __inline void GteUnitStall( u32 newStall )
 {
 	if( newStall == 0 ) return;		// not a GTE instruction?
 
@@ -82,6 +82,18 @@ __inline void GteUnitStall( u32 newStall )
 	psxRegs.GteUnitCycles = newStall;
 }
 #endif
+
+static __inline void AddCycles( int amount )
+{
+#ifndef NEW_EVENTS
+	psxRegs.cycle++;
+#else
+	psxRegs.evtCycleCountdown	-= amount;
+#ifdef GTE_TIMING
+	psxRegs.GteUnitCycles		-= amount;
+#endif
+#endif
+}
 
 static void delayRead(int reg, u32 bpc) {
 	u32 rold, rnew;
@@ -342,11 +354,7 @@ __inline void doBranch(u32 tar) {
 	debugI();
 
 	psxRegs.pc += 4;
-#ifndef NEW_EVENTS
-	psxRegs.cycle++;
-#else
-	AddCycles(1);;
-#endif
+	AddCycles(1);
 
 	// check for load delay
 	tmp = psxRegs.code >> 26;
@@ -952,7 +960,9 @@ static void intShutdown() {
 
 // interpreter execution
 inline void execI() { 
+#ifdef GTE_TIMING
 	GteStall = 0;
+#endif
 	u32 *code = (u32 *)PSXM(psxRegs.pc); 
 	psxRegs.code = ((code == NULL) ? 0 : GETLE32(code));
 
@@ -961,14 +971,10 @@ inline void execI() {
 	if (Config.Debug) ProcessDebug();
 #endif
 	psxRegs.pc += 4;
-#ifndef NEW_EVENTS
-	psxRegs.cycle++;
-#else
-	AddCycles(1);;
-#endif
+	AddCycles(1);
 
 	psxBSC[_Op_]();
-#ifndef NEW_EVENTS
+#ifdef GTE_TIMING
 	GteUnitStall(GteStall);
 #endif
 }

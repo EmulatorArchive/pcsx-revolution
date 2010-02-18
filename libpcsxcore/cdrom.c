@@ -110,6 +110,15 @@ static struct SubQ *subq;
 
 #endif
 
+void AddIrqQueue(unsigned char irq, unsigned long ecycle) {
+	cdr.Irq = irq;
+	if (cdr.Stat) {
+		cdr.eCycle = ecycle;
+	} else {
+		CDR_INT(ecycle);
+	}
+}
+
 static __inline void StartReading(type) {
    	cdr.Reading = type;
   	cdr.FirstSector = 1;
@@ -179,15 +188,6 @@ void ReadTrack() {
 #define Acknowledge	3
 #define DataEnd		4
 #define DiskError	5
-
-void AddIrqQueue(unsigned char irq, unsigned long ecycle) {
-	cdr.Irq = irq;
-	if (cdr.Stat) {
-		cdr.eCycle = ecycle;
-	} else {
-		CDR_INT(ecycle);
-	}
-}
 
 void cdrInterrupt() {
 	int i;
