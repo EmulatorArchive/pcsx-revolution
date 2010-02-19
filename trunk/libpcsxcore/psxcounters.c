@@ -58,7 +58,7 @@ static void psxRcntUpd(unsigned long index) {
 	psxCounters[index].sCycle = psxGetCycle();
 
 	if (psxCounters[index].mode_b.IRQTARGET != 0 || psxCounters[index].mode_b.IRQOVF != 0) {
-		s32 count = ((_rcntTarget(index) - psxCounters[index].count) * psxCounters[index].rate) / (BIAS << PsxFixedBits);
+		s32 count = ((_rcntTarget(index) - psxRcntRcount(index)) * psxCounters[index].rate) / (BIAS << PsxFixedBits);
 
 		if (count > 0) 
 			psx_int_add(index, count);
