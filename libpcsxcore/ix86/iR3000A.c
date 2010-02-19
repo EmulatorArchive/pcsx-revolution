@@ -42,20 +42,12 @@ u32 *psxRecLUT;
 
 #define RECMEM_SIZE		(8 * 1024 * 1024)
 
-#ifdef NEW_EVENTS
-
 #define REC_TEST_BRANCH() { \
 	CMP32ItoM((uptr)&psxRegs.evtCycleCountdown, 0); \
 	j8Ptr[0] = JG8(0); \
 	CALLFunc((uptr)psxBranchTest); \
 	x86SetJ8(j8Ptr[0]); \
 }
-
-#else
-
-#define REC_TEST_BRANCH() CALLFunc((uptr)psxBranchTest);
-
-#endif
 
 static char *recMem;	/* the recompiled blocks will be here */
 static char *recRAM;	/* and the ptr to the blocks here */
@@ -112,11 +104,7 @@ static void iFlushRegs() {
 }
 
 static void UpdateCycle(u32 amount) {
-#ifdef NEW_EVENTS
 	SUB32ItoM((uptr)&psxRegs.evtCycleCountdown, amount);
-#else
-	ADD32ItoM((uptr)&psxRegs.cycle, amount);
-#endif
 }
 
 static void iRet() {

@@ -42,10 +42,6 @@ extern R3000Acpu psxRec;
 #define PSXREC
 #endif
 
-#define NEW_EVENTS
-
-#ifdef NEW_EVENTS
-
 //#define GTE_TIMING
 
 enum PsxEventType
@@ -89,7 +85,6 @@ typedef struct {
 } Events_t;
 
 Events_t Events;
-#endif
 
 typedef union
 {
@@ -140,7 +135,7 @@ typedef struct {
     u32 pc;				/* Program counter */
     u32 code;			/* The instruction */
 	u32 cycle;
-#ifdef NEW_EVENTS
+
 	u32 IsDelaySlot:1;
 
 	// marks the original duration of time for the current pending event.  This is
@@ -160,10 +155,6 @@ typedef struct {
 	// a new instruction on the pipeline.  Negative values are flushed to 0 during BranchTest executions.
 	// (faster than flushing to zero on every cycle update).
 	s32 GteUnitCycles;
-#endif
-#else
-	u32 interrupt;
-	u32 intCycle[32];
 #endif
 } psxRegisters;
 
@@ -227,7 +218,6 @@ void psxTestSWInts();
 void psxTestHWInts();
 void psxJumpTest();
 
-#ifdef NEW_EVENTS
 u32 psxGetCycle();
 s32 GetPendingCycles();
 
@@ -237,6 +227,5 @@ void psxRaiseExtInt( uint irq );
 
 void advance_pc(s32 offset);
 void psxTestIntc();
-#endif
 
 #endif /* __R3000A_H__ */

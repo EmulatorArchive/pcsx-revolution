@@ -122,11 +122,8 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 				break;
 			}
 			GPU_writeDataMem(ptr, size);
-#ifdef NEW_EVENTS
 			psx_int_add(PsxEvt_GPU, (size / 4) / BIAS);
-#else
-			GPUDMA_INT((size / 4) / BIAS);
-#endif
+
 			return;
 //			break;
 
