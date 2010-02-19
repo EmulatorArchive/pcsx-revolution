@@ -395,8 +395,8 @@ void gteAVSZ3() {
 #endif
 	gteFLAG = 0;
 
-	gteMAC0 = F( (s64) ( gteZSF3 * gteSZ1 ) + ( gteZSF3 * gteSZ2 ) + ( gteZSF3 * gteSZ3 ) >> 12 );
-	gteOTZ = Lm_D( gteMAC0 );
+	gteMAC0 = F( (s64) ( gteZSF3 * gteSZ1 ) + ( gteZSF3 * gteSZ2 ) + ( gteZSF3 * gteSZ3 ) );
+	gteOTZ = Lm_D( gteMAC0 >> 12 );
 }
 
 void gteAVSZ4() {
@@ -408,8 +408,8 @@ void gteAVSZ4() {
 #endif
 	gteFLAG = 0;
 
-	gteMAC0 = F( (s64) ( gteZSF4 * (gteSZ0 + gteSZ1 + gteSZ2 + gteSZ3 ) ) >> 12 );
-	gteOTZ = Lm_D( gteMAC0 );
+	gteMAC0 = F( (s64) ( gteZSF4 * (gteSZ0 + gteSZ1 + gteSZ2 + gteSZ3) ) );
+	gteOTZ = Lm_D( gteMAC0 >> 12 );
 }
 
 void gteSQR() {

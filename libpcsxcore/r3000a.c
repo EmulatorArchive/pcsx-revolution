@@ -90,10 +90,6 @@ static void ResetEvents()
 
 	Events.next = &Events.list[PsxEvt_Idle];
 
-#ifndef SEPARATE_CNTS
-	Events.list[PsxEvt_Counter0].Execute = psxRcntUpdate;
-	psx_int_add(PsxEvt_Counter0, 0);
-#else
 	Events.list[PsxEvt_Counter0].Execute = psxRcntUpdate0;
 	Events.list[PsxEvt_Counter1].Execute = psxRcntUpdate1;
 	Events.list[PsxEvt_Counter2].Execute = psxRcntUpdate2;
@@ -104,7 +100,6 @@ static void ResetEvents()
 	psx_int_add(PsxEvt_Counter1, 0);
 	psx_int_add(PsxEvt_Counter2, 0);
 	psx_int_add(PsxEvt_Counter4, 0);
-#endif
 }
 
 u32 __inline psxGetCycle()

@@ -99,18 +99,11 @@ typedef struct {
 
 extern psxCounter psxCounters[5];
 
-u32 psxNextCounter, psxNextsCounter;
-
-// We can separate them only with new interrupt system.
-#define SEPARATE_CNTS
-
-#ifdef SEPARATE_CNTS
 void psxRcntUpdate0();
 void psxRcntUpdate1();
 void psxRcntUpdate2();
 void psxRcntUpdate3();
 void psxRcntUpdate4();
-#endif
 
 void psxRcntInit();
 void psxRcntUpdate();
