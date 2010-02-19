@@ -2337,13 +2337,7 @@ static void recMTC0() {
 		CALLFunc((u32)psxTestSWInts);
 
 		if(_Rd_ == 12) {
-#ifndef NEW_EVENTS
-			LWPRtoR(r3, &psxRegs.interrupt);
-			ORIS(r3, r3, 0x8000);
-			STWRtoPR(&psxRegs.interrupt, r3);
-#else
 			CALLFunc((uptr)psxTestIntc);
-#endif
 		}
 
 

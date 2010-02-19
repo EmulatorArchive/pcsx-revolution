@@ -51,7 +51,6 @@ int psxInit() {
 	return psxCpu->Init();
 }
 
-#ifdef NEW_EVENTS
 static void _evthandler_Exception()
 {
 	// Note: Re-test conditions here under the assumption that something else might have
@@ -203,6 +202,7 @@ __inline void psx_int_add( int n, s32 ecycle )
 #ifdef PRINT_EVENTS
 	SysPrintf("Event: %ld\t Cycle: %ld\tcycles: %ld\n", n, psxRegs.cycle, ecycle);
 #endif
+	//if(n < 3) SysPrintf("Event: %ld\t Cycle: %ld\tcycles: %ld\n", n, psxRegs.cycle, ecycle);
 	psx_event_add( n, ecycle );
 }
 
@@ -217,7 +217,6 @@ __inline void psxTestIntc()
 
 	psx_int_add( PsxEvt_Exception, 0 );
 }
-#endif
 
 __inline void psxRaiseExtInt( uint irq )
 {
@@ -225,11 +224,7 @@ __inline void psxRaiseExtInt( uint irq )
 	SysPrintf("ExtInt: %ld\n", irq);
 #endif
 	psxHu32ref(0x1070) |= SWAPu32(1 << irq);
-#ifdef NEW_EVENTS
 	psxTestIntc();
-#else
-	psxRegs.interrupt|= 0x80000000;
-#endif
 }
 
 void psxReset() {
@@ -249,15 +244,12 @@ void psxReset() {
 	psxRegs.CP0.r[12].d = 0x10900000; // COP0 enabled | BEV = 1 | TS = 1
 	psxRegs.CP0.r[15].d = 0x00000002; // PRevID = Revision ID, same as R3000A
 
-#ifdef NEW_EVENTS
 	psxRegs.evtCycleDuration = 32;
 	psxRegs.evtCycleCountdown = 32;
-#endif
 
 	psxHwReset();
-#ifdef NEW_EVENTS
 	ResetEvents();
-#endif
+
 	psxBiosInit();
 
 	if (!Config.HLE)
@@ -313,7 +305,6 @@ void psxException(u32 code, u32 bd) {
 	if (Config.HLE) psxBiosException();
 }
 
-#ifdef NEW_EVENTS
 void psxBranchTest() {
 	if (psxRegs.evtCycleCountdown > 0) return;
 #ifdef PRINT_EVENTS
@@ -342,64 +333,6 @@ void psxBranchTest() {
 	if( psxRegs.GteUnitCycles < 0 )
 		psxRegs.GteUnitCycles = 0;
 #endif
-}
-#else
-
-void psxBranchTest() {
-	if ((psxRegs.cycle - psxNextsCounter) >= psxNextCounter)
-		psxRcntUpdate();
-
-	if (psxRegs.interrupt) {
-		if ((psxRegs.interrupt & 0x80) && (!Config.Sio)) { // sio
-			if ((psxRegs.cycle - psxRegs.intCycle[7]) >= psxRegs.intCycle[7+1]) {
-				psxRegs.interrupt&=~0x80;
-				sioInterrupt();
-			}
-		}
-		if (psxRegs.interrupt & 0x04) { // cdr
-			if ((psxRegs.cycle - psxRegs.intCycle[2]) >= psxRegs.intCycle[2+1]) {
-				psxRegs.interrupt&=~0x04;
-				cdrInterrupt();
-			}
-		}
-		if (psxRegs.interrupt & 0x040000) { // cdr read
-			if ((psxRegs.cycle - psxRegs.intCycle[2+16]) >= psxRegs.intCycle[2+16+1]) {
-				psxRegs.interrupt&=~0x040000;
-				cdrReadInterrupt();
-			}
-		}
-		if (psxRegs.interrupt & 0x01000000) { // gpu dma
-			if ((psxRegs.cycle - psxRegs.intCycle[3+24]) >= psxRegs.intCycle[3+24+1]) {
-				psxRegs.interrupt&=~0x01000000;
-				gpuInterrupt();
-			}
-		}
-		/*if (psxRegs.interrupt & 0x02000000) { // mdec out dma
-			if ((psxRegs.cycle - psxRegs.intCycle[5+24]) >= psxRegs.intCycle[5+24+1]) {
-				psxRegs.interrupt&=~0x02000000;
-				mdec1Interrupt();
-			}
-		}*/
-
-//		if (psxRegs.interrupt & 0x80000000) {
-			psxRegs.interrupt&=~0x80000000;
-			psxTestHWInts();
-//		}
-	}
-}
-
-#endif
-
-__inline void psxTestHWInts() {
-	if (psxHu32(0x1070) & psxHu32(0x1074)) {
-		if ((psxRegs.CP0.n.Status & 0x401) == 0x401) {
-#ifdef PSXCPU_LOG
-			PSXCPU_LOG("Interrupt: %x %x\n", psxHu32(0x1070), psxHu32(0x1074));
-#endif
-//			SysPrintf("Interrupt (%x): %x %x\n", psxRegs.cycle, psxHu32(0x1070), psxHu32(0x1074));
-			psxException(0x400, 0);
-		}
-	}
 }
 
 void psxJumpTest() {

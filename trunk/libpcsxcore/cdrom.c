@@ -92,23 +92,8 @@ static const u32 cdReadTime = ((PSXCLK / 75) / BIAS);	// 0x37200
 static struct CdrStat stat;
 static struct SubQ *subq;
 
-#ifdef NEW_EVENTS
 #	define CDR_INT(eCycle)    psx_int_add(PsxEvt_Cdrom, eCycle);
 #	define CDREAD_INT(eCycle) psx_int_add(PsxEvt_CdromRead, eCycle);
-
-#else
-
-#define CDR_INT(eCycle) { \
-	psxRegs.interrupt |= 0x4; \
-	psxRegs.intCycle[2 + 1] = eCycle; \
-	psxRegs.intCycle[2] = psxRegs.cycle; }
-
-#define CDREAD_INT(eCycle) { \
-	psxRegs.interrupt |= 0x40000; \
-	psxRegs.intCycle[2 + 16 + 1] = eCycle; \
-	psxRegs.intCycle[2 + 16] = psxRegs.cycle; }
-
-#endif
 
 void AddIrqQueue(unsigned char irq, unsigned long ecycle) {
 	cdr.Irq = irq;
@@ -129,11 +114,7 @@ static __inline void StartReading(type) {
 static __inline void StopReading() {
 	if (cdr.Reading) {
 		cdr.Reading = 0;
-#ifdef NEW_EVENTS
 		psx_int_remove(PsxEvt_CdromRead);
-#else
-		psxRegs.interrupt &= ~0x40000;
-#endif
 	}
 	cdr.StatP &= ~0x20;
 }
@@ -688,7 +669,7 @@ void cdrReadInterrupt() {
 		//ReadTrack();
 		CDREAD_INT((cdr.Mode & 0x80) ? (cdReadTime / 2) : cdReadTime);
 	}
-		psxRaiseExtInt( PsxInt_CDROM );
+	psxRaiseExtInt( PsxInt_CDROM );
 }
 
 /*

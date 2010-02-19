@@ -28,22 +28,12 @@
 #include "psxhle.h"
 #include "psxhw.h"
 
-static int branch = 0;
 static int branch2 = 0;
 static u32 branchPC;
-
-#ifdef NEW_EVENTS
 
 #define TEST_BRANCH() \
 	if (psxRegs.evtCycleCountdown <= 0) \
 		psxBranchTest();
-
-#else
-
-#define TEST_BRANCH() \
-		psxBranchTest();
-
-#endif
 
 // These macros are used to assemble the repassembler functions
 
@@ -85,13 +75,9 @@ static __inline void GteUnitStall( u32 newStall )
 
 static __inline void AddCycles( int amount )
 {
-#ifndef NEW_EVENTS
-	psxRegs.cycle++;
-#else
 	psxRegs.evtCycleCountdown	-= amount;
 #ifdef GTE_TIMING
 	psxRegs.GteUnitCycles		-= amount;
-#endif
 #endif
 }
 
@@ -110,11 +96,7 @@ static void delayRead(int reg, u32 bpc) {
 	psxRegs.GPR.r[reg].d = rold;
 	execI(); // first branch opcode
 	psxRegs.GPR.r[reg].d = rnew;
-#ifdef NEW_EVENTS
 	psxRegs.IsDelaySlot = 0;
-#else
-	branch = 0;
-#endif
 }
 
 static void delayWrite(int reg, u32 bpc) {
@@ -128,11 +110,8 @@ static void delayWrite(int reg, u32 bpc) {
 
 	psxBSC[_Op_]();
 
-#ifdef NEW_EVENTS
 	psxRegs.IsDelaySlot = 0;
-#else
-	branch = 0;
-#endif
+
 	psxRegs.pc = bpc;
 
 	TEST_BRANCH();
@@ -144,11 +123,8 @@ static void delayReadWrite(int reg, u32 bpc) {
 
 	// the branch delay load is skipped
 
-#ifdef NEW_EVENTS
 	psxRegs.IsDelaySlot = 0;
-#else
-	branch = 0;
-#endif
+
 	psxRegs.pc = bpc;
 
 	TEST_BRANCH();
@@ -312,11 +288,7 @@ void psxDelayTest(int reg, u32 bpc) {
 
 	code = (u32 *)PSXM(bpc);
 	tmp = ((code == NULL) ? 0 : GETLE32(code));
-#ifdef NEW_EVENTS
 	psxRegs.IsDelaySlot = 1;
-#else
-	branch = 1;
-#endif
 
 	switch (psxTestLoadDelay(reg, tmp)) {
 		case 1:
@@ -328,11 +300,8 @@ void psxDelayTest(int reg, u32 bpc) {
 	}
 	psxBSC[_Op_]();
 
-#ifdef NEW_EVENTS
 	psxRegs.IsDelaySlot = 0;
-#else
-	branch = 0;
-#endif
+
 	psxRegs.pc = bpc;
 
 	TEST_BRANCH();
@@ -341,11 +310,9 @@ void psxDelayTest(int reg, u32 bpc) {
 __inline void doBranch(u32 tar) {
 	u32 *code;
 	u32 tmp;
-#ifdef NEW_EVENTS
+
 	branch2 = psxRegs.IsDelaySlot = 1;
-#else
-	branch2 = branch = 1;
-#endif
+
 	branchPC = tar;
 
 	code = (u32 *)PSXM(psxRegs.pc);
@@ -392,11 +359,8 @@ __inline void doBranch(u32 tar) {
 
 	psxBSC[_Op_]();
 
-#ifdef NEW_EVENTS
 	psxRegs.IsDelaySlot = 0;
-#else
-	branch = 0;
-#endif
+
 	psxRegs.pc = branchPC;
 
 	TEST_BRANCH();
@@ -618,12 +582,8 @@ void psxBREAK() {
 
 void psxSYSCALL() {
 	psxRegs.pc -= 4;
-#ifdef NEW_EVENTS
+
 	psxException(0x20, psxRegs.IsDelaySlot);
-#else
-	psxException(0x20, branch);
-#endif
-	
 }
 
 void psxRFE() {
@@ -800,11 +760,8 @@ void psxTestSWInts() {
 	// tell me if it works ok or not (linuzappz)
 	if (psxRegs.CP0.n.Cause & psxRegs.CP0.n.Status & 0x0300 &&
 		psxRegs.CP0.n.Status & 0x1) {
-#ifdef NEW_EVENTS
+
 		psxException(psxRegs.CP0.n.Cause, psxRegs.IsDelaySlot);
-#else
-		psxException(psxRegs.CP0.n.Cause, branch);
-#endif
 	}
 }
 #if 1
@@ -813,11 +770,7 @@ __inline void MTC0(int reg, u32 val) {
 	switch (reg) {
 		case 12: // Status
 			psxTestSWInts();
-#ifndef NEW_EVENTS
-			psxRegs.interrupt|= 0x80000000;
-#else
 			psxTestIntc();
-#endif
 			break;
 
 		case 13: // Cause

@@ -58,8 +58,6 @@ u32 *psxRecLUT;
 #define RECMEM_SIZE		(8*1024*1024)
 #endif
 
-#ifdef NEW_EVENTS
-
 #define REC_TEST_BRANCH() { \
 	LWPRtoR(r4, (uptr)&psxRegs.evtCycleCountdown); \
 	CMPWI(r4, 0); \
@@ -67,12 +65,6 @@ u32 *psxRecLUT;
 	CALLFunc((uptr)psxBranchTest); \
 	B_DST(b32Ptr[6]); \
 }
-
-#else
-
-#define REC_TEST_BRANCH() CALLFunc((uptr)psxBranchTest);
-
-#endif
 
 static char *recMem;	/* the recompiled blocks will be here */
 static char *recRAM;	/* and the ptr to the blocks here */
@@ -169,15 +161,9 @@ static void Return()
 }
 
 static void UpdateCycle(u32 amount) {
-#ifdef NEW_EVENTS
 	LWPRtoR(r9, &psxRegs.evtCycleCountdown);
 	ADDI(r9, r9, -amount);
 	STWRtoPR(&psxRegs.evtCycleCountdown, r9);
-#else
-	LWPRtoR(r9, &psxRegs.cycle);
-	ADDI(r9, r9, amount);
-	STWRtoPR(&psxRegs.cycle, r9);
-#endif
 }
 
 static void iRet() {

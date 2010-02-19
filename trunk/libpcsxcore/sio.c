@@ -39,18 +39,9 @@ char Mcd1Data[MCD_SIZE], Mcd2Data[MCD_SIZE];
 // clk cycle byte
 // 4us * 8bits = ((PSXCLK / 1000000) * 32) / BIAS; (linuzappz)
 
-// (PSXCLK / SIOCLK) * BIAS = 270; (SIOCLK = 250Hz) (Firnis)
-#ifdef NEW_EVENTS
-#define SIO_INT() psx_int_add(PsxEvt_SIO, 270 );
-#else
-#define SIO_INT() { \
-	if (!Config.Sio) { \
-		psxRegs.interrupt|= 0x80; \
-		psxRegs.intCycle[7+1] = 200; \
-		psxRegs.intCycle[7] = psxRegs.cycle; \
-	} \
-}
-#endif
+// (PSXCLK / SIOCLK) * BIAS = 270; (SIOCLK = 250kHz) (Firnis)
+static const u32 sioCycles = (PSXCLK / 250000) * BIAS;
+#define SIO_INT() psx_int_add(PsxEvt_SIO, sioCycles );
 
 void sioInit()
 {
@@ -303,11 +294,7 @@ void sioWriteCtrl16(unsigned short value) {
 	if ((sio.CtrlReg & SIO_RESET) || (!sio.CtrlReg)) {
 		sio.padst = 0; sio.mcdst = 0; sio.parp = 0;
 		sio.StatReg = TX_RDY | TX_EMPTY;
-#ifdef NEW_EVENTS
 		psx_int_remove(PsxEvt_SIO);
-#else
-		psxRegs.interrupt &= ~0x80;
-#endif
 	}
 }
 

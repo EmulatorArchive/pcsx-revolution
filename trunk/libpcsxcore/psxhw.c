@@ -411,11 +411,7 @@ void psxHwWrite16(u32 add, u16 value) {
 			PSXHW_LOG("IMASK 16bit write %x\n", value);
 #endif
 			psxHu16ref(0x1074) = SWAPu16(value);
-#ifdef NEW_EVENTS
 			psxTestIntc();
-#else
-			psxRegs.interrupt |= 0x80000000;
-#endif
 			return;
 
 		case 0x1f801100:
@@ -524,11 +520,7 @@ void psxHwWrite32(u32 add, u32 value) {
 			PSXHW_LOG("IMASK 32bit write %lx\n", value);
 #endif
 			psxHu32ref(0x1074) = SWAPu32(value);
-#ifdef NEW_EVENTS
 			psxTestIntc();
-#else
-			psxRegs.interrupt|= 0x80000000;
-#endif
 			return;
 
 #ifdef PSXHW_LOG
