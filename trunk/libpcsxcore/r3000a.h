@@ -224,6 +224,7 @@ s32 GetPendingCycles();
 void psx_int_add(int n, s32 ecycle);
 void psx_int_remove(int n);
 void psxRaiseExtInt( uint irq );
+u8 psxIsActiveEvent(int n);
 
 void advance_pc(s32 offset);
 void psxTestIntc();

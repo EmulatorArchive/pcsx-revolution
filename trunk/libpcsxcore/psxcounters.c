@@ -27,7 +27,7 @@
 #include "psxhw.h"
 
 static int cnts = 4;
-psxCounter psxCounters[5];
+psxCounter psxCounters[3];
 
 typedef struct {
 	u32 Render;
@@ -37,11 +37,59 @@ typedef struct {
 	u32 frame;
 } vSyncRate_t;
 
+typedef struct {
+	u32 rate;
+	u32 mode:1;
+} vSyncCounter_t;
+
+// I just love bit fields =)
+typedef union {
+	u32 value;
+	struct {
+		u32 unused: 16;
+		u32 width1: 1;
+		u32 width0: 2;
+	} width;
+} width_t;
+
+static const u32 SpuRate = (768 * 32);
+
 static vSyncRate_t vSyncRate;
-static void CalcRate(u32 region);
+static vSyncCounter_t vSyncCounter;
 
 // We need it because of PixelClock rate - 13.5MHz.
 static const PsxFixedBits = 12;
+
+static u32 _rcntRate(u32 index) {
+	if(index == 2) {
+		if(psxCounters[index].mode_b.Div != 0)
+			psxCounters[index].rate = 8 << PsxFixedBits; // 1/8 speed
+	}
+	else if(psxCounters[index].mode_b.ClockSource != 0) {
+		if(index == 0) {
+			// based on resolution. See http://members.at.infoseek.co.jp/DrHell/ps1/ 
+			// something like (vSyncRate.frame / (width * ((vSyncRate.scans / 3) * 2)))
+			width_t screen;
+			u32 width;
+			screen.value = psxHu32(0x1814);
+			if(screen.width.width1 != 0) width = 384;
+			else {
+				switch(screen.width.width0) {
+					case 0: width = 256;
+					case 1: width = 320;
+					case 2: width = 512;
+					case 3: width = 640;
+				}
+			}
+			psxCounters[index].rate = (vSyncRate.frame / (width * ((vSyncRate.scans / 3) * 2)));
+		}
+		else {
+			psxCounters[index].rate = (vSyncRate.frame / vSyncRate.scans) * BIAS;
+			//SysPrintf("hSync = %d\n", psxCounters[index].rate >> PsxFixedBits);
+		}
+	}
+	return psxCounters[index].rate;
+}
 
 static __inline u32 _rcntTarget(u32 index) {
 	if(psxCounters[index].mode_b.Tar != 0 ||
@@ -58,9 +106,8 @@ static void psxRcntUpd(unsigned long index) {
 	psxCounters[index].sCycle = psxGetCycle();
 
 	if (psxCounters[index].mode_b.IRQTARGET != 0 || psxCounters[index].mode_b.IRQOVF != 0) {
-		s32 count = ((_rcntTarget(index) - psxRcntRcount(index)) * psxCounters[index].rate) / (BIAS << PsxFixedBits);
-
-		if (count > 0) 
+		s32 count = ((_rcntTarget(index) - psxCounters[index].count) * _rcntRate(index)) / (BIAS << PsxFixedBits);
+		if (count > 0)
 			psx_int_add(index, count);
 	}
 }
@@ -69,26 +116,18 @@ void psxRcntInit() {
 
 	memset(psxCounters, 0, sizeof(psxCounters));
 
-	psxCounters[0].rate = 1 << PsxFixedBits; psxCounters[0].interrupt = PsxInt_RTC0;
-	psxCounters[1].rate = 1 << PsxFixedBits; psxCounters[1].interrupt = PsxInt_RTC1;
-	psxCounters[2].rate = 1 << PsxFixedBits; psxCounters[2].interrupt = PsxInt_RTC2;
-	psxCounters[3].interrupt = PsxInt_VBlank;
-
 	CalcRate(Config.PsxType);
 	psxUpdateVSyncRate();
 
-	if (SPU_async != NULL) {
-		psxCounters[4].rate = (768 * 32);	// Where did it came from?
-	}
-
 	int i;
-	for (i = 0; i < 4; i++)
+	for (i = 0; i < 3; i++) {
 		psxCounters[i].sCycle = psxRegs.cycle;
+		psxCounters[i].rate = 1 << PsxFixedBits;
+		psxCounters[i].interrupt = i + 4;
+	}
 }
 
-static void CalcRate(u32 region) {
-	u32 rate;
-
+void CalcRate(u32 region) {
 	if(region & PSX_TYPE_PAL) {
 		vSyncRate.frame = ((PSXCLK << PsxFixedBits) / 50);
 		vSyncRate.scans = 625;
@@ -97,7 +136,7 @@ static void CalcRate(u32 region) {
 		vSyncRate.frame = (((PSXCLK << PsxFixedBits) / 5994) * 100);
 		vSyncRate.scans = 525;
 	}
-	vSyncRate.Blank = (vSyncRate.frame / vSyncRate.scans) * 2;
+	vSyncRate.Blank = (vSyncRate.frame / vSyncRate.scans) * 44;
 	
 /*
   Region: PAL   Render: 675208;         Blank: 2167;
@@ -106,25 +145,25 @@ static void CalcRate(u32 region) {
 
 	vSyncRate.Render = vSyncRate.frame - vSyncRate.Blank;
 	vSyncRate.region = region;
-	SysPrintf("Region: %s\t Render: %d;\t Blank: %d;\n", vSyncRate.region ? "PAL" : "NTSC", vSyncRate.Render >> PsxFixedBits, vSyncRate.Blank >> PsxFixedBits);
+	//SysPrintf("Region: %s\t frame: %d\t Render: %d;\t Blank: %d;\n", vSyncRate.region ? "PAL" : "NTSC", vSyncRate.frame >> PsxFixedBits, vSyncRate.Render >> PsxFixedBits, vSyncRate.Blank >> PsxFixedBits);
 }
 
 void psxUpdateVSyncRate() {
 	//psxRaiseExtInt(PsxInt_VBlankEnd);		// Should be here, but cause only troubles.
-	psxCounters[3].rate = vSyncRate.Render;
-	if (Config.VSyncWA) psxCounters[3].rate/= 2;
+	vSyncCounter.rate = vSyncRate.Render;
+	if (Config.VSyncWA) vSyncCounter.rate/= 2;
 }
 
 void psxUpdateVSyncRateEnd() {
 	psxRaiseExtInt(PsxInt_VBlank);
-	psxCounters[3].rate = vSyncRate.Blank;
-	if (Config.VSyncWA) psxCounters[3].rate/= 2;
+	vSyncCounter.rate = vSyncRate.Blank;
+	if (Config.VSyncWA) vSyncCounter.rate/= 2;
 }
 
 void psxRcntUpdate3() {
 	if(Config.PsxType != vSyncRate.region) CalcRate(Config.PsxType);
-	if (psxCounters[3].mode & 0x10000) { // VSync End (22 hsyncs)
-		psxCounters[3].mode&=~0x10000;
+
+	if (vSyncCounter.mode) { // VSync End (22 hsyncs)
 		psxUpdateVSyncRate();
 		GPU_updateLace(); // updateGPU
 		SysUpdate();
@@ -135,17 +174,25 @@ void psxRcntUpdate3() {
 		GTE_LOG("VSync\n");
 #endif
 	} else { // VSync Start (240 hsyncs) 
-		psxCounters[3].mode|= 0x10000;
 		psxUpdateVSyncRateEnd();
-		
 	}
-	psx_int_add(3, psxCounters[3].rate / (BIAS << PsxFixedBits));
+	psx_int_add(3, vSyncCounter.rate / (BIAS << PsxFixedBits));
+	vSyncCounter.mode ^= 1;
 }
 
 static __inline void update_cnt(u32 index) {
-	psxCounters[index].count = 0;
+	if (psxCounters[index].mode_b.IRQTARGET != 0) {
+		psxCounters[index].count = psxCounters[index].target;
+		psxRaiseExtInt(psxCounters[index].interrupt);
 
-	if (psxCounters[index].mode_b.IRQTARGET != 0 || psxCounters[index].mode_b.IRQOVF != 0) {
+		if(psxCounters[index].mode_b.Tar != 0) {
+			// Reset on target
+			psxCounters[index].count = 0;
+		}
+	}
+
+	if (psxCounters[index].mode_b.IRQOVF != 0) {
+		psxCounters[index].count = 0;
 		psxRaiseExtInt(psxCounters[index].interrupt);
 	}
 	if (psxCounters[index].mode_b.Repeat != 0) {
@@ -167,8 +214,8 @@ void psxRcntUpdate2() {
 
 void psxRcntUpdate4() {
 	if (SPU_async) {
-		SPU_async(psxCounters[4].rate);		// Peops SPU doesn't really matter what we send.
-		psx_int_add(4, psxCounters[4].rate);
+		SPU_async(SpuRate);		// Peops SPU doesn't really matter what we send.
+		psx_int_add(4, SpuRate);
 	}
 }
 
@@ -183,40 +230,29 @@ void psxRcntWmode(u32 index, u32 value)  {
 	if(psxCounters[index].mode_b.Reset != 0)
 		psxCounters[index].count = 0;
 
-	psxCounters[index].rate = 1 << PsxFixedBits;
-
-	if(index == 2) {
-		if(psxCounters[index].mode_b.Div != 0)
-			psxCounters[index].rate = 8 << PsxFixedBits; // 1/8 speed
-	}
-	else if(psxCounters[index].mode_b.ClockSource != 0) {
-		if(index == 0) {
-			psxCounters[index].rate = (PSXCLK << PsxFixedBits) / 13500000;	// based on resolution. See http://members.at.infoseek.co.jp/DrHell/ps1/
-		}
-		else {
-			psxCounters[index].rate = (vSyncRate.Render / vSyncRate.scans) * BIAS;
-			//SysPrintf("hSync = %d\n", psxCounters[index].rate >> PsxFixedBits);
-		}
-	}
-
 	psxRcntUpd(index);
 }
 
 void psxRcntWtarget(u32 index, u32 value) {
 //	SysPrintf("writeCtarget[%ld] = %lx\n", index, value);
 	psxCounters[index].target = value;
+#if 1
+	if(psxIsActiveEvent(index)) \
+		psxCounters[index].count = psxRcntRcount(index);
+#endif
 	psxRcntUpd(index);
 }
 
 u16 psxRcntRcount(u32 index) {
-	u64 ret = psxCounters[index].count;
-	if (psxCounters[index].mode_b.Disabled != 0) return ret;
+	if (psxCounters[index].mode_b.Disabled != 0) return psxCounters[index].count;
 
+	u64 ret = psxCounters[index].count;
+_rcntRate(index);
 	if(Config.RCntFix) {
-		ret += ((psxGetCycle() - psxCounters[index].sCycle) << PsxFixedBits) / psxCounters[index].rate;
+		ret += ((psxGetCycle() - psxCounters[index].sCycle) << PsxFixedBits) / _rcntRate(index);
 	} 
 	else {
-		ret += ((psxGetCycle() - psxCounters[index].sCycle) * (BIAS << PsxFixedBits)) / psxCounters[index].rate;
+		ret += ((psxGetCycle() - psxCounters[index].sCycle) * (BIAS << PsxFixedBits)) / _rcntRate(index);
 	}
 
 	return ret;

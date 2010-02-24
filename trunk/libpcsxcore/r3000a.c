@@ -74,7 +74,7 @@ static void _evthandler_Idle()
 
 static void ResetEvents()
 {
-	memset(&Events.list, 0, sizeof(events_t) * PsxEvt_CountAll);
+	memset(&Events, 0, sizeof(Events));
 	Events.next = NULL;
 
 	Events.list[PsxEvt_Exception].Execute	= _evthandler_Exception;
@@ -114,7 +114,6 @@ s32 GetPendingCycles()
 
 static __inline void psx_event_add( int n, u32 time )
 {
-	//events[n].time = time;
 	Events.list[n].cycle = time;
 
 	// Find the sorted insertion point into the list of active events:
@@ -126,7 +125,7 @@ static __inline void psx_event_add( int n, u32 time )
 	{
 		// Note: curEvt->next represents the Idle node, which should always be scheduled
 		// last .. so the following conditional checks for it and schedules in front of it.
-		if( (curEvt == &Events.list[PsxEvt_Idle]) || (runningDelta+curEvt->time > time) )
+		if( (curEvt == &Events.list[PsxEvt_Idle]) || ((runningDelta + curEvt->time) > time) )
 		{
 			Events.list[n].next	= curEvt;
 			Events.list[n].time	= time - runningDelta;
@@ -204,6 +203,10 @@ __inline void psx_int_add( int n, s32 ecycle )
 __inline void psx_int_remove( int n )
 {
 	psx_event_remove( n );
+}
+
+__inline u8 psxIsActiveEvent(int n) {
+	return (Events.list[n].next != NULL);
 }
 
 __inline void psxTestIntc()

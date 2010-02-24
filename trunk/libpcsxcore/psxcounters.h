@@ -43,8 +43,10 @@ typedef struct
 	u32 IRQTARGET:1;
 
 	u32 Tar:1;
+	
+	u32 Reset:1;
 
-	u32 unused:2;
+	u32 unused:1;
 
 	u32 Disabled:1;
 #else
@@ -97,7 +99,7 @@ typedef struct {
 	u32 FutureTarget:1;
 } psxCounter;
 
-extern psxCounter psxCounters[5];
+extern psxCounter psxCounters[3];
 
 void psxRcntUpdate0();
 void psxRcntUpdate1();
@@ -106,7 +108,6 @@ void psxRcntUpdate3();
 void psxRcntUpdate4();
 
 void psxRcntInit();
-void psxRcntUpdate();
 void psxRcntWcount(u32 index, u32 value);
 void psxRcntWmode(u32 index, u32 value);
 void psxRcntWtarget(u32 index, u32 value);
@@ -115,5 +116,6 @@ u32 psxRcntRmode(u32 index);
 int psxRcntFreeze(gzFile f, int Mode);
 
 void psxUpdateVSyncRate();
+void CalcRate(u32 region);
 
 #endif /* __PSXCOUNTERS_H__ */
