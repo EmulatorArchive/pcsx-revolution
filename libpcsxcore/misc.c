@@ -337,6 +337,7 @@ int CheckCdrom() {
 			Config.PsxType = 1; // pal
 		else Config.PsxType = 0; // ntsc
 	}
+	CalcRate(Config.PsxType);
 	psxUpdateVSyncRate();
 	if (CdromLabel[0] == ' ') {
 		strncpy(CdromLabel, CdromId, 9);

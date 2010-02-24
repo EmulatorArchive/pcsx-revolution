@@ -226,6 +226,7 @@ u32 psxHwRead32(u32 add) {
 			return hard;
 		case 0x1f801814:
 			hard = GPU_readStatus();
+			psxHu32ref(0x1814) = hard;
 #ifdef PSXHW_LOG
 			PSXHW_LOG("GPU STATUS 32bit read %lx\n", hard);
 #endif

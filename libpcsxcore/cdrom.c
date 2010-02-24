@@ -92,8 +92,8 @@ static const u32 cdReadTime = ((PSXCLK / 75) / BIAS);	// 0x37200
 static struct CdrStat stat;
 static struct SubQ *subq;
 
-#	define CDR_INT(eCycle)    psx_int_add(PsxEvt_Cdrom, eCycle);
-#	define CDREAD_INT(eCycle) psx_int_add(PsxEvt_CdromRead, eCycle);
+#define CDR_INT(eCycle)    psx_int_add(PsxEvt_Cdrom, eCycle);
+#define CDREAD_INT(eCycle) psx_int_add(PsxEvt_CdromRead, eCycle);
 
 void AddIrqQueue(unsigned char irq, unsigned long ecycle) {
 	cdr.Irq = irq;
