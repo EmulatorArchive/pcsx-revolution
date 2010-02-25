@@ -161,7 +161,7 @@ void MULLI (int, int, s32);
 #endif
 #define MR(REG_DST, REG_SRC) \
 	{int __src = (REG_SRC); int __dst=(REG_DST); \
-        if (__src != __dst) {ADDI(__dst, __src, 0);}}
+        OR(__dst, __src, __src);}
 
 // mod3
 //void ADD (int, int, int);
@@ -228,11 +228,7 @@ void MULLI (int, int, s32);
 
 #define SUBCO_(REG_DST, REG1, REG2) \
 	{SUBFCO_(REG_DST, REG2, REG1)}
-/* Duplicate 
-#define SRAWI(REG_DST, REG_SRC, SHIFT) \
-	{int _src = (REG_SRC); int _dst=(REG_DST); \
-        Write32(0x7C000670 | (_src << 21) | (_dst << 16) | (SHIFT << 11));}
-*/
+
 #define MULHW(REG_DST, REG1, REG2) \
 	{int _reg1 = (REG1), _reg2 = (REG2); int _dst=(REG_DST); \
         Write32(0x7C000096 | (_dst << 21) | (_reg1 << 16) |  (_reg2 << 11));}
@@ -327,6 +323,14 @@ void MULLI (int, int, s32);
 #define CMPW(REG1, REG2) \
 	{int _reg1 = (REG1), _reg2 = (REG2); \
         Write32(0x7C000000 | (_reg1 << 16) | (_reg2 << 11));}
+        
+#define CMPI(CRF, REG, IMM) \
+	{ int _dst = (CRF); int _reg = (REG);  \
+        Write32(0x2C000000 | (_dst << 23) | (_reg << 16) | ((IMM) & 0xffff));}
+
+#define CMP(CRF, REG1, REG2) \
+	{int _dst = (CRF); int _reg1 = (REG1), _reg2 = (REG2); \
+        Write32(0x7C000000 | (_dst << 23) | (_reg1 << 16) | (_reg2 << 11));}
 
 #define MTCRF(MASK, REG) \
 	{int _reg = (REG); \

@@ -44,11 +44,11 @@ recRun:
 	/* prologue code */
 	mflr	r0
 	stmw	r14, -(32-14)*4(r1)
+	mtctr	r3
 	stw		r0, 4(r1)
 	stwu	r1, -((32-14)*4+8)(r1)
-	
+
 	/* execute code */
-	mtctr	r3
 	bctrl
 /*
 }

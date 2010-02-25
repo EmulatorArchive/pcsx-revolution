@@ -108,7 +108,7 @@ void SetArg_OfB( arg ) {
 		LIW((arg), iRegs[_Rs_].k + _Imm_);
 	}
 	else {
-		LWPRtoR((arg), &psxRegs.GPR.r[_Rs_]);
+		LWPRtoR((arg), &psxRegs.GPR.r[_Rs_].d);
 		if(_Imm_) ADDI((arg), (arg), _Imm_);
 	}
 }
@@ -131,7 +131,7 @@ static void MapConst(int reg, u32 _const) {
 static void iFlushReg(int reg) {
 	if (IsConst(reg)) {
 		LIW(r9, iRegs[reg].k);
-		STWRtoPR(&psxRegs.GPR.r[reg], r9);
+		STWRtoPR(&psxRegs.GPR.r[reg].d, r9);
 	}
 	iRegs[reg].state = ST_UNK;
 }
@@ -236,8 +236,6 @@ static void SetBranch() {
 		count = idlecyclecount + (pc - pcold) / 4;
 		UpdateCycle(count);
 
-		//LIW(r9, (uptr)&target);
-		//LWZ(PPCARG2, r0, r9);
 		LWMtoR(PPCARG2, (uptr)&target);
 		LIW(PPCARG1, _Rt_);
 
@@ -424,7 +422,7 @@ void iDumpRegs() {
 	//printf("%08x %08x\n", psxRegs.pc, psxRegs.evtCycleCountdown);
 	for (i=0; i<4; i++) {
 		for (j=0; j<8; j++)
-			printf("%08x ", psxRegs.GPR.r[j*i]);
+			printf("%08x ", psxRegs.GPR.r[j*i].d);
 		printf("\n");
 	}
 }
