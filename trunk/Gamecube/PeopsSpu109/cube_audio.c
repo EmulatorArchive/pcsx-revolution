@@ -24,7 +24,7 @@
 // cube audio globals
 
 #define NUM_BUFFERS 4
-#define BUFFER_SIZE 3840
+#define BUFFER_SIZE 3240
 static char buffer[NUM_BUFFERS][BUFFER_SIZE] __attribute__((aligned(32)));
 static int which_buffer = 0;
 static unsigned int buffer_offset = 0;
@@ -45,10 +45,18 @@ static void (*copy_to_buffer)(void* out, void* in, unsigned int samples);
 void SetupSound(void)
 {
 	AUDIO_Init(NULL);
-
+	int n;
+	for(n = 0; n < NUM_BUFFERS; n++)
+	{
+		memset(buffer[n], 0, BUFFER_SIZE);
+		DCFlushRange(buffer[n], BUFFER_SIZE);
+	}
 	//buffer_size = Config.PsxType ? BUFFER_SIZE_32_50 : BUFFER_SIZE_32_60;
 	AUDIO_SetDSPSampleRate(AI_SAMPLERATE_48KHZ);
 	copy_to_buffer = iDisStereo ? copy_to_buffer_mono : copy_to_buffer_stereo;
+	which_buffer = 0;
+	buffer_offset = 0;
+	buffer_size = 0;
 	//printf("SetupSound\n");
 }
 
@@ -56,6 +64,28 @@ void RemoveSound(void)
 {
 	AUDIO_StopDMA();
 
+	int n;
+	for(n = 0; n < NUM_BUFFERS; n++)
+	{
+		memset(buffer[n], 0, BUFFER_SIZE);
+		DCFlushRange(buffer[n], BUFFER_SIZE);
+	}
+
+	AUDIO_RegisterDMACallback(NULL);
+	AUDIO_InitDMA((u32)buffer[0], 32);
+	AUDIO_StartDMA();
+	
+	usleep(100);
+	
+	while (AUDIO_GetDMABytesLeft() > 0)
+		usleep(100);
+	
+	AUDIO_StopDMA();
+	
+	which_buffer = 0;
+	copy_to_buffer = NULL;
+	buffer_offset = 0;
+	buffer_size = 0;
 	//DEBUG_print("RemoveSound called",12);
 }
 
