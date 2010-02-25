@@ -136,20 +136,21 @@ void CalcRate(u32 region) {
 		vSyncRate.frame = (((PSXCLK << PsxFixedBits) / 5994) * 100);
 		vSyncRate.scans = 525;
 	}
-	vSyncRate.Blank = (vSyncRate.frame / vSyncRate.scans) * 44;
+	vSyncRate.Blank = (vSyncRate.frame / vSyncRate.scans) * BIAS;
 	
 /*
   Region: PAL   Render: 675208;         Blank: 2167;
   Region: NTSC  Render: 562892;         Blank: 2152;
 */
 
-	vSyncRate.Render = vSyncRate.frame - vSyncRate.Blank;
+	vSyncRate.Render = (vSyncRate.frame - vSyncRate.Blank) / (BIAS << PsxFixedBits);
+	vSyncRate.Blank /= (BIAS << PsxFixedBits);
 	vSyncRate.region = region;
-	//SysPrintf("Region: %s\t frame: %d\t Render: %d;\t Blank: %d;\n", vSyncRate.region ? "PAL" : "NTSC", vSyncRate.frame >> PsxFixedBits, vSyncRate.Render >> PsxFixedBits, vSyncRate.Blank >> PsxFixedBits);
+// 	SysPrintf("Region: %s\t frame: %d\t Render: %d;\t Blank: %d;\n", vSyncRate.region ? "PAL" : "NTSC", vSyncRate.frame >> PsxFixedBits, vSyncRate.Render, vSyncRate.Blank);
 }
 
 void psxUpdateVSyncRate() {
-	//psxRaiseExtInt(PsxInt_VBlankEnd);		// Should be here, but cause only troubles.
+// 	psxRaiseExtInt(PsxInt_VBlankEnd);		// Should be here, but cause only troubles.
 	vSyncCounter.rate = vSyncRate.Render;
 	if (Config.VSyncWA) vSyncCounter.rate/= 2;
 }
@@ -161,7 +162,8 @@ void psxUpdateVSyncRateEnd() {
 }
 
 void psxRcntUpdate3() {
-	if(Config.PsxType != vSyncRate.region) CalcRate(Config.PsxType);
+	if(Config.PsxType != vSyncRate.region)
+		CalcRate(Config.PsxType);
 
 	if (vSyncCounter.mode) { // VSync End (22 hsyncs)
 		psxUpdateVSyncRate();
@@ -176,7 +178,7 @@ void psxRcntUpdate3() {
 	} else { // VSync Start (240 hsyncs) 
 		psxUpdateVSyncRateEnd();
 	}
-	psx_int_add(3, vSyncCounter.rate / (BIAS << PsxFixedBits));
+	psx_int_add(3, vSyncCounter.rate);
 	vSyncCounter.mode ^= 1;
 }
 
@@ -247,7 +249,7 @@ u16 psxRcntRcount(u32 index) {
 	if (psxCounters[index].mode_b.Disabled != 0) return psxCounters[index].count;
 
 	u64 ret = psxCounters[index].count;
-_rcntRate(index);
+
 	if(Config.RCntFix) {
 		ret += ((psxGetCycle() - psxCounters[index].sCycle) << PsxFixedBits) / _rcntRate(index);
 	} 

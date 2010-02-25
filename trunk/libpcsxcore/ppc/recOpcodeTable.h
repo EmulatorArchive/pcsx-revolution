@@ -10,6 +10,11 @@
 #if 0
 REC_FUNC(SLTI);
 REC_FUNC(SLTIU);
+REC_FUNC(ADDI);
+REC_FUNC(ADDIU);
+REC_FUNC(ANDI);
+REC_FUNC(ORI);
+REC_FUNC(XORI)
 #else
 //CR0:	SIGN      | POSITIVE | ZERO  | SOVERFLOW | SOVERFLOW | OVERFLOW | CARRY
 static void recSLTI() {
@@ -21,19 +26,12 @@ static void recSLTI() {
 	} else {
 		iRegs[_Rt_].state = ST_UNK;
 
-		if (_Imm_ == 0) {
-			LWPRtoR(r3, &_rRsS_);
-			SRWI(r3, r3, 31);
-			STWRtoPR(&_rRtS_, r3);
-		} else {
-			LWPRtoR(r3, &_rRsS_);
-			CMPWI(r3, _Imm_);
-			LI(r3, 1);
-			STWRtoPR(&_rRtS_, r3);
-			BLT(1);
-			LI(r3, 0);
-			STWRtoPR(&_rRtS_, r3);
-		}
+		LWPRtoR(r3, &_rRsS_);
+		LIW(r4, _Imm_);
+		CMP(cr7, r3, r4);
+		MFCR(r3);
+		RLWINM(r3, r3, 29, 31, 31);
+		STWRtoPR(&_rRtS_, r3);
 	}
 }
 
@@ -46,23 +44,15 @@ static void recSLTIU() {
 	} else {
 		iRegs[_Rt_].state = ST_UNK;
 		LWPRtoR(r3, &_rRsU_);
-		CMPLWI(r3, (u32)_ImmU_);
-		LI(r3, 1);
-		STWRtoPR(&_rRtU_, r3);
-		BLT(1);
-		LI(r3, 0);
-		STWRtoPR(&_rRtU_, r3);
+		LIW(r4, _ImmU_);
+		SUBFC(r4, r4, r3);
+		SUBFE(r4, r4, r4);
+		NEG(r4, r4);
+		STWRtoPR(&_rRtU_, r4);
 	}
 }
-#endif
-#if 1
-REC_FUNC(ADDI);
-REC_FUNC(ADDIU);
-REC_FUNC(ANDI);
-REC_FUNC(ORI);
-REC_FUNC(XORI)
-#else
-static void recADDIU()  {
+
+static void recADDIU() {
 // Rt = Rs + Im
 	if (!_Rt_) return;
 
@@ -72,13 +62,13 @@ static void recADDIU()  {
 		iRegs[_Rt_].state = ST_UNK;
 
 		LWPRtoR(r3, &_rRsS_);
-		LIW(r9, _Imm_);
-		ADD(r3, r3, r9)
+		LIW(r4, _Imm_);
+		ADD(r3, r4, r3)
 		STWRtoPR(&_rRtS_, r3);
 	}
 }
 
-static void recADDI()  {
+static void recADDI() {
 // Rt = Rs + Im
 	recADDIU();
 }
@@ -91,9 +81,9 @@ static void recANDI() {
 	} else {
 		iRegs[_Rt_].state = ST_UNK;
 		LWPRtoR(r3, &_rRsU_);
-		LIW(r9, _ImmU_);
-		AND(r3, r3, r9);
-		//RLWINM(r3, r3, 0, 16, 31);
+		LIW(r4, _ImmU_);
+		AND(r3, r4, r3);
+		RLWINM(r3, r3, 0, 16, 31);
 		STWRtoPR(&_rRtU_, r3);
 	}
 }
@@ -107,9 +97,9 @@ static void recORI() {
 	} else {
 		iRegs[_Rt_].state = ST_UNK;
 
-		LWPRtoR(r9, &_rRsU_);
-		LIW(r3, _ImmU_);
-		OR(r3, r3, r9);
+		LWPRtoR(r3, &_rRsU_);
+		LIW(r4, _ImmU_);
+		OR(r3, r4, r3);
 		STWRtoPR(&_rRtU_, r3);
 	}
 }
@@ -122,9 +112,9 @@ static void recXORI() {
 		MapConst(_Rt_, iRegs[_Rs_].k ^ _ImmU_);
 	} else {
 		iRegs[_Rt_].state = ST_UNK;
-		LWPRtoR(r9, &_rRsU_);
-		LIW(r3, _ImmU_);
-		XOR(r3, r3, r9);
+		LWPRtoR(r3, &_rRsU_);
+		LIW(r4, _ImmU_);
+		XOR(r3, r4, r3);
 		STWRtoPR(&_rRtU_, r3);
 	}
 }
@@ -154,6 +144,14 @@ static void recLUI()  {
 #if 0
 REC_FUNC(ADD);
 REC_FUNC(ADDU);
+REC_FUNC(SUB);
+REC_FUNC(SUBU);
+REC_FUNC(AND);
+REC_FUNC(OR);
+REC_FUNC(XOR);
+REC_FUNC(NOR);
+REC_FUNC(SLT);
+REC_FUNC(SLTU);
 #else
 static void recADDU() {
 // Rd = Rs + Rt 
@@ -163,40 +161,27 @@ static void recADDU() {
 		MapConst(_Rd_, (s32)iRegs[_Rs_].k + (s32)iRegs[_Rt_].k);
 		return;
 	} else if (IsConst(_Rs_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LWPRtoR(r9, &_rRtS_);
 		LIW(r3, (s32)iRegs[_Rs_].k);
-		ADD(r3, r3, r9);
-		STWRtoPR(&_rRdS_, r3);
 	} else if (IsConst(_Rt_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LWPRtoR(r3, &_rRsS_);
 		LIW(r9, (s32)iRegs[_Rt_].k);
-		ADD(r3, r3, r9);
-		STWRtoPR(&_rRdS_, r3);
 	}
 	else {
-		iRegs[_Rd_].state = ST_UNK;
-		
 		LWPRtoR(r3, &_rRsS_);
 		LWPRtoR(r9, &_rRtS_);
-		ADD(r3, r3, r9);
-		STWRtoPR(&_rRdS_, r3);
 	}
+	iRegs[_Rd_].state = ST_UNK;
+	
+	ADD(r3, r3, r9);
+	STWRtoPR(&_rRdS_, r3);
 }
 
 static void recADD() {
 // Rd = Rs + Rt
 	recADDU();
 }
-#endif
 
-#if 0
-REC_FUNC(SUB);
-REC_FUNC(SUBU);
-#else
 static void recSUBU() {
 // Rd = Rs - Rt
 	if (!_Rd_) return;
@@ -205,253 +190,166 @@ static void recSUBU() {
 		MapConst(_Rd_, (s32)iRegs[_Rs_].k - (s32)iRegs[_Rt_].k);
 		return;
 	} else if (IsConst(_Rs_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LIW(r3, (s32)iRegs[_Rs_].k);
 		LWPRtoR(r9, &_rRtS_);
-		SUBF(r3, r9, r3);
-		STWRtoPR(&_rRdS_, r3);
 	} else if (IsConst(_Rt_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LWPRtoR(r3, &_rRsS_);
 		LIW(r9, (s32)iRegs[_Rt_].k);
-		SUBF(r3, r9, r3);
-		STWRtoPR(&_rRdS_, r3);
 	}
 	else {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LWPRtoR(r3, &_rRsS_);
 		LWPRtoR(r9, &_rRtS_);
-		SUBF(r3, r9, r3);
-		STWRtoPR(&_rRdS_, r3);
 	}
-}   
+	iRegs[_Rd_].state = ST_UNK;
+	SUBF(r3, r9, r3);
+	STWRtoPR(&_rRdS_, r3);
+}
 
 static void recSUB() {
 // Rd = Rs - Rt
 	recSUBU();
 }
-#endif
 
-#if 0
-REC_FUNC(AND);
-REC_FUNC(OR);
-REC_FUNC(XOR);
-REC_FUNC(NOR);
-#else
 static void recAND() {
 // Rd = Rs And Rt
 	if (!_Rd_) return;
-    
+
 	if (IsConst(_Rs_) && IsConst(_Rt_)) {
 		MapConst(_Rd_, iRegs[_Rs_].k & iRegs[_Rt_].k);
+		return;
 	} else if (IsConst(_Rs_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LIW(r9, iRegs[_Rs_].k);
 		LWPRtoR(r3, &_rRtU_);
-		AND(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	} else if (IsConst(_Rt_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LIW(r3, iRegs[_Rt_].k);
 		LWPRtoR(r9, &_rRsU_);
-		AND(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	} else {
-		iRegs[_Rd_].state = ST_UNK;
-		
 		LWPRtoR(r3, &_rRtU_);
 		LWPRtoR(r9, &_rRsU_);
-		AND(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	}
-}   
+	iRegs[_Rd_].state = ST_UNK;
+
+	AND(r3, r3, r9);
+	STWRtoPR(&_rRdU_, r3);
+}
 
 static void recOR() {
 // Rd = Rs Or Rt
 	if (!_Rd_) return;
-    
+
 	if (IsConst(_Rs_) && IsConst(_Rt_)) {
 		MapConst(_Rd_, iRegs[_Rs_].k | iRegs[_Rt_].k);
+		return;
 	} else if (IsConst(_Rs_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LIW(r9, iRegs[_Rs_].k);
 		LWPRtoR(r3, &_rRtU_);
-		OR(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	} else if (IsConst(_Rt_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LIW(r3, iRegs[_Rt_].k);
 		LWPRtoR(r9, &_rRsU_);
-		OR(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	} else {
-		iRegs[_Rd_].state = ST_UNK;
-		
 		LWPRtoR(r3, &_rRtU_);
 		LWPRtoR(r9, &_rRsU_);
-		OR(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	}
+	iRegs[_Rd_].state = ST_UNK;
+
+	OR(r3, r3, r9);
+	STWRtoPR(&_rRdU_, r3);
 }
 
 static void recXOR() {
 // Rd = Rs Xor Rt
 	if (!_Rd_) return;
-    
+
 	if (IsConst(_Rs_) && IsConst(_Rt_)) {
 		MapConst(_Rd_, iRegs[_Rs_].k | iRegs[_Rt_].k);
+		return;
 	} else if (IsConst(_Rs_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LIW(r9, iRegs[_Rs_].k);
 		LWPRtoR(r3, &_rRtU_);
-		XOR(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	} else if (IsConst(_Rt_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LIW(r3, iRegs[_Rt_].k);
 		LWPRtoR(r9, &_rRsU_);
-		XOR(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	} else {
-		iRegs[_Rd_].state = ST_UNK;
-		
 		LWPRtoR(r3, &_rRtU_);
 		LWPRtoR(r9, &_rRsU_);
-		XOR(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	}
+	iRegs[_Rd_].state = ST_UNK;
+
+	XOR(r3, r3, r9);
+	STWRtoPR(&_rRdU_, r3);
 }
 
 static void recNOR() {
 // Rd = Rs Nor Rt
 	if (!_Rd_) return;
-    
+
 	if (IsConst(_Rs_) && IsConst(_Rt_)) {
 		MapConst(_Rd_, iRegs[_Rs_].k | iRegs[_Rt_].k);
+		return;
 	} else if (IsConst(_Rs_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LIW(r9, iRegs[_Rs_].k);
 		LWPRtoR(r3, &_rRtU_);
-		NOR(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	} else if (IsConst(_Rt_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LIW(r3, iRegs[_Rt_].k);
 		LWPRtoR(r9, &_rRsU_);
-		NOR(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	} else {
-		iRegs[_Rd_].state = ST_UNK;
-		
 		LWPRtoR(r3, &_rRtU_);
 		LWPRtoR(r9, &_rRsU_);
-		NOR(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	}
+	iRegs[_Rd_].state = ST_UNK;
+
+	NOR(r3, r3, r9);
+	STWRtoPR(&_rRdU_, r3);
 }
 
-#endif
-
-#if 0
-REC_FUNC(SLT);
-#else
 static void recSLT() {
 // Rd = Rs < Rt (signed)
 	if (!_Rd_) return;
 
 	if (IsConst(_Rs_) && IsConst(_Rt_)) {
 		MapConst(_Rd_, (s32)iRegs[_Rs_].k < (s32)iRegs[_Rt_].k);
+		return;
 	} else if(IsConst(_Rs_)) {
-		iRegs[_Rd_].state = ST_UNK;
-		
-		LWPRtoR(r3, &_rRtS_);
-		LIW(r9, (s32)iRegs[_Rs_].k);
-		CMPW(r9, r3);
-		LI(r3, 1);
-		STWRtoPR(&_rRdS_, r3);
-		BLT(1);
-		LI(r3, 0);
-		STWRtoPR(&_rRdS_, r3);
+		LWPRtoR(r4, &_rRtS_);
+		LIW(r3, (s32)iRegs[_Rs_].k);
 	} else if (IsConst(_Rt_)) {
-		iRegs[_Rd_].state = ST_UNK;
-		
-		LWPRtoR(r9, &_rRsS_);
-		LIW(r3, (s32)iRegs[_Rt_].k);
-		CMPW(r9, r3);
-		LI(r3, 1);
-		STWRtoPR(&_rRdS_, r3);
-		BLT(1);
-		LI(r3, 0);
-		STWRtoPR(&_rRdS_, r3);
+		LIW(r4, (s32)iRegs[_Rt_].k);
+		LWPRtoR(r3, &_rRsS_);
 	} else {
-		iRegs[_Rd_].state = ST_UNK;
-		
-		LWPRtoR(r3, &_rRtS_);
-		LWPRtoR(r9, &_rRsS_);
-		CMPW(r9, r3);
-		LI(r3, 1);
-		STWRtoPR(&_rRdS_, r3);
-		BLT(1);
-		LI(r3, 0);
-		STWRtoPR(&_rRdS_, r3);
+		LWPRtoR(r4, &_rRtS_);
+		LWPRtoR(r3, &_rRsS_);
 	}
-}
-#endif
+	iRegs[_Rd_].state = ST_UNK;
 
-#if 1
-REC_FUNC(SLTU);
-#else
+	CMP(cr7, r3, r4);
+	MFCR(r3);
+	RLWINM(r3, r3, 29, 31, 31);
+	STWRtoPR(&_rRdS_, r3);
+}
+
 static void recSLTU() { 
 // Rd = Rs < Rt (unsigned)
 	if (!_Rd_) return;
 
 	if (IsConst(_Rs_) && IsConst(_Rt_)) {
 		MapConst(_Rd_, iRegs[_Rs_].k < iRegs[_Rt_].k);
+		return;
 	} else if(IsConst(_Rs_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
-		LWPRtoR(r3, &_rRtU_);
-		LIW(r9, iRegs[_Rs_].k);
-		CMPW(r9, r3);
-		LI(r3, 1);
-		STWRtoPR(&_rRdU_, r3);
-		BLT(1);
-		LI(r3, 0);
-		STWRtoPR(&_rRdU_, r3);
+		LWPRtoR(r4, &_rRtU_);
+		LIW(r3, iRegs[_Rs_].k);
 	} else if (IsConst(_Rt_)) {
-		iRegs[_Rd_].state = ST_UNK;
-		
-		LWPRtoR(r9, &_rRsU_);
-		LIW(r3, iRegs[_Rt_].k);
-		CMPW(r9, r3);
-		LI(r3, 1);
-		STWRtoPR(&_rRdU_, r3);
-		BLT(1);
-		LI(r3, 0);
-		STWRtoPR(&_rRdU_, r3);
+		LIW(r4, iRegs[_Rt_].k);
+		LWPRtoR(r3, &_rRsU_);
 	} else {
-		iRegs[_Rd_].state = ST_UNK;
-		
-		LWPRtoR(r3, &_rRtU_);
-		LWPRtoR(r9, &_rRsU_);
-		CMPW(r9, r3);
-		LI(r3, 1);
-		STWRtoPR(&_rRdU_, r3);
-		BLT(1);
-		LI(r3, 0);
-		STWRtoPR(&_rRdU_, r3);
+		LWPRtoR(r4, &_rRtU_);
+		LWPRtoR(r3, &_rRsU_);
 	}
+	iRegs[_Rd_].state = ST_UNK;
+
+	SUBFC(r4, r4, r3);
+	SUBFE(r4, r4, r4);
+	NEG(r4, r4);
+	STWRtoPR(&_rRdU_, r4);
 }
 #endif
 //End of * Register arithmetic
@@ -1143,8 +1041,8 @@ static void recLB() {
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
-    
-		if ((t & 0xfff0)  == 0xbfc0) {
+
+		if ((t & 0xfff0) == 0xbfc0) {
 			if (!_Rt_) return;
 			// since bios is readonly it won't change
 			MapConst(_Rt_, psxRs8(addr));
@@ -1188,7 +1086,7 @@ static void recLBU() {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
 
-		if ((t & 0xfff0)  == 0xbfc0) {
+		if ((t & 0xfff0) == 0xbfc0) {
 			if (!_Rt_) return;
 			// since bios is readonly it won't change
 			MapConst(_Rt_, psxRu8(addr));
@@ -1232,7 +1130,7 @@ static void recLH() {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
 	
-		if ((t & 0xfff0)  == 0xbfc0) {
+		if ((t & 0xfff0) == 0xbfc0) {
 			if (!_Rt_) return;
 			// since bios is readonly it won't change
 			MapConst(_Rt_, psxRs16(addr));
@@ -1590,7 +1488,6 @@ static void recSH() {
 
 static void recSW() {
 // mem[Rs + Im] = Rt
-	//u32 *b1, *b2;
 
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
@@ -1749,29 +1646,26 @@ static void recSLLV() {
 
 	if (IsConst(_Rt_) && IsConst(_Rs_)) {
 		MapConst(_Rd_, iRegs[_Rt_].k << (iRegs[_Rs_].k & 0x1f));
+		return;
 	}
 	else if (IsConst(_Rs_)) {
-		iRegs[_Rd_].state = ST_UNK;
 		LWPRtoR(r3, &_rRtU_);
-		if(iRegs[_Rs_].k & 0x1f) SLWI(r3, r3, (iRegs[_Rs_].k & 0x1f));
-		STWRtoPR(&_rRdU_, r3);
+		LIW(r9, (iRegs[_Rs_].k & 0x1f));
 	}
 	else if (IsConst(_Rt_)) {
-		iRegs[_Rd_].state = ST_UNK;
 		LIW(r3, iRegs[_Rt_].k);
 		LWPRtoR(r9, &_rRsU_);
 		RLWINM(r9, r9, 0, 27, 31); // &0x1f
-		SLW(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	}
 	else {
-		iRegs[_Rd_].state = ST_UNK;
 		LWPRtoR(r3, &_rRtU_);
 		LWPRtoR(r9, &_rRsU_);
 		RLWINM(r9, r9, 0, 27, 31); // &0x1f
-		SLW(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	}
+	iRegs[_Rd_].state = ST_UNK;
+
+	SLW(r3, r3, r9);
+	STWRtoPR(&_rRdU_, r3);
 }
 
 static void recSRLV() {
@@ -1780,29 +1674,26 @@ static void recSRLV() {
 
 	if (IsConst(_Rt_) && IsConst(_Rs_)) {
 		MapConst(_Rd_, iRegs[_Rt_].k >> (iRegs[_Rs_].k & 0x1f));
+		return;
 	}
 	else if (IsConst(_Rs_)) {
-		iRegs[_Rd_].state = ST_UNK;
 		LWPRtoR(r3, &_rRtU_);
-		if(iRegs[_Rs_].k & 0x1f) SRWI(r3, r3, (iRegs[_Rs_].k & 0x1f));
-		STWRtoPR(&_rRdU_, r3);
+		LIW(r9, (iRegs[_Rs_].k & 0x1f));
 	}
 	else if (IsConst(_Rt_)) {
-		iRegs[_Rd_].state = ST_UNK;
 		LIW(r3, iRegs[_Rt_].k);
 		LWPRtoR(r9, &_rRsU_);
 		RLWINM(r9, r9, 0, 27, 31); // &0x1f
-		SRW(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	}
 	else {
-		iRegs[_Rd_].state = ST_UNK;
 		LWPRtoR(r3, &_rRtU_);
 		LWPRtoR(r9, &_rRsU_);
 		RLWINM(r9, r9, 0, 27, 31); // &0x1f
-		SRW(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	}
+	iRegs[_Rd_].state = ST_UNK;
+
+	SRW(r3, r3, r9);
+	STWRtoPR(&_rRdU_, r3);
 }
 
 static void recSRAV() {
@@ -1811,32 +1702,26 @@ static void recSRAV() {
 
 	if (IsConst(_Rt_) && IsConst(_Rs_)) {
 		MapConst(_Rd_, (s32)iRegs[_Rt_].k >> (iRegs[_Rs_].k & 0x1f));
+		return;
 	}
 	else if (IsConst(_Rs_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LWPRtoR(r3, &_rRtU_);
-		if(iRegs[_Rs_].k & 0x1f) SRAWI(r3, r3, (iRegs[_Rs_].k & 0x1f));
-		STWRtoPR(&_rRdU_, r3);
+		LIW(r9, (iRegs[_Rs_].k & 0x1f));
 	}
 	else if (IsConst(_Rt_)) {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LIW(r3, iRegs[_Rt_].k);
 		LWPRtoR(r9, &_rRsU_);
 		RLWINM(r9, r9, 0, 27, 31); // &0x1f
-		SRAW(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	}
 	else {
-		iRegs[_Rd_].state = ST_UNK;
-
 		LWPRtoR(r3, &_rRtU_);
 		LWPRtoR(r9, &_rRsU_);
 		RLWINM(r9, r9, 0, 27, 31); // &0x1f
-		SRAW(r3, r3, r9);
-		STWRtoPR(&_rRdU_, r3);
 	}
+	iRegs[_Rd_].state = ST_UNK;
+
+	SRAW(r3, r3, r9);
+	STWRtoPR(&_rRdU_, r3);
 }
 #endif
 
@@ -1936,35 +1821,17 @@ static void recBEQ() {
 		}
 		else if (IsConst(_Rs_)) {
 			LWPRtoR(r3, &_rRtU_);
-			if ((iRegs[_Rs_].k & 0xffff) == iRegs[_Rs_].k) {
-				CMPLWI(r3, iRegs[_Rs_].k);
-			}
-			else if ((s32)(s16)iRegs[_Rs_].k == (s32)iRegs[_Rs_].k) {
-				CMPWI(r3, iRegs[_Rs_].k);
-			}
-			else {
-				LWPRtoR(r9, &_rRsU_);
-				CMPLW(r9, r3);
-			}
+			LIW(r9, iRegs[_Rs_].k);
 		}
 		else if (IsConst(_Rt_)) {
+			LIW(r3, iRegs[_Rt_].k);
 			LWPRtoR(r9, &_rRsU_);
-			if ((iRegs[_Rt_].k & 0xffff) == iRegs[_Rt_].k) {
-				CMPLWI(r9, iRegs[_Rt_].k);
-			}
-			else if ((s32)(s16)iRegs[_Rt_].k == (s32)iRegs[_Rt_].k) {
-				CMPWI(r9, iRegs[_Rt_].k);
-			}
-			else {
-				LWPRtoR(r3, &_rRtU_);
-				CMPLW(r9, r3);
-			}
 		}
 		else {
 			LWPRtoR(r3, &_rRtU_);
 			LWPRtoR(r9, &_rRsU_);
-			CMPLW(r9, r3);
 		}
+		CMPW(r9, r3);
 		BEQ_L( b32Ptr[4] );
 
 		iBranch(pc+4, 1);
@@ -1998,35 +1865,18 @@ static void recBNE() {
 	}
 	else if (IsConst(_Rs_)) {
 		LWPRtoR(r3, &_rRtU_);
-		if ((iRegs[_Rs_].k & 0xffff) == iRegs[_Rs_].k) {
-			CMPLWI(r3, iRegs[_Rs_].k);
-		}
-		else if ((s32)(s16)iRegs[_Rs_].k == (s32)iRegs[_Rs_].k) {
-			CMPWI(r3, iRegs[_Rs_].k);
-		}
-		else {
-			LWPRtoR(r9, &_rRsU_);
-			CMPLW(r9, r3);
-		}
+		LIW(r9, iRegs[_Rs_].k);
+
 	}
 	else if (IsConst(_Rt_)) {
+		LIW(r3, iRegs[_Rt_].k);
 		LWPRtoR(r9, &_rRsU_);
-		if ((iRegs[_Rt_].k & 0xffff) == iRegs[_Rt_].k) {
-			CMPLWI(r9, iRegs[_Rt_].k);
-		}
-		else if ((s32)(s16)iRegs[_Rt_].k == (s32)iRegs[_Rt_].k) {
-			CMPWI(r9, iRegs[_Rt_].k);
-		}
-		else {
-			LWPRtoR(r3, &_rRtU_);
-			CMPLW(r9, r3);
-		}
 	}
 	else {
 		LWPRtoR(r3, &_rRtU_);
 		LWPRtoR(r9, &_rRsU_);
-		CMPLW(r9, r3);
 	}
+	CMPW(r9, r3);
 	BNE_L(b32Ptr[4]);
 
 	iBranch(pc+4, 1);
@@ -2050,8 +1900,7 @@ REC_BRANCH(BGEZ);
 static void recBLTZ() {
 // Branch if Rs < 0
 	u32 bpc = _Imm_ * 4 + pc;
-	//u32 *b;
-	
+
 	if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
 		return;
 	}
@@ -2078,97 +1927,94 @@ static void recBLTZ() {
 
 static void recBGTZ() {
 // Branch if Rs > 0
-    u32 bpc = _Imm_ * 4 + pc;
-    u32 *b;
-	
+	u32 bpc = _Imm_ * 4 + pc;
+
 	if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
 		return;
 	}
 
-    if (IsConst(_Rs_)) {
-        if ((s32)iRegs[_Rs_].k > 0) {
-            iJump(bpc); return;
-        } else {
-            iJump(pc+4); return;
-        }
-    }
+	if (IsConst(_Rs_)) {
+		if ((s32)iRegs[_Rs_].k > 0) {
+			iJump(bpc); return;
+		} else {
+			iJump(pc+4); return;
+		}
+	}
 
 	LWPRtoR(r3, &_rRsU_);
-    CMPWI(r3, 0);
-    BGT_L(b32Ptr[4]);
-    
-    iBranch(pc+4, 1);
+	CMPWI(r3, 0);
+	BGT_L(b32Ptr[4]);
 
-    B_DST(b32Ptr[4]);
+	iBranch(pc+4, 1);
 
-    iBranch(bpc, 0);
-    pc+=4;
+	B_DST(b32Ptr[4]);
+
+	iBranch(bpc, 0);
+	pc += 4;
 }
 
 static void recBLTZAL() {
 // Branch if Rs < 0
-    u32 bpc = _Imm_ * 4 + pc;
-    u32 *b;
-	
+	u32 bpc = _Imm_ * 4 + pc;
+
 	if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
 		return;
 	}
 
-    if (IsConst(_Rs_)) {
-        if ((s32)iRegs[_Rs_].k < 0) {
-            MapConst(31, pc + 4);
+	if (IsConst(_Rs_)) {
+		if ((s32)iRegs[_Rs_].k < 0) {
+			MapConst(31, pc + 4);
 
-            iJump(bpc); return;
-        } else {
-            iJump(pc+4); return;
-        }
-    }
+			iJump(bpc); return;
+		} else {
+			iJump(pc+4); return;
+		}
+	}
 
 	LWPRtoR(r3, &_rRsU_);
-    CMPWI(r3, 0);
-    BLT_L(b32Ptr[4]);
-    
-    iBranch(pc+4, 1);
+	CMPWI(r3, 0);
+	BLT_L(b32Ptr[4]);
 
-    B_DST(b32Ptr[4]);
-    
-    MapConst(31, pc + 4);
+	iBranch(pc+4, 1);
 
-    iBranch(bpc, 0);
-    pc+=4;
+	B_DST(b32Ptr[4]);
+
+	MapConst(31, pc + 4);
+
+	iBranch(bpc, 0);
+	pc+=4;
 }
 
 static void recBGEZAL() {
 // Branch if Rs >= 0
-    u32 bpc = _Imm_ * 4 + pc;
-    u32 *b;
-	
+	u32 bpc = _Imm_ * 4 + pc;
+
 	if (bpc == pc+4 && psxTestLoadDelay(_Rs_, PSXMu32(bpc)) == 0) {
 		return;
 	}
-	
-    if (IsConst(_Rs_)) {
-        if ((s32)iRegs[_Rs_].k >= 0) {
-            MapConst(31, pc + 4);
 
-            iJump(bpc); return;
-        } else {
-            iJump(pc+4); return;
-        }
-    }
+	if (IsConst(_Rs_)) {
+		if ((s32)iRegs[_Rs_].k >= 0) {
+			MapConst(31, pc + 4);
+
+			iJump(bpc); return;
+		} else {
+			iJump(pc+4); return;
+		}
+	}
 
 	LWPRtoR(r3, &_rRsU_);
-    CMPWI(r3, 0);
-    BGE_L(b32Ptr[4]);
-    
-    iBranch(pc+4, 1);
+	CMPWI(r3, 0);
+	BGE_L(b32Ptr[4]);
 
-    B_DST(b32Ptr[4]);
-    
-    MapConst(31, pc + 4);
+	iBranch(pc+4, 1);
 
-    iBranch(bpc, 0);
-    pc+=4;
+	B_DST(b32Ptr[4]);
+
+	MapConst(31, pc + 4);
+
+	iBranch(bpc, 0);
+	pc += 4;
 }
 
 static void recBLEZ() {
@@ -2224,7 +2070,7 @@ static void recBGEZ() {
 	iBranch(pc+4, 1);
 
 	B_DST(b32Ptr[4]);
-	
+
 	iBranch(bpc, 0);
 	pc+=4;
 }
