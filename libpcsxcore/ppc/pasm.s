@@ -43,7 +43,6 @@
 recRun:
 	/* prologue code */
 	mflr	r0
-	stmw	r14, -(32-14)*4(r1)
 	mtctr	r3
 	stw		r0, 4(r1)
 	stwu	r1, -((32-14)*4+8)(r1)
@@ -62,7 +61,6 @@ returnPC:
 	lwz		r0, (32-14)*4+8+4(r1)
 	addi	r1, r1, (32-14)*4+8
 	mtlr	r0
-	lmw		r14, -(32-14)*4(r1)
 	blr
 //}*/
 

@@ -77,8 +77,6 @@ static int branch;		/* set for branch */
 static u32 target;		/* branch target */
 static u32 resp;
 
-u32 *ptr;
-
 u32 cop2readypc = 0;
 u32 idlecyclecount = 0;
 
@@ -89,8 +87,6 @@ typedef struct {
 } iRegisters;
 
 static iRegisters iRegs[32];
-
-
 
 #define ST_UNK      0x00
 #define ST_CONST    0x01
@@ -178,13 +174,10 @@ static void move_to_mem(u32 from) {
 	while(from < (u32)(u8*)ppcPtr) {
 		__asm__ __volatile__("dcbst 0,%0" : : "r" (from));
 		__asm__ __volatile__("icbi 0,%0" : : "r" (from));
+		__asm__ __volatile__("sync");
+		__asm__ __volatile__("isync");
 		from += 4;
 	}
-	__asm__ __volatile__("sync");
-	__asm__ __volatile__("isync");
-
-	//sprintf((char *)ppcPtr, "PC=%08x", pcold);
-	//ppcPtr += strlen((char *)ppcPtr);
 }
 
 static int iLoadTest() {
@@ -562,7 +555,6 @@ static void recError() {
 	recFunc = (void (**)()) (u32)p;
 
 	recRun(*recFunc);
-
 }
 
 static void recExecute() {
@@ -677,7 +669,7 @@ static void (*recCP2BSC[32])() = {
 static void recRecompile() {
 	//static int recCount = 0;
 	char *p;
-	//u32 *ptr;
+	u32 *ptr;
 	cop2readypc = 0;
 	idlecyclecount = 0;
 	resp = 0;
@@ -694,7 +686,7 @@ static void recRecompile() {
 
 	pcold = pc = psxRegs.pc;
 
-	for (count=0; count<500;) {
+	for (count = 0; count < 500;) {
 		p = (char *)PSXM(pc);
 		if (p == NULL) recError();
 		psxRegs.code = GETLE32((u32 *)p);

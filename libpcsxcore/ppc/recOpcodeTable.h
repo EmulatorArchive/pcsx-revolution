@@ -1796,7 +1796,7 @@ static void recMTLO() {
 #endif
 /* - branch ops - */
 
-#if 0
+#if 1
 REC_BRANCH(BEQ);     // *FIXME
 #else
 static void recBEQ() {
@@ -1844,7 +1844,7 @@ static void recBEQ() {
 }
 #endif
 
-#if 0
+#if 1
 REC_BRANCH(BNE);     // *FIXME
 #else
 static void recBNE() {
