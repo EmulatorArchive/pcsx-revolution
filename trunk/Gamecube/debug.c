@@ -14,7 +14,7 @@
 //#include "usb.h"
 
 char text[DEBUG_TEXT_HEIGHT][DEBUG_TEXT_WIDTH];
-char printToSD = 1;
+static char printToSD = 1;
 
 #ifdef SHOW_DEBUG
 char txtbuffer[1024];
@@ -28,7 +28,7 @@ static void check_heap_space(void){
 }
 #endif
 
-void DEBUG_update() {
+void DEBUG_update(void) {
 	#ifdef SHOW_DEBUG
 	int i;
 	long long nowTick = gettime();
@@ -42,12 +42,12 @@ void DEBUG_update() {
 	#endif
 }
 
-int flushed = 0;
-int writtenbefore = 0;
-int amountwritten = 0;
+static int flushed = 0;
+static int writtenbefore = 0;
+static int amountwritten = 0;
 //char *dump_filename = "dev0:\\PSXISOS\\debug.txt";
-char *dump_filename = "/PSXISOS/debug.txt";
-FILE* fdebug = NULL;
+static char *dump_filename = "/PSXISOS/debug.txt";
+static FILE* fdebug = NULL;
 void DEBUG_print(char* string,int pos){
 
 	#ifdef SHOW_DEBUG
@@ -102,8 +102,8 @@ void DEBUG_print(char* string,int pos){
 
 
 #define MAX_STATS 20
-unsigned int stats_buffer[MAX_STATS];
-unsigned int avge_counter[MAX_STATS];
+static unsigned int stats_buffer[MAX_STATS];
+static unsigned int avge_counter[MAX_STATS];
 void DEBUG_stats(int stats_id, char *info, unsigned int stats_type, unsigned int adjustment_value) 
 {
 	#ifdef SHOW_DEBUG

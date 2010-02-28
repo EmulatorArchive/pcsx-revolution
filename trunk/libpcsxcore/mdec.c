@@ -94,7 +94,7 @@ static const u32 zscan[ DCTSIZE2 ] =
 #		define WORD_XOR_LE(a) ((a) ^ 2)
 #	else
 #		define WORD_XOR_LE(a) ((a) ^ 0)
-#endif
+#	endif
 
 static u16 mdec_output[ 24 * 16 ];
 
