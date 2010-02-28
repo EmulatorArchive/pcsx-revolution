@@ -395,7 +395,7 @@ static void ReadConfigFile(void)
  FILE *in;char t[256];int len;
  char * pB, * p;
 
-#ifndef __GAMECUBE__
+#ifndef GEKKO
  if(pConfigFile)  
   {
    strcpy(t,pConfigFile); 

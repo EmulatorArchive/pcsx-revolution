@@ -158,7 +158,7 @@ static void Return()
 
 static void UpdateCycle(u32 amount) {
 	LWPRtoR(r9, &psxRegs.evtCycleCountdown);
-	ADDI(r9, r9, -amount);
+	SUBI(r9, r9, amount);
 	STWRtoPR(&psxRegs.evtCycleCountdown, r9);
 }
 

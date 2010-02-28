@@ -77,11 +77,18 @@ int LoadConfig()
 	char *data, *tmp;
 
 	char path[255];
+#ifdef HW_RVL
 	strcpy(path, "sd:/pcsx-r/config.ini");
-
+#else
+	strcpy(path, "carda:/pcsx-r/config.ini");
+#endif
 	if (stat(path, &buf) == -1)
 	{
+#ifdef HW_RVL
 		strcpy(path, "usb:/pcsx-r/config.ini");
+#else
+		strcpy(path, "cardb:/pcsx-r/config.ini");
+#endif
 		if (stat(path, &buf) == -1)
 			return -1;
 	}
@@ -134,11 +141,20 @@ void SaveConfig() {
 	FILE *f;
 
 	char path[255];
+#ifdef HW_RVL
 	strcpy(path, "sd:/pcsx-r/config.ini");
+#else
+	strcpy(path, "carda:/pcsx-r/config.ini");
+#endif
+
 	f = fopen(path, "w");
 	if (f == NULL)
 	{
+#ifdef HW_RVL
 		strcpy(path, "usb:/pcsx-r/config.ini");
+#else
+		strcpy(path, "cardb:/pcsx-r/config.ini");
+#endif
 		f = fopen(path, "w");
 		if (f == NULL)
 			return;
@@ -187,11 +203,21 @@ void GPUReadConfig()
 	Settings.GPU.FrameSkip = 0;
 
 	char path[255];
-	strcpy(path, "sd:/pcsx-r/video.ini");
+	
+#ifdef HW_RVL
+		strcpy(path, "sd:/pcsx-r/video.ini");
+#else
+		strcpy(path, "carda:/pcsx-r/video.ini");
+#endif
 
 	if (stat(path, &buf) == -1)
 	{
+#ifdef HW_RVL
 		strcpy(path, "usb:/pcsx-r/video.ini");
+#else
+		strcpy(path, "cardb:/pcsx-r/video.ini");
+#endif
+
 		if (stat(path, &buf) == -1)
 			return;
 	}
@@ -236,11 +262,20 @@ void GPUWriteConfig()
 	FILE *f;
 
 	char path[255];
-	strcpy(path, "sd:/pcsx-r/video.ini");
+#ifdef HW_RVL
+		strcpy(path, "sd:/pcsx-r/video.ini");
+#else
+		strcpy(path, "carda:/pcsx-r/video.ini");
+#endif
+
 	f = fopen(path, "w");
 	if (f == NULL)
 	{
+#ifdef HW_RVL
 		strcpy(path, "usb:/pcsx-r/video.ini");
+#else
+		strcpy(path, "cardb:/pcsx-r/video.ini");
+#endif
 		f = fopen(path, "w");
 		if (f == NULL)
 			return;
@@ -260,11 +295,20 @@ void PADWriteConfig() {
 	FILE *f;
 
 	char path[255];
-	strcpy(path, "sd:/pcsx-r/pad.ini");
+#ifdef HW_RVL
+		strcpy(path, "sd:/pcsx-r/pad.ini");
+#else
+		strcpy(path, "carda:/pcsx-r/pad.ini");
+#endif
+
 	f = fopen(path, "w");
 	if (f == NULL)
 	{
+#ifdef HW_RVL
 		strcpy(path, "usb:/pcsx-r/pad.ini");
+#else
+		strcpy(path, "cardb:/pcsx-r/pad.ini");
+#endif
 		f = fopen(path, "w");
 		if (f == NULL)
 			return;
@@ -320,11 +364,19 @@ static void PADReadConfig() {
 	char *data, *tmp;
 
 	char path[255];
-	strcpy(path, "sd:/pcsx-r/pad.ini");
+#ifdef HW_RVL
+		strcpy(path, "sd:/pcsx-r/pad.ini");
+#else
+		strcpy(path, "carda:/pcsx-r/pad.ini");
+#endif
 
 	if (stat(path, &buf) == -1)
 	{
+#ifdef HW_RVL
 		strcpy(path, "usb:/pcsx-r/pad.ini");
+#else
+		strcpy(path, "cardb:/pcsx-r/pad.ini");
+#endif
 		if (stat(path, &buf) == -1)
 			return;
 	}
@@ -395,13 +447,22 @@ void SPUReadConfig() {
 	Settings.SPU.CompatMode = 2;
 	Settings.SPU.SPU_IRQ_Wait = 0;
 	Settings.SPU.SingleChMode = 0;
+	Settings.SPU.Disable = 0;
 
 	char path[255];
-	strcpy(path, "sd:/pcsx-r/audio.ini");
+#ifdef HW_RVL
+		strcpy(path, "sd:/pcsx-r/audio.ini");
+#else
+		strcpy(path, "carda:/pcsx-r/audio.ini");
+#endif
 
 	if (stat(path, &buf) == -1)
 	{
+#ifdef HW_RVL
 		strcpy(path, "usb:/pcsx-r/audio.ini");
+#else
+		strcpy(path, "cardb:/pcsx-r/audio.ini");
+#endif
 		if (stat(path, &buf) == -1)
 			return;
 	}
@@ -424,6 +485,7 @@ void SPUReadConfig() {
 	GetValuel("HighCompMode", Settings.SPU.CompatMode );
 	GetValuel("SPUIRQWait", Settings.SPU.SPU_IRQ_Wait );
 	GetValuel("DisStereo", Settings.SPU.SingleChMode );
+	GetValuel("Disable", Settings.SPU.Disable );
 
 	free(data);
 
@@ -436,11 +498,21 @@ void SPUWriteConfig() {
 	FILE *f;
 
 	char path[255];
-	strcpy(path, "sd:/pcsx-r/audio.ini");
+#ifdef HW_RVL
+		strcpy(path, "sd:/pcsx-r/audio.ini");
+#else
+		strcpy(path, "carda:/pcsx-r/audio.ini");
+#endif
+
 	f = fopen(path, "w");
 	if (f == NULL)
 	{
+#ifdef HW_RVL
 		strcpy(path, "usb:/pcsx-r/audio.ini");
+#else
+		strcpy(path, "cardb:/pcsx-r/audio.ini");
+#endif
+
 		f = fopen(path, "w");
 		if (f == NULL)
 			return;
@@ -454,6 +526,7 @@ void SPUWriteConfig() {
 	SetValuel("HighCompMode", Settings.SPU.CompatMode );
 	SetValuel("SPUIRQWait", Settings.SPU.SPU_IRQ_Wait );
 	SetValuel("DisStereo", Settings.SPU.SingleChMode );
+	SetValuel("Disable", Settings.SPU.Disable );
 
 	fclose(f);
 

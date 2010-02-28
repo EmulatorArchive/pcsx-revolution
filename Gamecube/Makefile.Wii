@@ -25,13 +25,11 @@ INCLUDES	:=	./ ../libpcsxcore/ ../libpcsxcore/ppc/ ./PeopsSpu109/
 # options for code generation
 #---------------------------------------------------------------------------------
 
-CFLAGS	= -g $(MACHDEP) $(INCLUDE) -D__GAMECUBE__ -D__ppc__ \
+CFLAGS	= -g $(MACHDEP) $(INCLUDE) -D__ppc__ \
 		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -D'PACKAGE_VERSION="0.1"'
 
 ifneq ($(BUILD),debug)
-CFLAGS	+= -O2 -pipe -fno-strict-aliasing \
-		  -fomit-frame-pointer \
-		  -Wno-unused-parameter -Wno-strict-aliasing
+CFLAGS	+= -O2 -pipe -fno-strict-aliasing
 else
 CFLAGS	+= -DSHOW_DEBUG
 endif

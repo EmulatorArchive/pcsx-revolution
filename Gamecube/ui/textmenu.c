@@ -161,9 +161,10 @@ void Main_menu()
 					NeedReset = 1;
 
 					msg = NULL;
-					if( GameBrowser() == 0 )
+					int ret;
+					if( ret = GameBrowser() == 0 )
 						index = 0;
-					else 
+					else if(ret == -1)
 						msg = "Device not found";
 
 					clrscr();

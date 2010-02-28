@@ -219,6 +219,9 @@ void MULLI (int, int, s32);
 
 #define SUB(REG_DST, REG1, REG2) \
 	{SUBF(REG_DST, REG2, REG1)}
+	
+#define SUBI(REG_DST, REG1, IMM) \
+	{ADDI((REG_DST), (REG1), -(IMM))}
 
 #define SUBO(REG_DST, REG1, REG2) \
 	{SUBFO(REG_DST, REG2, REG1)}
@@ -249,6 +252,9 @@ void MULLI (int, int, s32);
 	{int _reg1 = (REG1), _reg2 = (REG2); int _dst=(REG_DST); \
         Write32(0x7C000396 | (_dst << 21) | (_reg1 << 16) |  (_reg2 << 11));}
 
+#define CNTLZW(REG_DST, REG1) \
+	{int _dst = (REG_DST); int _reg1 = (REG1); \
+        Write32(0x7C000034 | (_dst << 21) | (_reg1 << 16));}
 
 /* Branch ops */
 #define B_FROM(VAR) VAR = ppcPtr
@@ -438,13 +444,16 @@ void MULLI (int, int, s32);
 #define NOR(REG_DST, REG1, REG2) \
 	{int _reg1 = (REG1), _reg2 = (REG2); int _dst=(REG_DST); \
         Write32(0x7C0000f8 | (_reg1 << 21) | (_dst << 16) | (_reg2 << 11));}
+        
+#define NOT(REG_DST, REG1) \
+	NOR(REG_DST, REG1, REG1);
 
 #define NEG(REG_DST, REG_SRC) \
 	{int _src = (REG_SRC); int _dst=(REG_DST); \
         Write32(0x7C0000D0 | (_dst << 21) | (_src << 16));}
 
 #define NOP() \
-	{write320x60000000;}
+	{write32(0x60000000);}
 
 #define MCRXR(CR_DST) \
 	{Write32(0x7C000400 | (CR_DST << 23));}

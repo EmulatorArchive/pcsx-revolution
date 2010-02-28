@@ -61,35 +61,81 @@ GXRModeObj *vmode;				/*** Graphics Mode Object ***/
 #define DEFAULT_FIFO_SIZE ( 256 * 1024 )
 //static u8 gp_fifo[DEFAULT_FIFO_SIZE] ATTRIBUTE_ALIGN(32); /*** 3D GX FIFO ***/
 
+#define max(a, b) ((a > b) ? b : a)
+
 static inline void VideoInit()
 {
+	VIDEO_Init();
 	whichfb = 0;				/*** Frame buffer toggle ***/
 	vmode = VIDEO_GetPreferredMode(NULL);
 
-#ifdef HW_RVL
-	if( CONF_GetAspectRatio() )							// widescreen fix
+	int overscan = 1;
+	int screenwidth = 640;
+	int screenheight = 480;
+
+	int videowidth = VI_MAX_WIDTH_NTSC;
+	int videoheight = VI_MAX_HEIGHT_NTSC;
+	
+	if ((vmode->viTVMode >> 2) == VI_PAL)
 	{
-		vmode->viWidth = 678;
-		vmode->viXOrigin = (VI_MAX_WIDTH_PAL - 678)/2;
+		videowidth = VI_MAX_WIDTH_PAL;
+		videoheight = VI_MAX_HEIGHT_PAL;
 	}
-#else
-	if(VIDEO_HaveComponentCable())
-		vmode = &TVNtsc480Prog;
-#endif
-	VIDEO_Configure (vmode);
-	xfb[0] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode)); //assume PAL largest
-	xfb[1] = (u32 *) MEM_K0_TO_K1 (SYS_AllocateFramebuffer (vmode));	//fixme for progressive?
-	console_init (xfb[0], 20, 64, vmode->fbWidth, vmode->xfbHeight,
-		vmode->fbWidth * 2);
-	VIDEO_ClearFrameBuffer (vmode, xfb[0], COLOR_BLACK);
-	VIDEO_ClearFrameBuffer (vmode, xfb[1], COLOR_BLACK);
-	VIDEO_SetNextFramebuffer (xfb[0]);
-	//VIDEO_SetPostRetraceCallback (ScanPADSandReset);
-	VIDEO_SetBlack (0);
-	VIDEO_Flush ();
-	VIDEO_WaitVSync ();		/*** Wait for VBL ***/
+	
+	if (overscan)
+		vmode->viHeight = ceil((float)(videoheight * 0.95) / 8) * 8;
+	else
+		vmode->viHeight = videoheight;
+	
+	vmode->xfbHeight = vmode->viHeight;
+	vmode->efbHeight = max(vmode->xfbHeight, 528);
+	
+	if (CONF_GetAspectRatio() == CONF_ASPECT_16_9)
+	{
+        if (overscan) vmode->viWidth = videowidth * 0.95;
+		screenwidth = ((float)screenheight / 9) * 16;
+	}
+	else
+	{
+        if (overscan) vmode->viWidth = videowidth * 0.93;
+		screenwidth = ((float)screenheight / 3) * 4;
+	}
+	
+	if (overscan)
+		vmode->viWidth = ceil((float)vmode->viWidth / 16) * 16;
+	else
+		vmode->viWidth = videowidth;
+	
+	vmode->viXOrigin = (videowidth - vmode->viWidth) / 2;
+	vmode->viYOrigin = (videoheight - vmode->viHeight) / 2;
+	
+	if (overscan)
+	{
+		s8 hor_offset = 0;
+		
+		if (CONF_GetDisplayOffsetH(&hor_offset) > 0)
+			vmode->viXOrigin += hor_offset;
+	}
+	
+	VIDEO_Configure(vmode);
+	
+	xfb[0] = (u32 *)MEM_K0_TO_K1(SYS_AllocateFramebuffer(vmode));
+	xfb[1] = (u32 *)MEM_K0_TO_K1(SYS_AllocateFramebuffer(vmode));
+
+	console_init(xfb[0], 20, 64, vmode->fbWidth, vmode->xfbHeight, vmode->fbWidth * 2);
+	VIDEO_ClearFrameBuffer(vmode, xfb[0], COLOR_BLACK);
+	VIDEO_ClearFrameBuffer(vmode, xfb[1], COLOR_BLACK);
+	
+	VIDEO_SetNextFramebuffer(xfb[whichfb]);
+	VIDEO_SetBlack(FALSE);
+	VIDEO_Flush();
+	VIDEO_WaitVSync();
+	
 	if (vmode->viTVMode & VI_NON_INTERLACE)
-		VIDEO_WaitVSync ();
+		VIDEO_WaitVSync();
+	else
+	    while (VIDEO_GetNextField())
+	    	VIDEO_WaitVSync();
 
 	// setup the fifo and then init GX
 	void *gp_fifo = NULL;
@@ -99,26 +145,29 @@ static inline void VideoInit()
 	GX_Init (gp_fifo, DEFAULT_FIFO_SIZE);
  
 	// clears the bg to color and clears the z buffer
-	GX_SetCopyClear ((GXColor){0,0,0,255}, 0x00000000);
+	GX_SetCopyClear ((GXColor){0,0,0,255}, GX_MAX_Z24);
 	// init viewport
 	GX_SetViewport (0, 0, vmode->fbWidth, vmode->efbHeight, 0, 1);
 	// Set the correct y scaling for efb->xfb copy operation
-	GX_SetDispCopyYScale ((f32) vmode->xfbHeight / (f32) vmode->efbHeight);
-	GX_SetDispCopyDst (vmode->fbWidth, vmode->xfbHeight); 
-	GX_SetCullMode (GX_CULL_NONE); 
-	GX_CopyDisp(xfb[0], GX_TRUE); // This clears the efb
+	f32 yscale = GX_GetYScaleFactor(vmode->efbHeight, vmode->xfbHeight);
+	u32 xfbHeight = GX_SetDispCopyYScale(yscale);
+	GX_SetScissor(0, 0, max(vmode->fbWidth, 640), vmode->efbHeight);
+	GX_SetDispCopySrc(0, 0, max(vmode->fbWidth, 640), vmode->efbHeight);
+	GX_SetDispCopyDst(vmode->fbWidth, xfbHeight);
+	GX_SetCopyFilter(vmode->aa, vmode->sample_pattern, GX_TRUE, vmode->vfilter);
+	
+	GX_SetCullMode(GX_CULL_NONE);
+	GX_CopyDisp(xfb[0], GX_TRUE);
 }
 
 static void Initialise (void){
 	//InitDVD();
-	VIDEO_Init();
+	VideoInit();
 	PAD_Init();
 
 #ifdef HW_RVL
 	WPAD_Init();
 #endif
-
-	VideoInit();
 
 #ifdef HW_RVL
 	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);
@@ -157,16 +206,17 @@ int main(int argc, char *argv[]) {
 	if (LoadConfig() == -1)
 	{
 		strcpy(Config.Bios, "SCPH1001.BIN"); // Use actual BIOS
+#ifdef HW_RVL
 		strcpy(Config.BiosDir, "sd:/pcsx-r/bios/");
-/*
-		strcpy(Config.Mcd[0].Filename, "sd:/pcsx-r/memcards/Mcd001.mcr");
-		strcpy(Config.Mcd[1].Filename, "sd:/pcsx-r/memcards/Mcd002.mcr");
-		Config.Mcd[0].Enabled = 1;
-		Config.Mcd[1].Enabled = 1;
-*/
+
 		strcpy(Config.Mcd1, "sd:/pcsx-r/memcards/Mcd001.mcr");
 		strcpy(Config.Mcd2, "sd:/pcsx-r/memcards/Mcd002.mcr");
+#else
+		strcpy(Config.BiosDir, "/pcsx-r/bios/");
 
+		strcpy(Config.Mcd1, "/pcsx-r/memcards/Mcd001.mcr");
+		strcpy(Config.Mcd2, "/pcsx-r/memcards/Mcd002.mcr");
+#endif
 		Config.Cpu 		= 1;	//interpreter = 1, dynarec = 0
 
 		Config.PsxOut 	= 0;

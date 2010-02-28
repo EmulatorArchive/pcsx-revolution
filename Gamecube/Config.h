@@ -28,6 +28,7 @@ typedef struct {
 	int CompatMode;			// 0, 2
 	int SPU_IRQ_Wait;		// 0-1
 	int SingleChMode;		// 0-1
+	int Disable;			// 0-1
 } audio_config;
 
 typedef struct {

@@ -62,7 +62,7 @@ static int textFileBrowser(file_browser_st *file_struct){
 	int temp	= 0;
 
 	u8 page, start, limit;
-	short draw = 1;
+	u8 draw = 1;
 
 	clrscr();
 	while(1)
@@ -96,7 +96,18 @@ static int textFileBrowser(file_browser_st *file_struct){
 
 		if(GetInput(A, A, A))
 		{
-			sprintf(file_struct->path, "%s/%s", file_struct->path, dir[index].name);
+			if(index == 0 && strcmp(dir[index].name, "..") == 0) {
+				int length = strlen(file_struct->path);
+				int idx;
+				for( idx = length; idx > 0; idx-- ) {
+					char ch = file_struct->path[idx];
+					file_struct->path[idx] = '\0';
+					if( ch == '/' ) break;
+				}
+			}
+			else 
+				sprintf(file_struct->path, "%s/%s", file_struct->path, dir[index].name);
+
 			BOOL atr = dir[index].attr & S_IFDIR;
 			free(dir);
 			if(atr)
@@ -112,16 +123,18 @@ static int textFileBrowser(file_browser_st *file_struct){
 
 		if(draw)
 		{
-			draw = 0;
-			printf("\x1B[2;2H");	
-
-			printf("\x1b[33m");
-			printf("\t%s\n\n", file_struct->title);
-			printf("\tbrowsing %s:\n\n", file_struct->path);
-
+			u8 old_page = page;
 			page = index / per_page;
+			if( old_page != page ) {
+				clrscr();
+			}
 			start = page * per_page;
 			limit = ( num_entries > (start + per_page) ) ? ( start + per_page ) : num_entries;
+			printf("\x1B[2;2H");
+			printf("\x1b[33m");
+			printf("\t%s\n\n", file_struct->title);
+
+			printf("\tbrowsing %s:\n\n", file_struct->path);
 
 			for(temp = start; temp < limit; temp++)
 			{
@@ -130,6 +143,7 @@ static int textFileBrowser(file_browser_st *file_struct){
 			}
 
 			printf("\x1b[37m");
+			draw = 0;
 		}
 		VIDEO_WaitVSync();
 	}
@@ -157,22 +171,26 @@ static int MountDevice(int device)
 int GameBrowser()
 {
 	if( MountDevice(Settings.device) == -1 )
-		return -1;
+		return BROWSER_FILE_NOT_FOUND;
 
 	int ret = 0;
 
 	file_browser_st game_filename;
 	strcpy(game_filename.title, "Select game image");
 	game_filename.filter = 1;
-	sprintf(game_filename.path, "%s%s", device[Settings.device], "pcsx-r/games");
+	if(strlen(Settings.filename))
+		strcpy(game_filename.path, Settings.filename);
+	else
+		sprintf(game_filename.path, "%s%s", device[Settings.device], "pcsx-r/games");
 
 	if(ret = textFileBrowser(&game_filename) == BROWSER_FILE_NOT_FOUND)
 	{
 		sprintf(game_filename.path, "%s", device[Settings.device]);
 		ret = textFileBrowser(&game_filename);
 	}
-	if (ret == BROWSER_FILE_CHOSED)
+	if (ret == BROWSER_FILE_CHOSED) {
 		strcpy(Settings.filename, game_filename.path);
+	}
 	return ret;
 }
 

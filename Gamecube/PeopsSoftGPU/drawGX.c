@@ -27,8 +27,8 @@
 #include "prim.h"
 #include "menu.h"
 #include "swap.h"
-#include "../font.h"
-#include "../DEBUG.h"
+#include "font.h"
+#include "DEBUG.h"
 
 ////////////////////////////////////////////////////////////////////////////////////
 // misc globals
