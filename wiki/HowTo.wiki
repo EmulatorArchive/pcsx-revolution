@@ -8,7 +8,8 @@
     * Download [http://tortoisesvn.net/downloads TortoiseSVN].
     * Create folder, right click on it -> TortoiseSVN -> checkout -> http://pcsx-revolution.googlecode.com/svn/trunk/
     * Run Programmer's Notepad (installed with devkitPro)
-    * Find the Makefile.Wii from the source you downloaded. Click Tools > Make.
+    * File->"Open Project(s)...", find pcsx-revolution project file.
+    * Tools->make (wii or gc at your will).
    # *Unix*: 
     * Install subversion.
     * svn checkout http://pcsx-revolution.googlecode.com/svn/trunk/ pcsx-revolution-read-only
