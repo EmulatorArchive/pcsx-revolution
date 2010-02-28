@@ -44,7 +44,7 @@ extern R3000Acpu psxRec;
 
 //#define GTE_TIMING
 
-enum PsxEventType
+typedef enum
 {
 	PsxEvt_Counter0 = 0,
 
@@ -70,7 +70,7 @@ enum PsxEventType
 	PsxEvt_Idle = PsxEvt_CountNonIdle,
 
 	PsxEvt_CountAll		// total number of schedulable event types in the Psx
-};
+} PsxEventType;
 
 typedef struct int_timer {
 	u32 time;
@@ -221,10 +221,10 @@ void psxJumpTest();
 u32 psxGetCycle();
 s32 GetPendingCycles();
 
-void psx_int_add(int n, s32 ecycle);
-void psx_int_remove(int n);
+void psx_int_add(PsxEventType n, s32 ecycle);
+void psx_int_remove(PsxEventType n);
 void psxRaiseExtInt( uint irq );
-u8 psxIsActiveEvent(int n);
+u8 psxIsActiveEvent(PsxEventType n);
 
 void advance_pc(s32 offset);
 void psxTestIntc();

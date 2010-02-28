@@ -112,9 +112,9 @@ s32 GetPendingCycles()
 	return psxRegs.evtCycleDuration - psxRegs.evtCycleCountdown;
 }
 
-static __inline void psx_event_add( int n, u32 time )
+static __inline void psx_event_add( events_t *event, u32 time )
 {
-	Events.list[n].cycle = time;
+	event->cycle = time;
 
 	// Find the sorted insertion point into the list of active events:
 	events_t* curEvt = Events.next;
@@ -127,22 +127,22 @@ static __inline void psx_event_add( int n, u32 time )
 		// last .. so the following conditional checks for it and schedules in front of it.
 		if( (curEvt == &Events.list[PsxEvt_Idle]) || ((runningDelta + curEvt->time) > time) )
 		{
-			Events.list[n].next	= curEvt;
-			Events.list[n].time	= time - runningDelta;
-			curEvt->time	-= Events.list[n].time;
+			event->next	= curEvt;
+			event->time	= time - runningDelta;
+			curEvt->time	-= event->time;
 
 			if( prevEvt == NULL )
 			{
-				Events.next = &Events.list[n];
+				Events.next = event;
 
 				// Node is being inserted at the head of the list, so reschedule the PSX's
 				// master counters as needed.
 
-				psxRegs.evtCycleDuration	= Events.list[n].time;
-				psxRegs.evtCycleCountdown	= Events.list[n].cycle;
+				psxRegs.evtCycleDuration	= event->time;
+				psxRegs.evtCycleCountdown	= event->cycle;
 			}
 			else
-				prevEvt->next = &Events.list[n];
+				prevEvt->next = event;
 			break;
 		}
 		runningDelta += curEvt->time;
@@ -153,14 +153,14 @@ static __inline void psx_event_add( int n, u32 time )
 	Events.list[PsxEvt_Idle].time = 0x4000;
 }
 
-static __inline void psx_event_remove( int n )
+static __inline void psx_event_remove( events_t *event )
 {
-	if( Events.list[n].next == NULL ) return;		// not even scheduled.
-	Events.list[n].next->time += Events.list[n].time;
+	if( event->next == NULL ) return;		// not even scheduled.
+	event->next->time += event->time;
 
-	if( Events.next == &Events.list[n] )
+	if( Events.next == event )
 	{
-		Events.next = Events.list[n].next;
+		Events.next = event->next;
 		
 		int psxPending 				= GetPendingCycles();
 		psxRegs.evtCycleDuration	= Events.next->time;
@@ -171,41 +171,41 @@ static __inline void psx_event_remove( int n )
 		events_t* curEvt = Events.next;
 		while( 1 )
 		{
-			if( curEvt->next == &Events.list[n] )
+			if( curEvt->next == event )
 			{
-				curEvt->next = Events.list[n].next;
+				curEvt->next = event->next;
 				break;
 			}
 			curEvt = curEvt->next;
 		}
 	}
 
-	Events.list[n].next = NULL;
+	event->next = NULL;
 	Events.list[PsxEvt_Idle].time = 0x4000;
 }
 
-__inline void psx_int_add( int n, s32 ecycle )
+__inline void psx_int_add( PsxEventType n, s32 ecycle )
 {
 	// Generally speaking games shouldn't throw ints that haven't been cleared yet.
 	// It's usually indicative os something amiss in our emulation.
 	if(Events.list[n].next != NULL)
 	{
-		psx_event_remove( n );
+		psx_event_remove( &Events.list[n] );
 		//SysPrintf("Event: %d\t Cycle: %d\tecycle: %d\ttime: %d\told time: %d\n", n, psxRegs.cycle, ecycle, psxRegs.cycle + ecycle, Events.list[n].time);
 	}
 #ifdef PRINT_EVENTS
 	SysPrintf("Event: %ld\t Cycle: %ld\tcycles: %ld\n", n, psxRegs.cycle, ecycle);
 #endif
 	//if(n < 3) SysPrintf("Event: %ld\t Cycle: %ld\tcycles: %ld\n", n, psxRegs.cycle, ecycle);
-	psx_event_add( n, ecycle );
+	psx_event_add( &Events.list[n], ecycle );
 }
 
-__inline void psx_int_remove( int n )
+__inline void psx_int_remove( PsxEventType n )
 {
-	psx_event_remove( n );
+	psx_event_remove( &Events.list[n] );
 }
 
-__inline u8 psxIsActiveEvent(int n) {
+__inline u8 psxIsActiveEvent(PsxEventType n) {
 	return (Events.list[n].next != NULL);
 }
 

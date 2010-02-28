@@ -69,10 +69,6 @@ static inline void VideoInit()
 	whichfb = 0;				/*** Frame buffer toggle ***/
 	vmode = VIDEO_GetPreferredMode(NULL);
 
-	int overscan = 1;
-	int screenwidth = 640;
-	int screenheight = 480;
-
 	int videowidth = VI_MAX_WIDTH_NTSC;
 	int videoheight = VI_MAX_HEIGHT_NTSC;
 	
@@ -82,40 +78,32 @@ static inline void VideoInit()
 		videoheight = VI_MAX_HEIGHT_PAL;
 	}
 	
-	if (overscan)
-		vmode->viHeight = ceil((float)(videoheight * 0.95) / 8) * 8;
-	else
-		vmode->viHeight = videoheight;
+	vmode->viHeight = ceil((float)(videoheight * 0.95) / 8) * 8;
 	
 	vmode->xfbHeight = vmode->viHeight;
 	vmode->efbHeight = max(vmode->xfbHeight, 528);
-	
+#ifdef HW_RVL
 	if (CONF_GetAspectRatio() == CONF_ASPECT_16_9)
 	{
-        if (overscan) vmode->viWidth = videowidth * 0.95;
-		screenwidth = ((float)screenheight / 9) * 16;
+        vmode->viWidth = videowidth * 0.95;
 	}
 	else
+#endif
 	{
-        if (overscan) vmode->viWidth = videowidth * 0.93;
-		screenwidth = ((float)screenheight / 3) * 4;
+        vmode->viWidth = videowidth * 0.93;
 	}
 	
-	if (overscan)
-		vmode->viWidth = ceil((float)vmode->viWidth / 16) * 16;
-	else
-		vmode->viWidth = videowidth;
+	vmode->viWidth = ceil((float)vmode->viWidth / 16) * 16;
 	
 	vmode->viXOrigin = (videowidth - vmode->viWidth) / 2;
 	vmode->viYOrigin = (videoheight - vmode->viHeight) / 2;
+
+#ifdef HW_RVL
+	s8 hor_offset = 0;
 	
-	if (overscan)
-	{
-		s8 hor_offset = 0;
-		
-		if (CONF_GetDisplayOffsetH(&hor_offset) > 0)
-			vmode->viXOrigin += hor_offset;
-	}
+	if (CONF_GetDisplayOffsetH(&hor_offset) > 0)
+		vmode->viXOrigin += hor_offset;
+#endif
 	
 	VIDEO_Configure(vmode);
 	
