@@ -376,7 +376,7 @@ static void ConfigureSPU()
 
 		if(GetInput(DOWN, DOWN, DOWN))
 		{
-			if(index < 8) index++;
+			if(index < 9) index++;
 		}
 
 		if(GetInput(A, A, A)) 
@@ -425,8 +425,12 @@ static void ConfigureSPU()
 				case 7: 
 					Settings.SPU.SingleChMode ^= 1;
 					break;
+					
+				case 8: 
+					Settings.SPU.Disable ^= 1;
+					break;
 
-				case 8:
+				case 9:
 					SPUWriteConfig();
 					return;
 					break;
@@ -466,8 +470,11 @@ static void ConfigureSPU()
 
 		printf("\x1b[%um", (index == 7) ? 32 : 37);
 		printf("\tSingle channel: %s\n", Settings.SPU.SingleChMode ? "yes" : "no");
-
+		
 		printf("\x1b[%um", (index == 8) ? 32 : 37);
+		printf("\tDisable sound: %s\n", Settings.SPU.Disable ? "yes" : "no");
+
+		printf("\x1b[%um", (index == 9) ? 32 : 37);
 		printf("\n\tBack\n\n");
 
 		printf("\x1b[37m");								// Reset Color

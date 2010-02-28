@@ -40,11 +40,11 @@ static void recSLTIU() {
 	if (!_Rt_) return;
 
 	if (IsConst(_Rs_)) {
-		MapConst(_Rt_, iRegs[_Rs_].k < _ImmU_);
+		MapConst(_Rt_, iRegs[_Rs_].k < (u32)_ImmU_);
 	} else {
 		iRegs[_Rt_].state = ST_UNK;
 		LWPRtoR(r3, &_rRsU_);
-		LIW(r4, _ImmU_);
+		LIW(r4, _Imm_);
 		SUBFC(r4, r4, r3);
 		SUBFE(r4, r4, r4);
 		NEG(r4, r4);
@@ -83,7 +83,7 @@ static void recANDI() {
 		LWPRtoR(r3, &_rRsU_);
 		LIW(r4, _ImmU_);
 		AND(r3, r4, r3);
-		RLWINM(r3, r3, 0, 16, 31);
+		//RLWINM(r3, r3, 0, 16, 31);
 		STWRtoPR(&_rRtU_, r3);
 	}
 }
@@ -261,7 +261,7 @@ static void recXOR() {
 	if (!_Rd_) return;
 
 	if (IsConst(_Rs_) && IsConst(_Rt_)) {
-		MapConst(_Rd_, iRegs[_Rs_].k | iRegs[_Rt_].k);
+		MapConst(_Rd_, iRegs[_Rs_].k ^ iRegs[_Rt_].k);
 		return;
 	} else if (IsConst(_Rs_)) {
 		LIW(r9, iRegs[_Rs_].k);
@@ -284,7 +284,7 @@ static void recNOR() {
 	if (!_Rd_) return;
 
 	if (IsConst(_Rs_) && IsConst(_Rt_)) {
-		MapConst(_Rd_, iRegs[_Rs_].k | iRegs[_Rt_].k);
+		MapConst(_Rd_, ~(iRegs[_Rs_].k | iRegs[_Rt_].k));
 		return;
 	} else if (IsConst(_Rs_)) {
 		LIW(r9, iRegs[_Rs_].k);
@@ -452,16 +452,10 @@ static void recDIV() {
 	CMPWI(r9, 0);
 	BNE_L(b32Ptr[0]);	// if(Rt == 0)
 
-	CMPWI(r3, 0);
-	BLT_L(b32Ptr[1]);	// Rs >= 0 ? ...
-	LI(r9, -1);		// then -1 ...
+	NOT(r9, r3);
 	STWRtoPR(&_rHiS_, r3);
-	STWRtoPR(&_rLoS_, r9);
-	B_L(b32Ptr[2]);
-
-	B_DST(b32Ptr[1]);	// else 1.
-	LI(r9, 1);
-	STWRtoPR(&_rHiS_, r3);
+	SRAWI(r9, r9, 31);
+	ORI(r9, r9, 1);
 	STWRtoPR(&_rLoS_, r9);
 	B_L(b32Ptr[2]);
 
@@ -472,8 +466,8 @@ static void recDIV() {
 	B_FROM(b32Ptr[4]);
 	DIVW(r10, r3, r9);	// rLo = Rs / Rt 
 	MULLW(r9, r10, r9);
-	SUBF(r9, r9, r3);	// rHi = Rs % Rt
 	STWRtoPR(&_rLoS_, r10);
+	SUBF(r9, r9, r3);	// rHi = Rs % Rt
 	STWRtoPR(&_rHiS_, r9);
 	B_L(b32Ptr[2]);
 	
@@ -519,19 +513,19 @@ static void recDIVU() {
 	}
 
 	CMPWI(r9, 0);
-	BNE_L(b32Ptr[0]);
+	BEQ_L(b32Ptr[0]);
 
-	LI(r9, -1);
-	STWRtoPR(&_rHiU_, r3);
-	STWRtoPR(&_rLoU_, r9);
+	DIVWU(r10, r3, r9);	// rLo = Rs / Rt 
+	MULLW(r9, r10, r9);
+	STWRtoPR(&_rLoU_, r10);
+	SUBF(r9, r9, r3);	// rHi = Rs % Rt
+	STWRtoPR(&_rHiU_, r9);
 	B_L(b32Ptr[2]);
 
 	B_DST(b32Ptr[0]);
-	DIVWU(r10, r3, r9);	// rLo = Rs / Rt 
-	MULLW(r9, r10, r9);
-	SUBF(r9, r9, r3);	// rHi = Rs % Rt
-	STWRtoPR(&_rLoU_, r10);
-	STWRtoPR(&_rHiU_, r9);
+	LI(r9, -1);
+	STWRtoPR(&_rHiU_, r3);
+	STWRtoPR(&_rLoU_, r9);
 
 	B_DST(b32Ptr[2]);
 }
@@ -545,8 +539,8 @@ REC_FUNC(SWL);
 #else
 static void recSWL() {
 
+#if 0
 	if (IsConst(_Rs_)) {
-#if 1
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
 		const u32 shift = (addr & 3) << 3;
@@ -676,22 +670,24 @@ static void recSWL() {
 			}
 		}
 #endif
-#endif
+
 	}
-	
+#endif
+
 	SetArg_OfB(r12);
 	RLWINM(r10, r12, 3, 27, 28);	// (addr & 3) << 3
 	RLWINM(r12, r12, 0, 0, 29);		// (addr & ~3)
 	MR(PPCARG1, r12);
 	CALLFunc((u32)psxMemRead32);
+
+	LI(r4, -256);
+	SLW(r4, r4, r10);
 	if (IsConst(_Rt_)) {
 		LIW(r11, iRegs[_Rt_].k);
 	}
 	else {
 		LWPRtoR(r11, &_rRtU_);
 	}
-	LI(r4, -256);
-	SLW(r4, r4, r10);
 	SUBFIC(r10, r10, 24);
 	AND(r4, r3, r4);
 	MR(PPCARG1, r12);
@@ -705,9 +701,8 @@ static void recSWL() {
 REC_FUNC(SWR);
 #else
 static void recSWR() {
-
+#if 0
 	if (IsConst(_Rs_)) {
-#if 1
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
 		const u32 shift = (addr & 3) << 3;
@@ -844,14 +839,18 @@ static void recSWR() {
 			}
 		}
 #endif
-#endif
 	}
+#endif
 
 	SetArg_OfB(r12);
 	RLWINM(r10, r12, 3, 27, 28);	// (addr & 3) << 3
 	RLWINM(r12, r12, 0, 0, 29);		// (addr & ~3)
 	MR(PPCARG1, r12);
 	CALLFunc((u32)psxMemRead32);
+
+	LIS(r4, 255);
+	SUBFIC(r9, r10, 24);
+	ORI(r4, r4, 65535);
 	if (IsConst(_Rt_)) {
 		LIW(r11, iRegs[_Rt_].k);
 	}
@@ -859,26 +858,23 @@ static void recSWR() {
 		LWPRtoR(r11, &_rRtU_);
 	}
 
-	LIS(r9, 255);
-	ORI(r9, r9, 65535);
-	SLW(r11, r11, r10);
-	SUBFIC(r10, r10, 24);
-	SRAW(r9, r9, r10);
+	SRAW(r4, r4, r9);
 
-	AND(r3, r3, r9);
-	OR(PPCARG2, r11, r3);
-
+	AND(r4, r3, r4);
 	MR(PPCARG1, r12);
+	SLW(r10, r11, r10);
+	OR(PPCARG2, r4, r10);
+
 	CALLFunc((uptr)psxMemWrite32);
+	resp += 24;
 }
 #endif
 #if 0
 REC_FUNC(LWL);
 #else
 static void recLWL() {
-
+#if 0
 	if (IsConst(_Rs_)) {
-#if 1
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
 		const u32 shift = (addr & 3) << 3;
@@ -923,27 +919,27 @@ static void recLWL() {
 			STWRtoPR(&_rRtU_, r9);
 			return;
 		}
-#endif
 	}
-
+#endif
 	SetArg_OfB(r12);
 	RLWINM(PPCARG1, r12, 0, 0, 29);		// (add & ~3)
 	CALLFunc((u32)psxMemRead32);
 	if(_Rt_) {
 		iRegs[_Rt_].state = ST_UNK;
 
-		RLWINM(r12, r12, 3, 27, 28);	// (addr & 3) << 3
 		LIS(r9, 255);
-		ORI(r9, r9, 65535);
-		SRAW(r9, r9, r12);
-		SUBFIC(r12, r12, 24);
-		SLW(r3, r3, r12);
+		RLWINM(r12, r12, 3, 27, 28);	// (addr & 3) << 3
+
 		if (IsConst(_Rt_)) {
 			LIW(r11, iRegs[_Rt_].k);
 		}
 		else {
 			LWPRtoR(r11, &_rRtU_);
 		}
+		ORI(r9, r9, 65535);
+		SRAW(r9, r9, r12);
+		SUBFIC(r12, r12, 24);
+		SLW(r3, r3, r12);
 		AND(r9, r9, r11);
 		OR(r3, r3, r9);
 
@@ -955,9 +951,8 @@ static void recLWL() {
 REC_FUNC(LWR);
 #else
 static void recLWR() {
-
+#if 0
 	if (IsConst(_Rs_)) {
-#if 1
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
 		const u32 shift = (addr & 3) << 3;
@@ -1002,8 +997,8 @@ static void recLWR() {
 			STWRtoPR(&_rRtU_, r9);
 			return;
 		}
-#endif
 	}
+#endif
 
 	SetArg_OfB(r12);
 	RLWINM(PPCARG1, r12, 0, 0, 29);		// (addr & ~3)
@@ -1013,15 +1008,16 @@ static void recLWR() {
 
 		RLWINM(r12, r12, 3, 27, 28);	// shift = (addr & 3) << 3
 		SUBFIC(r9, r12, 24);
-		LI(r10, -256);					// 0xffffff00
-		SRW(r3, r3, r12);
-		SLW(r9, r10, r9);
 		if (IsConst(_Rt_)) {
 			LIW(r11, iRegs[_Rt_].k);
 		}
 		else {
 			LWPRtoR(r11, &_rRtU_);
 		}
+		LI(r10, -256);					// 0xffffff00
+		SRW(r3, r3, r12);
+		SLW(r9, r10, r9);
+
 		AND(r9, r9, r11);
 		OR(r3, r3, r9);
 		STWRtoPR(&_rRtU_, r3);
@@ -1117,7 +1113,7 @@ static void recLBU() {
 
 	if (_Rt_) {
 		iRegs[_Rt_].state = ST_UNK;
-		RLWINM(r3, r3, 0, 24, 31);
+		//RLWINM(r3, r3, 0, 24, 31);
 		STWRtoPR(&_rRtU_, r3);
 	}
 	resp += 16;
@@ -1169,6 +1165,7 @@ static void recLH() {
 
 static void recLHU() {
 // Rt = mem[Rs + Im] (unsigned)
+#if 1
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -1250,7 +1247,7 @@ static void recLHU() {
 
 	//	SysPrintf("unhandled r16u %x\n", addr);
 	}
-
+#endif
 	SetArg_OfB(PPCARG1);
 	CALLFunc((u32)psxMemRead16);
 	if (_Rt_) {
@@ -1350,7 +1347,6 @@ else {
 		iRegs[_Rt_].state = ST_UNK;
 		STWRtoPR(&_rRtS_, r3);
 	}
-	//ADDI(r1, r1, 16);
 	resp += 16;
 }
 }
@@ -1405,7 +1401,7 @@ static void recSB() {
 
 static void recSH() {
 // mem[Rs + Im] = Rt
-
+#if 1
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -1475,7 +1471,7 @@ static void recSH() {
 		}
 //		SysPrintf("unhandled w16 %x\n", addr);
 	}
-
+#endif
 	SetArg_OfB(PPCARG1);
 	if (IsConst(_Rt_)) {
 		LIW(PPCARG2, (u16)iRegs[_Rt_].k);
@@ -1488,7 +1484,7 @@ static void recSH() {
 
 static void recSW() {
 // mem[Rs + Im] = Rt
-
+#if 1
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -1573,7 +1569,7 @@ static void recSW() {
 		}
 
 	}
-
+#endif
 	SetArg_OfB(PPCARG1);
 	if (IsConst(_Rt_)) {
 		LIW(PPCARG2, iRegs[_Rt_].k);
@@ -1734,8 +1730,8 @@ static void recSYSCALL() {
 
 	LIW(r3, pc - 4);
 	STWRtoPR(&psxRegs.pc, r3);
-	LIW(PPCARG1, 0x20);
-	LIW(PPCARG2, (branch == 1 ? 1 : 0));
+	LI(PPCARG1, 0x20);
+	LI(PPCARG2, (branch == 1 ? 1 : 0));
 	CALLFunc ((u32)psxException);
 
 	branch = 2;
@@ -2185,7 +2181,6 @@ static void recMTC0() {
 		if(_Rd_ == 12) {
 			CALLFunc((uptr)psxTestIntc);
 		}
-
 
 		if(branch == 0) {
 			branch = 2;

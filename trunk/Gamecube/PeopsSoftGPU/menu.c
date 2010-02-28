@@ -49,7 +49,7 @@ void DisplayText(void)                                 // DISPLAY TEXT
 // Build Menu buffer (== Dispbuffer without FPS)...
 void BuildDispMenu(int iInc)
 {
-#ifndef __GAMECUBE__
+#ifndef GEKKO
  if(!(ulKeybits&KEY_SHOWFPS)) return;                  // mmm, cheater ;)
 
  iMPos+=iInc;                                          // up or down
@@ -105,7 +105,7 @@ void BuildDispMenu(int iInc)
 // Some menu action...
 void SwitchDispMenu(int iStep)                         // SWITCH DISP MENU
 {
-#ifndef __GAMECUBE__
+#ifndef GEKKO
  if(!(ulKeybits&KEY_SHOWFPS)) return;                  // tststs
 
  switch(iMPos)

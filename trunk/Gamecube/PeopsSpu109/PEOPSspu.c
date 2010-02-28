@@ -104,10 +104,10 @@
 #include "record.h"
 #include "resource.h"
 
-#ifdef __GAMECUBE__
+#ifdef GEKKO
 #include <gccore.h>
 #include <ogc/lwp.h>
-#include "../Gamecube/DEBUG.h"
+#include "DEBUG.h"
 #endif
 ////////////////////////////////////////////////////////////////////////
 // spu version infos/name
@@ -176,7 +176,7 @@ HWND    hWMain=0;                                      // window handle
 HWND    hWDebug=0;
 HWND    hWRecord=0;
 static HANDLE   hMainThread;                           
-#elif defined(__GAMECUBE__)
+#elif defined(GEKKO)
 static lwp_t thread = LWP_THREAD_NULL;					// thread id (Wii)
 #else
 // 2003/06/07 - Pete
@@ -1061,7 +1061,7 @@ void SetupTimer(void)
                      //THREAD_PRIORITY_TIME_CRITICAL);
                      THREAD_PRIORITY_HIGHEST);
   }
-#elif defined(__GAMECUBE__)
+#elif defined(GEKKO)
 	if(!iUseTimer)                                        // Wii: use thread
 	{
 		LWP_CreateThread(&thread, MAINThread, NULL, NULL, 0, LWP_PRIO_HIGHEST);
@@ -1095,7 +1095,7 @@ void RemoveTimer(void)
   }
  if(iUseTimer==1) timeEndPeriod(1);                    // windows timer? stop it
 
-#elif defined(__GAMECUBE__)
+#elif defined(GEKKO)
 
 	if(!iUseTimer)                                        // Wii tread?
 	{

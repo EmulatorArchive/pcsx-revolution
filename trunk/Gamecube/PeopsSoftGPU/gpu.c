@@ -208,7 +208,7 @@ static char * pGetConfigInfos(int iCfg)
 
 static void DoTextSnapShot(int iNum)
 {
-#ifndef __GAMECUBE__
+#ifndef GEKKO
  FILE *txtfile;
  char szTxt[256];
  char *pB;
@@ -230,7 +230,7 @@ static void DoTextSnapShot(int iNum)
 
 void CALLBACK GPUmakeSnapshot(void)
 {
-#ifndef __GAMECUBE__
+#ifndef GEKKO
  FILE *bmpfile;
  char filename[256];
  unsigned char header[0x36];
@@ -468,7 +468,7 @@ void updateDisplay(void)                               // UPDATE DISPLAY
 		DoClearFrontBuffer();                               // -> clear frontbuffer
 		return;                                             // -> and bye
 	}
-#ifndef __GAMECUBE__
+#ifndef GEKKO
 	if(dwActFixes&32)                                     // pc fps calculation fix
 	{
 		if(UseFrameLimit) PCFrameCap();                     // -> brake

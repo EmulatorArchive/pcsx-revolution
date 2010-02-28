@@ -12,9 +12,10 @@
 
 #include "stdafx.h"
 #include "externals.h"
-#include "gctypes.h"
 
+#include "Config.h"
 #include "DEBUG.h"
+#include <gctypes.h>
 #include <ogc/audio.h>
 #include <ogc/cache.h>
 
@@ -184,7 +185,9 @@ static void inline add_to_buffer(void* stream, unsigned int length){
 void SoundFeedStreamData(unsigned char* pSound,long lBytes)
 {
 	buffer_size = lBytes;
-	add_to_buffer(pSound, lBytes);
+	if( !Settings.SPU.Disable ) {
+		add_to_buffer(pSound, lBytes);
+	}
 }
 
 void PEOPS_SPUplayCDDAchannel(short* pcm, int nbytes) {

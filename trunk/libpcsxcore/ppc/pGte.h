@@ -63,7 +63,6 @@ CP2_FUNC(LWC2);
 static void recLWC2() {
 // Cop2D->Rt = mem[Rs + Im] (unsigned)
 
-if(_Rt_ != 30) { //TODO
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -109,7 +108,7 @@ if(_Rt_ != 30) { //TODO
 	if(IsConst(_Rs_)) {
 		B_DST(b32Ptr[0]);
 	}
-}
+
 	switch (_Rt_) {
 		case 7: case 29: case 31:	// Readonly regs
 			return;
@@ -124,20 +123,19 @@ if(_Rt_ != 30) { //TODO
 			break;
 
 		case 28:
-			RLWINM(r9, r3, 7, 20, 24);	// IR1
-			RLWINM(r11, r3, 2, 20, 24);	// IR2
-			RLWINM(r12, r3, 29, 20, 24);	// IR3
 			STWRtoPR(&gteIRGB, r3);
-			STWRtoPR(&gteIR1, r9);
-			STWRtoPR(&gteIR2, r11);
-			STWRtoPR(&gteIR3, r12);
+			RLWINM(r9, r3, 7, 20, 24);	// IR1
+			STHRtoPR(&gteIR1, r9);
+			RLWINM(r11, r3, 2, 20, 24);	// IR2
+			STHRtoPR(&gteIR2, r11);
+			RLWINM(r12, r3, 29, 20, 24);	// IR3
+			STHRtoPR(&gteIR3, r12);
 			break;
 
 		case 30:
-			iFlushRegs();
-			LIW(r3, (u32)psxRegs.code);
-			STWRtoPR(&psxRegs.code, r3);
-			CALLFunc ((uptr)gteLWC2);
+			STWRtoPR(&gteLZCS, r3);
+			CNTLZW(r3, r3);
+			STWRtoPR(&gteLZCR, r3);
 			break;
 			
 		default:
@@ -220,6 +218,7 @@ static void recMFC2() {
 			STWRtoPR(&psxRegs.GPR.r[_Rt_], r3);
 			break;
 	}
+	resp += 16;
 }
 #endif
 #if 0
@@ -257,20 +256,25 @@ static void recMTC2() {
 			else {
 				LWPRtoR(r3, &psxRegs.GPR.r[_Rt_]);
 			}
-			RLWINM(r9, r3, 7, 20, 24);	// IR1
-			RLWINM(r11, r3, 2, 20, 24);	// IR2
-			RLWINM(r12, r3, 29, 20, 24);	// IR3
-			STHRtoPR(&gteIR1, r9);
-			STHRtoPR(&gteIR2, r11);
-			STHRtoPR(&gteIR3, r12);
 			STWRtoPR(&gteIRGB, r3);
+			RLWINM(r9, r3, 7, 20, 24);
+			STHRtoPR(&gteIR1, r9);
+			RLWINM(r11, r3, 2, 20, 24);
+			STHRtoPR(&gteIR2, r11);
+			RLWINM(r12, r3, 29, 20, 24);
+			STHRtoPR(&gteIR3, r12);
 			break;
 			
 		case 30:
-			iFlushRegs();
-			LIW(r3, (u32)psxRegs.code);
-			STWRtoPR(&psxRegs.code, r3);
-			CALLFunc ((uptr)gteMTC2);
+			if (IsConst(_Rt_)) {
+				LIW(r3, iRegs[_Rt_].k);
+			}
+			else {
+				LWPRtoR(r3, &psxRegs.GPR.r[_Rt_]);
+			}
+			STWRtoPR(&gteLZCS, r3);
+			CNTLZW(r3, r3);
+			STWRtoPR(&gteLZCR, r3);
 			break;
 			
 		default:

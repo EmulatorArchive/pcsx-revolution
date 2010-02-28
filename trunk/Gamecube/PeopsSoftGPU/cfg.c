@@ -85,7 +85,7 @@ static void ReadConfigFile()
 	struct stat buf;
 	FILE *in;char t[256];int len, size;
 	char * pB, * p;
-#ifndef __GAMECUBE__
+#ifndef GEKKO
 	if(pConfigFile)
 		strcpy(t, pConfigFile);
 	else
