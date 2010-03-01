@@ -26,7 +26,7 @@ INCLUDES	:=	./ ../libpcsxcore/ ../libpcsxcore/ppc/ ./PeopsSpu109/
 #---------------------------------------------------------------------------------
 
 CFLAGS	= -g $(MACHDEP) $(INCLUDE) -D__ppc__ \
-		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -D'PACKAGE_VERSION="0.1"'
+		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -D'PACKAGE_VERSION="0.1a"'
 
 ifneq ($(BUILD),debug)
 CFLAGS	+= -O2 -pipe -fno-strict-aliasing \
