@@ -15,6 +15,8 @@
  *  along with this program; if not, see <http://www.gnu.org/licenses>.
  */
 
+FILE *emuLog;
+
 #ifndef GEKKO
 
 #include "psxcommon.h"

@@ -11,70 +11,57 @@
 #else
 #include <sdcard/gcsd.h>
 #endif
-static int isMounted[2] = {-1, -1};
 
+static int isMounted[FAT_DEVICES_COUNT] = {-1, -1};
+
+static DISC_INTERFACE *fat_interface[FAT_DEVICES_COUNT] = {
 #ifdef HW_RVL
-	const DISC_INTERFACE* sd = &__io_wiisd;
-	const DISC_INTERFACE* usb = &__io_usbstorage;
+	&__io_wiisd,
+	&__io_usbstorage
 #else
-	const DISC_INTERFACE* carda = &__io_gcsda;
-	const DISC_INTERFACE* cardb = &__io_gcsdb;
+	&__io_gcsda,
+	&__io_gcsdb
 #endif
+};
+
+static char *fat_name[FAT_DEVICES_COUNT] = {
+#ifdef HW_RVL
+	"sd",
+	"usb"
+#else
+	"carda",
+	"cardb"
+#endif
+};
 
 void UnmountAllFAT()
 {
-#ifdef HW_RVL
-	fatUnmount("sd:/");
-	fatUnmount("usb:/");
-#else
-	fatUnmount("carda:/");
-	fatUnmount("cardb:/");
-#endif
+	int i;
+	for(i = FAT_DEVICE_0; i < FAT_DEVICES_COUNT; i++)
+		fatUnmount( fat_name[i] );
 }
 
-int MountFAT(int method)
+mount_state MountFAT(int device)
 {
-	int mounted = 1; // assume our disc is already mounted
-	char name[10];
-	const DISC_INTERFACE* disc = NULL;
+	if (device >= FAT_DEVICES_COUNT) return 1;
 
-	switch(method)
-	{
-#ifdef HW_RVL
-		case DEVICE_SD:
-			sprintf(name, "sd");
-			disc = sd;
-			break;
-		case DEVICE_USB:
-			sprintf(name, "usb");
-			disc = usb;
-			break;
-#else
-		case DEVICE_SD:
-			sprintf(name, "carda");
-			disc = carda;
-			break;
+	int mounted = MOUNTED; // assume our disc is already mounted
 
-		case DEVICE_USB:
-			sprintf(name, "cardb");
-			disc = cardb;
-			break;
-#endif
-		default:
-			return -1; // unknown device
-	}
-	if(isMounted[method] == -1)
+	const DISC_INTERFACE* disc = fat_interface[device];
+
+	if(isMounted[device] == NOT_MOUNTED)
 	{
-		if(!disc->startup() || !fatMountSimple(name, disc))
-			mounted = -1;
+		if(!disc->startup() || !fatMountSimple( fat_name[device], disc ))
+			mounted = NOT_MOUNTED;
 	}
 
-	isMounted[method] = mounted;
+	isMounted[device] = mounted;
 	return mounted;
 }
 
 void MountAllFAT()
 {
-	MountFAT(DEVICE_SD);
-	MountFAT(DEVICE_USB);
+	int i;
+	for(i = FAT_DEVICE_0; i < FAT_DEVICES_COUNT; i++)
+		MountFAT( i );
 }

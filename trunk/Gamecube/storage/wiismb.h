@@ -1,8 +1,8 @@
 #ifndef __WIISHARE_H__
 #define __WIISHARE_H__
 
+#include "mount.h"
 
-int ConnectShare();
-
+mount_state ConnectShare();
 
 #endif

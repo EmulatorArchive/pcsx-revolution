@@ -17,7 +17,7 @@ typedef struct {
 	int FrameSkip;			// 0-1
 	int LimitFPS;			// 0-1
 	int Dithering;			// 0-2
-} video_config;
+} GPU_t;
 
 typedef struct {
 	int Volume;				// 1-4
@@ -29,7 +29,7 @@ typedef struct {
 	int SPU_IRQ_Wait;		// 0-1
 	int SingleChMode;		// 0-1
 	int Disable;			// 0-1
-} audio_config;
+} SPU_t;
 
 typedef struct {
 	char	ip[16];
@@ -41,9 +41,8 @@ typedef struct {
 typedef struct {
 	char filename[255];
 	int device;
-	int Lw;
-	video_config GPU;
-	audio_config SPU;
+	GPU_t GPU;
+	SPU_t SPU;
 	smb_settings smb;
 } settings;
 

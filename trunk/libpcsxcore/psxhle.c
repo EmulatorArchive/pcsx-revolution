@@ -23,6 +23,7 @@
 */
 
 #include "psxhle.h"
+#include "psxbios.h"
 
 static void hleDummy() {
 	psxRegs.pc = psxRegs.GPR.n.ra;

@@ -8,6 +8,8 @@ static void ConfigureGPU();
 
 static u32 set_button(char msg[15], int type, int pad_num);
 
+#define CONFIG_OPTIONS 6
+
 void Config_menu()
 {
 	int index 	= 0;
@@ -22,7 +24,7 @@ void Config_menu()
 		}
 		if(GetInput(DOWN, DOWN, DOWN))
 		{
-			if(index < (Config.Cpu ? 5 : 6)) index++;
+			if(index < CONFIG_OPTIONS-1) index++;
 		}
 			
 		if(GetInput(A, A, A)) 
@@ -50,12 +52,6 @@ void Config_menu()
 					break;
 
 				case 5:
-					if(!Config.Cpu) {
-						Settings.Lw ^= 1;
-						break;
-					}
-
-				case 6:
 					SaveConfig();
 					return;
 			}
@@ -89,19 +85,7 @@ void Config_menu()
 
 		printf("\x1b[%um", (index == 5) ? 32 : 37);
 
-		if(!Config.Cpu) {
-			printf("\tRecompiler: %s\n", Settings.Lw ? "Fast" : "Normal");
-
-			printf("\x1b[%um", (index == 6) ? 32 : 37);
-		}
-
 		printf("\n\tReturn\n\n");
-
-		if((!Config.Cpu) && Settings.Lw)
-		{
-			printf("\x1b[36m");
-			printf("\tFast: Speedup in some games, but may cause freezes.");
-		}
 
 		printf("\x1b[37m");								// Reset Color
 
@@ -125,8 +109,8 @@ static void ConfigurePAD(struct_pad *pad)
 		CHECK_POWER_BUTTONS();
 #ifdef HW_RVL
 		data 	= WPAD_Data(pad->num);
-		if(data->exp.type == WPAD_EXP_NUNCHUK) thirddevice = "Wiimote + nunchak";
-		if(data->exp.type == WPAD_EXP_CLASSIC) thirddevice = "Classic controller";
+		if(data->exp.type == WPAD_EXP_NUNCHUK) strcpy(thirddevice, "Wiimote + nunchak");
+		if(data->exp.type == WPAD_EXP_CLASSIC) strcpy(thirddevice, "Classic controller");
 #endif
 		if(GetInput(UP, UP, UP))
 		{
@@ -180,6 +164,7 @@ static void ConfigurePAD(struct_pad *pad)
 			switch(index)
 			{
 				case 1: 
+				{
 					if(!pad->type)									// GC Pad
 					{
 						init_gc_pad(pad);
@@ -213,6 +198,7 @@ static void ConfigurePAD(struct_pad *pad)
 					pad->MENU 		= set_button("MENU", pad->type, pad_port);
 					
 					clrscr();
+				}
 					break;
 					
 				case 3:
@@ -433,7 +419,6 @@ static void ConfigureSPU()
 				case 9:
 					SPUWriteConfig();
 					return;
-					break;
 			}
 		}
 

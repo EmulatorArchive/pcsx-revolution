@@ -22,9 +22,6 @@
 #define __R3000A_H__
 
 #include "psxcommon.h"
-#include "psxmem.h"
-#include "psxcounters.h"
-#include "psxbios.h"
 
 typedef struct {
 	int  (*Init)();
@@ -223,7 +220,6 @@ s32 GetPendingCycles();
 
 void psx_int_add(PsxEventType n, s32 ecycle);
 void psx_int_remove(PsxEventType n);
-void psxRaiseExtInt( uint irq );
 u8 psxIsActiveEvent(PsxEventType n);
 
 void advance_pc(s32 offset);

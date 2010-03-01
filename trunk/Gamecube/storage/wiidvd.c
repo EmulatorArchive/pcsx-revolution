@@ -5,7 +5,7 @@
 
 static const short retries = 20;
 
-int MountDVD()
+mount_state MountDVD()
 {
 	#ifdef HW_RVL
 	int x = retries;
@@ -13,7 +13,7 @@ int MountDVD()
 	while (DI_GetStatus() & DVD_INIT) usleep(5000);
 	while (!(DI_GetStatus() & DVD_READY) && x--) usleep(50000);
 	if (DI_GetStatus() & DVD_READY) return ISO9660_Mount();
-	return -1;
+	return NOT_MOUNTED;
 	#endif
 }
 

@@ -67,6 +67,8 @@ static void PADReadConfig();
 
 settings Settings;
 
+PcsxConfig Config;
+
 /////////////////////////////////////////////////////////
 
 int LoadConfig()
@@ -123,7 +125,6 @@ int LoadConfig()
 	GetValueld("VSyncWA", Config.VSyncWA);
 	
 	GetValuel("LastDevice", Settings.device);
-	GetValuel("RecLW", Settings.Lw);
 
 	pads[0].num = 0;
 	pads[1].num = 1;
@@ -181,7 +182,6 @@ void SaveConfig() {
 	SetValueld("VSyncWA", Config.VSyncWA);
 
 	SetValuel("LastDevice", Settings.device);
-	SetValuel("RecLW", Settings.Lw);
 
 	fclose(f);
 

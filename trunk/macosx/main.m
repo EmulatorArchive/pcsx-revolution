@@ -17,6 +17,8 @@
 static BOOL sysInited = NO;
 //#define EMU_LOG
 
+PcsxConfig Config;
+
 int main(int argc, const char *argv[])
 {
     if ( argc >= 2 && strncmp (argv[1], "-psn", 4) == 0 ) {

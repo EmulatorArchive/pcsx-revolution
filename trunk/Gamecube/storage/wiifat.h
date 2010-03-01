@@ -1,9 +1,9 @@
- 
 #ifndef __WIIFAT_H__
 #define __WIIFAT_H__
 
-int MountFat(int n);
-void unMountFat(int n);
+#include "mount.h"
+
+mount_state MountFAT(int n);
 void MountAllFAT();
 
 #endif

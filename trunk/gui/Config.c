@@ -24,6 +24,8 @@
 
 #include "Linux.h"
 
+PcsxConfig Config;
+
 /* TODO escaping/unescaping would be nice, as would maxchars */
 void GetValue(char *src, char *name, char *outvar) {
 	char *tmp;

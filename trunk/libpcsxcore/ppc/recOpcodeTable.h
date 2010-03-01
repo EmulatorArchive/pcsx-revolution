@@ -1259,21 +1259,12 @@ static void recLHU() {
 }
 #endif
 
-#if 0
+#if 1
 REC_FUNC(LW);
 #else
 static void recLW() {
 // Rt = mem[Rs + Im] (unsigned)
 
-if(!Settings.Lw) {
-	iFlushRegs();
-	LIW(r3, (u32)psxRegs.code);
-	STWRtoPR(&psxRegs.code, r3);
-	LIW(r3, (u32)pc);
-	STWRtoPR(&psxRegs.pc, r3);
-	CALLFunc((u32)psxLW);
-} 
-else {
 #if 1
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
@@ -1348,7 +1339,6 @@ else {
 		STWRtoPR(&_rRtS_, r3);
 	}
 	resp += 16;
-}
 }
 #endif
 

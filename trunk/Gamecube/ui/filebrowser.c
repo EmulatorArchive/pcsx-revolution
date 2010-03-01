@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "../storage/wiismb.h"
 #include "../storage/wiifat.h"
+#include "../storage/wiidvd.h"
 #include "../storage/mount.h"
 
 #define TYPE_FILTER(x)	(strstr(x, ".bin") || strstr(x, ".BIN")   \
@@ -11,11 +12,12 @@
 						|| strstr(x, ".mdf") || strstr(x, ".MDF") \
 						|| strstr(x, ".img") || strstr(x, ".IMG"))
 
-enum {
-	BROWSER_CANCELED = -2,
-	BROWSER_FILE_NOT_FOUND = -1,
-	BROWSER_FILE_CHOSED = 0
-};
+typedef enum {
+	BROWSER_FILE_NOT_FOUND	= -1,
+	BROWSER_FILE_SELECTED	= 0,
+	BROWSER_CANCELED		= 1,
+	BROWSER_CHANGE_FOLDER	= 2
+} ret_action;
 
 typedef struct {
 	char name[255];
@@ -31,15 +33,17 @@ typedef struct {
 	int filter;
 } file_browser_st;
 
-static int textFileBrowser(file_browser_st *file_struct){
+static ret_action textFileBrowser(file_browser_st *file_struct){
 	// Set everything up to read
 	DIR_ITER* dp = diropen(file_struct->path);
+
 	if(!dp)
 		return BROWSER_FILE_NOT_FOUND;
+
 	struct stat fstat;
 	char filename[MAXPATHLEN];
 	int num_entries = 1, i = 0;
-	dir_ent* dir = malloc( num_entries * sizeof(dir_ent) );
+	dir_ent* dir = (dir_ent*) malloc( num_entries * sizeof(dir_ent) );
 	// Read each entry of the directory
 	while( dirnext(dp, filename, &fstat) == 0 ){
 		if((strcmp(filename, ".") != 0 && (fstat.st_mode & S_IFDIR)) || (file_struct->filter ? TYPE_FILTER(filename) : 1) )
@@ -47,7 +51,7 @@ static int textFileBrowser(file_browser_st *file_struct){
 			// Make sure we have room for this one
 			if(i == num_entries){
 				++num_entries;
-				dir = realloc( dir, num_entries * sizeof(dir_ent) ); 
+				dir = (dir_ent*) realloc( dir, num_entries * sizeof(dir_ent) ); 
 			}
 			strcpy(dir[i].name, filename);
 			dir[i].size = fstat.st_size;
@@ -108,12 +112,13 @@ static int textFileBrowser(file_browser_st *file_struct){
 			else 
 				sprintf(file_struct->path, "%s/%s", file_struct->path, dir[index].name);
 
-			BOOL atr = dir[index].attr & S_IFDIR;
+			BOOL is_dir = (dir[index].attr & S_IFDIR);
 			free(dir);
-			if(atr)
-				return textFileBrowser(file_struct);
+			if(is_dir) {
+				return BROWSER_CHANGE_FOLDER;
+			}
 			else
-				return BROWSER_FILE_CHOSED;
+				return BROWSER_FILE_SELECTED;
 		}
 		
 		if(GetInput(B, B, B)) 
@@ -134,7 +139,7 @@ static int textFileBrowser(file_browser_st *file_struct){
 			printf("\x1b[33m");
 			printf("\t%s\n\n", file_struct->title);
 
-			printf("\tbrowsing %s:\n\n", file_struct->path);
+			printf("\tbrowsing %s\n\n", file_struct->path);
 
 			for(temp = start; temp < limit; temp++)
 			{
@@ -149,46 +154,56 @@ static int textFileBrowser(file_browser_st *file_struct){
 	}
 }
 
+static mount_state (*mount_dev[DEVICES_COUNT])(int) = {
+	MountFAT
+,	MountFAT
+,	ConnectShare
+#ifdef DVD_FIXED
+,	MountDVD
+#endif
+};
+
 static int MountDevice(int device)
 {
-	int ret = 0;
-	switch(Settings.device)
-	{
-		case DEVICE_SD:
-		case DEVICE_USB:
-			ret = MountFAT(Settings.device);
-			break;
-		case DEVICE_SMB:
-			ret = ConnectShare();
-			break;
-		case DEVICE_DVD:
-			ret = MountDVD();
-			break;
-	}
-	return ret;
-}
-
-int GameBrowser()
-{
-	if( MountDevice(Settings.device) == -1 )
+	if( Settings.device >= DEVICES_COUNT ) 
 		return BROWSER_FILE_NOT_FOUND;
 
+	return mount_dev[Settings.device](Settings.device);
+}
+
+int GameBrowser() {
+	if( MountDevice(Settings.device) == BROWSER_FILE_NOT_FOUND ) \
+		return BROWSER_FILE_NOT_FOUND;
+	
 	int ret = 0;
 
 	file_browser_st game_filename;
 	strcpy(game_filename.title, "Select game image");
 	game_filename.filter = 1;
-	if(strlen(Settings.filename))
-		strcpy(game_filename.path, Settings.filename);
-	else
-		sprintf(game_filename.path, "%s%s", device[Settings.device], "pcsx-r/games");
 
-	if(ret = textFileBrowser(&game_filename) == BROWSER_FILE_NOT_FOUND)
+	DIR_ITER *dp;
+	dp = diropen(Settings.filename);
+
+	if(dp && strlen(Settings.filename) > 1) {
+		strcpy(game_filename.path, Settings.filename);
+		dirclose(dp);
+	}
+	else {
+		sprintf(game_filename.path, "%s/%s", device[Settings.device], "pcsx-r/games");
+		dp = diropen(game_filename.path);
+		if(dp) 
+			dirclose(dp);
+		else 
+			sprintf(game_filename.path, "%s/", device[Settings.device]);
+	}
+
+	ret = textFileBrowser(&game_filename);
+
+	while(ret == BROWSER_CHANGE_FOLDER)
 	{
-		sprintf(game_filename.path, "%s", device[Settings.device]);
 		ret = textFileBrowser(&game_filename);
 	}
-	if (ret == BROWSER_FILE_CHOSED) {
+	if (ret == BROWSER_FILE_SELECTED) {
 		strcpy(Settings.filename, game_filename.path);
 	}
 	return ret;
@@ -196,7 +211,7 @@ int GameBrowser()
 
 char *StateBrowser( )
 {
-	if( MountDevice(Settings.device) == -1 )
+	if( MountDevice(Settings.device) == BROWSER_FILE_NOT_FOUND )
 		return NULL;
 
 	int ret = 0;

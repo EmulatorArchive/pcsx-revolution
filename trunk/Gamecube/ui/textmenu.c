@@ -1,40 +1,96 @@
 #include "textmenu.h"
 #include "r3000a.h"
 #include "../save_state.h"
-
-#ifdef HW_RVL
-
-#define DEVICES			3
-
-static const char *devicename[DEVICES] = {
-	"Front SD"
-,	"USB Storage"
-,	"SMB"
-};
-
-#else	//!HW_RVL
-
-#define DEVICES			2
-
-static const char *devicename[DEVICES] = {
-	"Memcard A"
-,	"Memcard B"
-};
-
-#endif	//HW_RVL
+#include "system.h"
+#include "storage/mount.h"
 
 #define SAVE_STATE 0
 
-static int NeedReset = 0;
+#ifdef HW_RVL
+
+#if SAVE_STATE
+#	define TEXT_MENU_OPTIONS 7
+#else
+#	define TEXT_MENU_OPTIONS 5
+#endif
+
+#else	//!HW_RVL
+
+#if SAVE_STATE
+#	define TEXT_MENU_OPTIONS 6
+#else
+#	define TEXT_MENU_OPTIONS 4
+#endif
+
+#endif	//HW_RVL
+
+static const char *devicename[DEVICES_COUNT] = {
+#ifdef HW_RVL
+	"Front SD"
+,	"USB Storage"
+,	"SMB"
+#ifdef DVD_FIXED
+,	"DVD"
+#endif
+#else
+	"Memcard A"
+,	"Memcard B"
+#endif
+};
+
+typedef enum {
+	NO_ACTION			= 0,
+	ERR_BROWSER			= 1,
+	ERR_CDROM			= 2,
+	ERR_BIOS			= 3,
+	ERR_SYSTEM_INIT		= 4,
+	ERR_SSTATE_SAVE		= 5,
+	ERR_SSTATE_LOAD		= 6,
+	RUN_GAME			= 7,
+	UPDATE_MENU			= 8,
+	ACTIONS_COUNT
+} ret_action;
+
+static char *errors[ACTIONS_COUNT] = {
+	"",
+	"File not found",
+	"It's not a PSX game",
+	"Bios not found",
+	"Error system init",
+	"Error saving state",
+	"Error loading state"
+	"",
+	"",
+};
+
+static char *str_options[TEXT_MENU_OPTIONS] = {
+	"Start",
+	"Reset",
+	"Source: ",
+	"Config"
+#if SAVE_STATE
+.	"Save state"
+,	"Load state"
+#endif
+#ifdef HW_RVL
+,	"Exit to HBC"
+#endif
+};
+
+static u8 NeedReset = 0;
 extern int Running;
 
-static int RunEmu()
-{
+#define TEXT_MENU_ACTION static ret_action
+#define TEXT_MENU_OPTION static void
+
+TEXT_MENU_ACTION (*menu_option[TEXT_MENU_OPTIONS])();
+
+TEXT_MENU_ACTION RunEmu() {
 	if(!Running)
 	{
 		if(SysInit() == -1) 
 		{
-			return -1;
+			return ERR_SYSTEM_INIT;
 		}
 		OpenPlugins();
 		SysReset();
@@ -42,7 +98,7 @@ static int RunEmu()
 		if(CheckCdrom() == -1 || LoadCdrom() == -1)
 		{
 			ClosePlugins();
-			return -1;
+			return ERR_CDROM;
 		}
 	}
 	else
@@ -54,22 +110,127 @@ static int RunEmu()
 			if(CheckCdrom() == -1 || LoadCdrom() == -1)
 			{
 				ClosePlugins();
-				return -1;
+				return ERR_CDROM;
 			}
 		}
 	}
 	Running 	= 1;
 	NeedReset 	= 0;
 	VIDEO_WaitVSync();
-	return 0;
+	return RUN_GAME;
 }
+
+TEXT_MENU_ACTION Run() {
+	clrscr();
+	int ret;
+	FILE *f = NULL;
+	char bios[256];
+	sprintf (bios,"%s%s",Config.BiosDir, Config.Bios);
+	f = fopen(bios, "rb");
+	if(!f) {
+		ret = ERR_BIOS;
+	}
+	else
+	{
+		fclose(f);
+		ret = RunEmu();
+	}
+
+	return ret;
+}
+
+TEXT_MENU_ACTION Reset() {
+	NeedReset = 1;
+	return Run();
+}
+
+TEXT_MENU_ACTION SelectGame() {
+
+	int ret = GameBrowser();
+	if( ret == 0 ) {
+		return Reset();
+	}
+	else if( ret < 0 ) {
+		return ERR_BROWSER;
+	}
+
+	clrscr();
+	return UPDATE_MENU;
+}
+
+TEXT_MENU_ACTION Configure() {
+	Config_menu();
+	clrscr();
+	return UPDATE_MENU;
+}
+
+TEXT_MENU_ACTION Exit() {
+	to_loader();
+}
+
+TEXT_MENU_ACTION SaveState() {
+	if(on_states_save() == ERR_SSTATE_SAVE)
+		return ERR_SSTATE_SAVE;
+
+	clrscr();
+	return UPDATE_MENU;
+}
+
+TEXT_MENU_ACTION LoadState() {
+	if(on_states_load() == ERR_SSTATE_LOAD)
+	{
+		clrscr();
+		return ERR_SSTATE_LOAD;
+	}
+	else 
+		return RUN_GAME;
+}
+
+TEXT_MENU_ACTION menu_null() {
+	
+}
+
+TEXT_MENU_ACTION (*menu_option[TEXT_MENU_OPTIONS])() = {
+	Run
+,	Reset
+,	SelectGame
+,	Configure
+
+#if SAVE_STATE
+,	SaveState
+,	LoadState
+#endif
+
+#ifdef HW_RVL
+,	Exit
+#endif
+};
+
+TEXT_MENU_OPTION print_option(int option, int color) {
+	printf("\x1b[%um", color);
+
+	printf("\t%s\n", str_options[option]);
+}
+
+TEXT_MENU_OPTION print_option_device(int option, int color) {
+	printf("\x1b[%um", color);
+
+	printf("\t%s%s\n", str_options[option], devicename[Settings.device]);
+}
+
+TEXT_MENU_OPTION (*print_option_str[TEXT_MENU_OPTIONS])(int, int);
 
 void Main_menu()
 {
 	u8 index = 0;
-	u8 draw  = 1;
-
+	int action = UPDATE_MENU;
 	char *msg = NULL;
+
+	int i;
+	for(i = 0; i < TEXT_MENU_OPTIONS; i++)
+		print_option_str[i] = print_option;
+
+	print_option_str[2] = print_option_device;
 
 	clrscr();
 	while(1)
@@ -79,23 +240,15 @@ void Main_menu()
 		{
 			if(index) index--;
 			usleep(150000);
-			draw = 1;
+			action = UPDATE_MENU;
 		}
 
 		if(GetHeld(DOWN, DOWN, DOWN))
 		{
-#if SAVE_STATE
-			if(index < 6) 
-#else
-#ifdef HW_RVL
-			if(index < 4) 
-#else
-			if(index < 3) 
-#endif
-#endif
+			if(index < TEXT_MENU_OPTIONS-1) 
 				index++;
 			usleep(150000);
-			draw = 1;
+			action = UPDATE_MENU;
 		}
 
 		if(GetInput(RIGHT, RIGHT, RIGHT))
@@ -103,9 +256,9 @@ void Main_menu()
 			switch(index)
 			{
 				case 2: 
-					if(Settings.device < DEVICES-1) Settings.device++;
+					if(Settings.device < DEVICES_COUNT-1) Settings.device++;
 					msg = NULL;
-					draw = 1;
+					action = UPDATE_MENU;
 					clrscr();
 					break;
 			}
@@ -118,7 +271,7 @@ void Main_menu()
 				case 2: 
 					if(Settings.device) Settings.device--;
 					msg = NULL;
-					draw = 1;
+					action = UPDATE_MENU;
 					clrscr();
 					break;
 			}
@@ -126,122 +279,22 @@ void Main_menu()
 
 		if(GetInput(A, A, A)) 
 		{
-			switch(index)
-			{
-				case 0:
-					clrscr();
-					if(strlen(Settings.filename) > 6)
-					{
-						FILE *f = NULL;
-						char bios[256];
-						sprintf (bios,"%s%s",Config.BiosDir, Config.Bios);
-						f = fopen(bios, "rb");
-						if(!f)
-							msg = "Bios not found";
-						else
-						{
-							fclose(f);
-							if( RunEmu() == 0 )
-								return psxCpu->Execute();
-							else
-								msg = "Error loading CD image";
-						}
-					}
-					else 
-						msg = "Select a file first";
-					draw = 1;
-					break;
-					
-				case 1:
-					NeedReset = 1;
-					index = 0;
-					break;
-
-				case 2:
-					NeedReset = 1;
-
-					msg = NULL;
-					int ret;
-					if( ret = GameBrowser() == 0 )
-						index = 0;
-					else if(ret == -1)
-						msg = "Device not found";
-
-					clrscr();
-					draw = 1;
-					break;
-					
-				case 3:
-					Config_menu();
-					clrscr();
-					draw = 1;
-					break;
-#if SAVE_STATE
-				case 4:
-					if(on_states_save() == -1)
-						msg = "Error saving save state";
-					clrscr();
-					draw = 1;
-					break;
-
-				case 5:
-					if(on_states_load() == -1)
-					{
-						clrscr();
-						draw = 1;
-					}
-					else psxCpu->Execute();
-					//clrscr();
-					//draw = 1;
-					break;
-
-				case 6: 
-					to_loader();
-					break;
-#else
-				case 4: 
-					to_loader();
-					break;
-#endif
-			}
+			action = menu_option[index]();
+			if(action == RUN_GAME) return;
+			msg = errors[action];
 		}
 
-		if(draw)
+		if(action != NO_ACTION)
 		{
-			draw = 0;
+			action = NO_ACTION;
 			printf("\x1B[2;2H");
 
 			printf("\x1b[33m");
 			printf("\tMain menu\n\n");
 
-			printf("\x1b[%um", (index == 0) ? 32 : 37); 	// Set Color
-			printf("\tStart\n");
+			for(i = 0; i < TEXT_MENU_OPTIONS; i++)
+				print_option_str[i]( i, (index == i ? 32 : 37) );
 
-			printf("\x1b[%um", (index == 1) ? 32 : 37);
-			printf("\tReset\n");
-
-			printf("\x1b[%um", (index == 2) ? 32 : 37);
-			printf("\tSource: %s\n", devicename[Settings.device]);
-
-			printf("\x1b[%um", (index == 3) ? 32 : 37);
-			printf("\tConfig\n");
-#if SAVE_STATE
-			printf("\x1b[%um", (index == 4) ? 32 : 37);
-			printf("\tSave state\n");
-
-			printf("\x1b[%um", (index == 5) ? 32 : 37);
-			printf("\tLoad state\n\n");
-
-#ifdef HW_RVL
-			printf("\x1b[%um", (index == 6) ? 32 : 37);
-			printf("\tExit to HBC\n\n");
-#endif
-#else
-#ifdef HW_RVL
-			printf("\x1b[%um", (index == 4) ? 32 : 37);
-			printf("\tExit to HBC\n");
-#endif
-#endif
 			if(msg)
 			{
 				printf("\x1b[36m");

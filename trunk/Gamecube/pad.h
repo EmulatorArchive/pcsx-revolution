@@ -6,12 +6,12 @@
 #endif
 #include <ogc/pad.h>
 
-enum {
+typedef enum {
 	PAD_STANDARD = 4,
 	PAD_ANALOG = 7
 } PsxPadType;
 
-enum {
+typedef enum {
 	GCPAD = 0
 ,	REMOTE
 ,	NUNCHAK		//  Remote+Nunchak / Classic.

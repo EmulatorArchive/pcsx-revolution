@@ -1,6 +1,10 @@
 /*****************************************************************************
  * font.h
  *****************************************************************************/
+
+#ifndef _FONT_H_
+#define _FONT_H_
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -13,4 +17,6 @@ void write_font_origin(char *string, float scale);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
