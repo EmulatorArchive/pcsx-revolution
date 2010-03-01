@@ -21,12 +21,7 @@
 #ifndef __CDROM_H__
 #define __CDROM_H__
 
-#include "psxcommon.h"
 #include "decode_xa.h"
-#include "r3000a.h"
-#include "plugins.h"
-#include "psxmem.h"
-#include "psxhw.h"
 
 typedef struct {
 	unsigned char OCUP;

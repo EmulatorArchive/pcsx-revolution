@@ -24,6 +24,9 @@
 
 #include "psxhle.h"
 #include "psxbios.h"
+#include "r3000a.h"
+#include "misc.h"
+#include "psxmem.h"
 
 static void hleDummy() {
 	psxRegs.pc = psxRegs.GPR.n.ra;

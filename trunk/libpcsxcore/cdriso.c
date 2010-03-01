@@ -21,6 +21,7 @@
 #include "plugins.h"
 #include "cdrom.h"
 #include "psxcommon.h"
+#include "psxmem.h"
 
 #ifdef GEKKO
 #	define STATIC 

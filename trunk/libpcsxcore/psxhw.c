@@ -22,9 +22,12 @@
 * Functions for PSX hardware control.
 */
 
-#include "psxhw.h"
+#include "r3000a.h"
+#include "sio.h"
+#include "psxcounters.h"
 #include "mdec.h"
 #include "cdrom.h"
+#include "psxhw.h"
 
 void psxHwReset() {
     if (Config.Sio) psxHu32ref(0x1070) |= SWAP32(0x80);

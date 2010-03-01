@@ -32,6 +32,7 @@
 #include "R3000AOpcodeTable.h"
 #include "psxhle.h"
 #include "mdec.h"
+#include "plugins.h"
 
 #ifdef GEKKO
 #	define _LANGUAGE_ASSEMBLY

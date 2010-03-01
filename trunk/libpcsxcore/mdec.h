@@ -22,9 +22,6 @@
 #define __MDEC_H__
 
 #include "psxcommon.h"
-#include "r3000a.h"
-#include "psxhw.h"
-#include "psxdma.h"
 
 void mdecInit();
 void mdecWrite0(u32 data);

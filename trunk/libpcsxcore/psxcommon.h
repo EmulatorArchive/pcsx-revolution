@@ -39,8 +39,6 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <math.h>
-#include <time.h>
 #include <ctype.h>
 #include <sys/types.h>
 #include <assert.h>

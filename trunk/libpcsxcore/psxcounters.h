@@ -22,9 +22,6 @@
 #define __PSXCOUNTERS_H__
 
 #include "psxcommon.h"
-#include "r3000a.h"
-#include "psxmem.h"
-#include "plugins.h"
 
 typedef struct
 {

@@ -22,6 +22,11 @@
 * Handles all CD-ROM registers and functions.
 */
 
+#include "psxcommon.h"
+#include "r3000a.h"
+#include "plugins.h"
+#include "psxmem.h"
+#include "psxhw.h"
 #include "cdrom.h"
 
 /* CD-ROM magic numbers */

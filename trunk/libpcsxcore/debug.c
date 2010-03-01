@@ -15,14 +15,15 @@
  *  along with this program; if not, see <http://www.gnu.org/licenses>.
  */
 
-FILE *emuLog;
-
-#ifndef GEKKO
-
 #include "psxcommon.h"
 #include "r3000a.h"
 #include "debug.h"
 #include "socket.h"
+#include "psxmem.h"
+
+FILE *emuLog;
+
+#ifndef GEKKO
 
 /*
 PCSX Debug console protocol description, version 1.0

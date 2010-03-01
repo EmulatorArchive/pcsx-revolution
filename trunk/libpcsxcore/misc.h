@@ -22,10 +22,6 @@
 #define __MISC_H__
 
 #include "psxcommon.h"
-#include "coff.h"
-#include "plugins.h"
-#include "r3000a.h"
-#include "psxmem.h"
 
 #undef s_addr
 

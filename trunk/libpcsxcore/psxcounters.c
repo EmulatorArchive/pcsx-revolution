@@ -22,9 +22,12 @@
 * Internal PSX counters.
 */
 
-#include "psxcounters.h"
-#include "cheat.h"
 #include "psxhw.h"
+#include "r3000a.h"
+#include "psxmem.h"
+#include "psxcounters.h"
+#include "plugins.h"
+#include "cheat.h"
 
 static int cnts = 4;
 psxCounter psxCounters[3];
