@@ -33,6 +33,20 @@ typedef struct {
 	int filter;
 } file_browser_st;
 
+static void browse_back(char *str){
+	int length = strlen(str);
+	int idx;
+	for( idx = length; idx > 0; idx-- ) {
+		char ch = str[idx];
+		str[idx] = '\0';
+		if( ch == '/' ) {
+			if( str[idx-1] == ':' )		// root folder.
+				str[idx] = '/';			// Check is here, because it happens only once per call.
+			break;
+		}
+	}
+}
+
 static ret_action textFileBrowser(file_browser_st *file_struct){
 	// Set everything up to read
 	DIR_ITER* dp = diropen(file_struct->path);
@@ -101,13 +115,7 @@ static ret_action textFileBrowser(file_browser_st *file_struct){
 		if(GetInput(A, A, A))
 		{
 			if(index == 0 && strcmp(dir[index].name, "..") == 0) {
-				int length = strlen(file_struct->path);
-				int idx;
-				for( idx = length; idx > 0; idx-- ) {
-					char ch = file_struct->path[idx];
-					file_struct->path[idx] = '\0';
-					if( ch == '/' ) break;
-				}
+				browse_back(file_struct->path);
 			}
 			else 
 				sprintf(file_struct->path, "%s/%s", file_struct->path, dir[index].name);
@@ -181,11 +189,15 @@ int GameBrowser() {
 	strcpy(game_filename.title, "Select game image");
 	game_filename.filter = 1;
 
-	DIR_ITER *dp;
-	dp = diropen(Settings.filename);
+	DIR_ITER *dp = NULL;
 
-	if(dp && strlen(Settings.filename) > 1) {
+	if(Settings.filename) {
 		strcpy(game_filename.path, Settings.filename);
+		browse_back(game_filename.path);	// delete game filename
+		dp = diropen(game_filename.path);
+	}
+
+	if(dp) {
 		dirclose(dp);
 	}
 	else {
@@ -194,7 +206,7 @@ int GameBrowser() {
 		if(dp) 
 			dirclose(dp);
 		else 
-			sprintf(game_filename.path, "%s/", device[Settings.device]);
+			sprintf(game_filename.path, "%s", device[Settings.device]);
 	}
 
 	ret = textFileBrowser(&game_filename);
