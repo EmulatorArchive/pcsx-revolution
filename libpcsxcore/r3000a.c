@@ -28,6 +28,8 @@
 #include "gte.h"
 #include "cheat.h"
 #include "psxcounters.h"
+#include "psxbios.h"
+#include "psxmem.h"
 
 //#define PRINT_EVENTS
 
@@ -216,7 +218,7 @@ __inline void psxTestIntc()
 	psx_int_add( PsxEvt_Exception, 0 );
 }
 
-__inline void psxRaiseExtInt( uint irq )
+__inline void psxRaiseExtInt( PsxIrq irq )
 {
 #ifdef PRINT_EVENTS
 	SysPrintf("ExtInt: %ld\n", irq);

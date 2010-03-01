@@ -5,7 +5,7 @@
 #include <smb.h>
 
 #include "wiismb.h"
-#include "../Config.h"
+#include "Config.h"
 
 static u8 ShareConnected;
 static u8 NetworkConnected;
@@ -40,25 +40,24 @@ static void CloseShare()
 	NetworkConnected = 0; // trigger a network reinit
 }
 
-int ConnectShare ()
+mount_state ConnectShare ()
 {
 	// Crashes or stalls system in GameCube mode - so disable
 	#ifndef HW_RVL
-	return -1;
+	return NOT_MOUNTED;
 	#endif
 
-	int ret = 1;
+	int ret = MOUNTED;
 
 	if( SMBReadConfig() == -1 )
 	{
 		printf("Config not found");
-		//usleep(5000000);
-		return -1;
+		return NOT_MOUNTED;
 	}
-	int chkU = (strlen(Settings.smb.user) > 0) ? 0:1;
-	int chkP = (strlen(Settings.smb.pwd) > 0) ? 0:1;
-	int chkS = (strlen(Settings.smb.share) > 0) ? 0:1;
-	int chkI = (strlen(Settings.smb.ip) > 0) ? 0:1;
+	int chkU = (strlen(Settings.smb.user)	> 0) ? 0 : 1;
+	int chkP = (strlen(Settings.smb.pwd)	> 0) ? 0 : 1;
+	int chkS = (strlen(Settings.smb.share)	> 0) ? 0 : 1;
+	int chkI = (strlen(Settings.smb.ip)		> 0) ? 0 : 1;
 
 	// check that all parameters have been set
 	if(chkU + chkP + chkS + chkI > 0)
@@ -76,8 +75,7 @@ int ConnectShare ()
 		else if(chkI)
 			sprintf(msg, "Share IP is blank.");
 			printf("Invalid network settings - %s", msg);
-			//usleep(5000000);
-		return -1;
+		return NOT_MOUNTED;
 	}
 
 	if(ShareConnected)
@@ -93,7 +91,7 @@ int ConnectShare ()
 			if( smbInit(Settings.smb.user, Settings.smb.pwd,
 					Settings.smb.share, Settings.smb.ip) == true )
 			{
-				ShareConnected = 1;
+				ShareConnected = MOUNTED;
 			}
 		}
 	}

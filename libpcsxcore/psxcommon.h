@@ -132,7 +132,7 @@ typedef struct {
 #endif
 } PcsxConfig;
 
-PcsxConfig Config;
+extern PcsxConfig Config;
 
 extern int StatesC;
 extern int cdOpenCase;

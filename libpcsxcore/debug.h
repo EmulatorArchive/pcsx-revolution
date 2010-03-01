@@ -40,7 +40,7 @@ extern char *disRNameCP0[];
 
 char* disR3000AF(u32 code, u32 pc);
 
-FILE *emuLog;
+extern FILE *emuLog;
 
 /* 
  * Specficies which logs should be activated.

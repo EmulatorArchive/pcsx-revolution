@@ -54,7 +54,7 @@
 #define HW_DMA_PCR   (psxHu32ref(0x10f0))
 #define HW_DMA_ICR   (psxHu32ref(0x10f4))
 
-enum PsxInterrupts
+typedef enum
 {
 	PsxInt_VBlank		= 0,
 	PsxInt_GPU			= 1,
@@ -71,8 +71,9 @@ enum PsxInterrupts
 	PsxInt_Mcd1			= 12,
 	PsxInt_Mcd2			= 13,
 	PsxInt_Mcd3			= 14,
-};
+} PsxIrq;
 
+void psxRaiseExtInt( PsxIrq irq );
 void psxHwReset();
 u8   psxHwRead8 (u32 add);
 u16  psxHwRead16(u32 add);

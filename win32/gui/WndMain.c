@@ -57,6 +57,8 @@ static HDC          hdcmem;
 static HBITMAP      hBm;
 static BITMAP       bm;
 
+PcsxConfig Config;
+
 #ifdef ENABLE_NLS
 
 unsigned int langsMax;

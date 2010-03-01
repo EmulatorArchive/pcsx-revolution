@@ -1,32 +1,36 @@
 #ifndef __MOUNT_H__
 #define __MOUNT_H__
 
-enum {
-	DEVICE_SD = 0
-,	DEVICE_USB
-,	DEVICE_SMB
-,	DEVICE_DVD
-};
-
+typedef enum {
+	FAT_DEVICE_0 = 0
+,	FAT_DEVICE_1
 #ifdef HW_RVL
+,	DEVICE_SMB
+#ifdef DVD_FIXED
+,	DEVICE_DVD
+#endif
+#endif
+,	DEVICES_COUNT
+,	FAT_DEVICES_COUNT = FAT_DEVICE_1+1
+} gekko_device;
 
-#define DEVICES			3
+typedef enum {
+	NOT_MOUNTED = -1,
+	MOUNTED = 1
+} mount_state;
 
-static const char *device[DEVICES] = {
+static const char *device[DEVICES_COUNT] = {
+#ifdef HW_RVL
 	"sd:/"
 ,	"usb:/"
 ,	"smb:/"
-};
-
-#else	//!HW_RVL
-
-#define DEVICES			2
-
-static const char *device[DEVICES] = {
+#ifdef DVD_FIXED
+,	"dvd:/"
+#endif
+#else
 	"carda:/"
 ,	"cardb:/"
+#endif
 };
-
-#endif	//HW_RVL
 
 #endif

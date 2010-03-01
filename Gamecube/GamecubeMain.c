@@ -42,19 +42,6 @@
 #include "storage/wiifat.h"
 //#include "storage/wiidvd.h"
 
-/* function prototypes */
-int  SysInit();							// Init mem and plugins
-void SysReset();						// Resets mem
-void SysPrintf(char *fmt, ...);			// Printf used by bios syscalls
-void SysMessage(char *fmt, ...);		// Message used to print msg to users
-void *SysLoadLibrary(char *lib);		// Loads Library
-void *SysLoadSym(void *lib, char *sym);	// Loads Symbol from Library
-const char *SysLibError();				// Gets previous error loading sysbols
-void SysCloseLibrary(void *lib);		// Closes Library
-void SysUpdate();						// Called on VBlank (to update i.e. pads)
-void SysRunGui();						// Returns to the Gui
-void SysClose();						// Close mem and plugins
-
 u32 *xfb[2] = { NULL, NULL };			/*** Framebuffers ***/
 int whichfb = 0;						/*** Frame buffer toggle ***/
 GXRModeObj *vmode;				/*** Graphics Mode Object ***/
@@ -216,8 +203,23 @@ int main(int argc, char *argv[]) {
 	}
 
 	Main_menu();
+	
+	psxCpu->Execute();
 
 	return 0;
+}
+
+void SysPrintf(char *fmt, ...) {
+	if (Config.PsxOut) {
+		va_list list;
+		char msg[512];
+
+		va_start(list, fmt);
+		vsprintf(msg, fmt, list);
+		va_end(list);
+	
+		printf ("%s", msg);
+	}
 }
 
 int SysInit() {
@@ -242,25 +244,6 @@ void SysReset() {
 void SysClose() {
 	psxShutdown();
 	ReleasePlugins();
-
-	if (emuLog != NULL) fclose(emuLog);
-}
-
-void SysPrintf(char *fmt, ...) {
-	if (Config.PsxOut) {
-		va_list list;
-		char msg[512];
-
-		va_start(list, fmt);
-		vsprintf(msg, fmt, list);
-		va_end(list);
-	
-		printf ("%s", msg);
-#if defined (CPU_LOG) || defined(DMA_LOG) || defined(CDR_LOG) || defined(HW_LOG) || \
-	defined(BIOS_LOG) || defined(GTE_LOG) || defined(PAD_LOG)
-		fprintf(emuLog, "%s", msg);
-#endif
-	}
 }
 
 void *SysLoadLibrary(char *lib) {
@@ -297,6 +280,7 @@ void SysUpdate() {
 
 void SysRunGui() {
 	Main_menu();
+	psxCpu->Execute();
 }
 
 void SysMessage(char *fmt, ...) {

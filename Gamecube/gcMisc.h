@@ -1,6 +1,10 @@
 #ifndef GCMISC_H
 #define GCMISC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <gccore.h>
 #include <ogcsys.h>
 #include <stdlib.h>
@@ -60,8 +64,8 @@ static u32 Held(u32 GC)
 	if(wii_shutdown) ShutdownWii(); \
 	if(wii_reset) to_loader();
 
-int wii_shutdown;		// 1-shutdown, 2-return to HBC
-int wii_reset;
+extern int wii_shutdown;		// 1-shutdown, 2-return to HBC
+extern int wii_reset;
 
 void ShutdownCB();
 void ResetCB();
@@ -71,8 +75,12 @@ void ShutdownWii();
 	PAD_ScanPads();
 #endif
 
-int Running;
+extern int Running;
 void to_loader();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
