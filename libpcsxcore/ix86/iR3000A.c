@@ -23,6 +23,7 @@
 */
 
 #include "ix86.h"
+#include "../psxhw.h"
 #include <sys/mman.h>
 
 #ifndef MAP_ANONYMOUS

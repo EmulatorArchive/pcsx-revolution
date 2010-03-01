@@ -30,6 +30,9 @@
 #include "psxcounters.h"
 #include "psxbios.h"
 #include "psxmem.h"
+#include "psxdma.h"
+#include "psxhw.h"
+#include "sio.h"
 
 //#define PRINT_EVENTS
 

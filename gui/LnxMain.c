@@ -32,6 +32,8 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include "../libpcsxcore/sio.h"
+#include "../libpcsxcore/plugins.h"
+#include "../libpcsxcore/r3000a.h"
 
 #include "Linux.h"
 #include "ConfDlg.h"

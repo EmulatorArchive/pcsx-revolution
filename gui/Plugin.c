@@ -28,6 +28,8 @@
 #include "../libpcsxcore/plugins.h"
 #include "../libpcsxcore/spu.h"
 #include "../libpcsxcore/cdriso.h"
+#include "../libpcsxcore/misc.h"
+#include "../libpcsxcore/psxmem.h"
 
 #include "nopic.h"
 

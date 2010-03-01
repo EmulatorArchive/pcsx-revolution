@@ -34,6 +34,9 @@
 
 #include "../libpcsxcore/plugins.h"
 #include "../libpcsxcore/cheat.h"
+#include "../libpcsxcore/misc.h"
+#include "../libpcsxcore/system.h"
+#include "../libpcsxcore/r3000a.h"
 
 #include "MemcardDlg.h"
 #include "ConfDlg.h"

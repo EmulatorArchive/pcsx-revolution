@@ -25,6 +25,9 @@
 #include "ix86-64.h"
 #include "../r3000a.h"
 #include "../psxhle.h"
+#include "../psxhw.h"
+#include "../psxcounters.h"
+#include "../plugins.h"
 
 #include <sys/mman.h>
 

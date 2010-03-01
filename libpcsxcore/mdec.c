@@ -20,8 +20,10 @@
 * Movie decoder. Based on the FPSE v0.08 Mdec decoder.
 */
 
+#include "r3000a.h"
+#include "psxhw.h"
+#include "psxdma.h"
 #include "mdec.h"
-#include "psxcommon.h"
 
 // Need to find endianess issue.
 #if !defined(__BIGENDIAN__) && !defined(GEKKO) 

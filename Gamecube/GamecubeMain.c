@@ -24,6 +24,7 @@
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
+#include <math.h>
 #include "system.h"
 #include "r3000a.h"
 #include "DEBUG.h"

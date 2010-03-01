@@ -24,6 +24,8 @@
 
 #include "plugins.h"
 #include "cdriso.h"
+#include "r3000a.h"
+#include "psxmem.h"
 
 char cdrfilename[MAXPATHLEN] = "";
 int cdOpenCase = 0;

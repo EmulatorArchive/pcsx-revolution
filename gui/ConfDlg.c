@@ -33,6 +33,7 @@
 #include "ConfDlg.h"
 
 #include "../libpcsxcore/plugins.h"
+#include "../libpcsxcore/r3000a.h"
 
 static void OnBiosPath_Changed(GtkWidget *wdg, gpointer data);
 static void OnConf_Clicked(GtkDialog *dialog, gint arg1, gpointer user_data);

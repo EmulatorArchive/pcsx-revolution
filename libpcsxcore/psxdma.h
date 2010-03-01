@@ -22,15 +22,6 @@
 #define __PSXDMA_H__
 
 #include "psxcommon.h"
-#include "r3000a.h"
-#include "psxhw.h"
-#include "psxmem.h"
-
-#define GPUDMA_INT(eCycle) { \
-	psxRegs.interrupt |= 0x01000000; \
-	psxRegs.intCycle[3+24+1] = eCycle; \
-	psxRegs.intCycle[3+24] = psxRegs.cycle; \
-}
 
 void psxDmaInterrupt(u32 channel);
 void psxDma2(u32 madr, u32 bcr, u32 chcr);

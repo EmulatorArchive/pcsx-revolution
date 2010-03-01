@@ -22,9 +22,13 @@
 * SIO functions.
 */
 
-#include "sio.h"
-#include "psxhw.h"
 #include <sys/stat.h>
+#include "r3000a.h"
+#include "psxmem.h"
+#include "plugins.h"
+#include "psemu_plugin_defs.h"
+#include "psxhw.h"
+#include "sio.h"
 
 // *** FOR WORKS ON PADS AND MEMORY CARDS *****
 
