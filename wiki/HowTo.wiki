@@ -8,12 +8,12 @@
     * Download [http://tortoisesvn.net/downloads TortoiseSVN].
     * Create folder, right click on it -> TortoiseSVN -> checkout -> http://pcsx-revolution.googlecode.com/svn/trunk/
     * Run Programmer's Notepad (installed with devkitPro)
-    * File->"Open Project(s)...", find pcsx-revolution project file.
-    * Tools->make (wii or gc at your will).
+    * File->Open, find project folder and open Gamecube/Makefile.
+    * Tools->make.
    # *Unix*: 
     * Install subversion.
     * svn checkout http://pcsx-revolution.googlecode.com/svn/trunk/ pcsx-revolution-read-only
-    * "cd pcsx-revolution-read-only && make -f Makefile.gekko wii" (or "... Makefile.gekko cube" for GC version). Or you can modify build.sh script for your system.
+    * "cd pcsx-revolution-read-only/Gamecube && make" (or "make gc" for GC version). Or you can modify build.sh script for your system.
 
 = Launch =
 File organisation:
