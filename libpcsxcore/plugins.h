@@ -22,7 +22,6 @@
 #define __PLUGINS_H__
 
 #include "psxcommon.h"
-#include "spu.h"
 
 #ifndef _WIN32
 

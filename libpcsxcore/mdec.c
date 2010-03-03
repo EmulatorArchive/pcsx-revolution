@@ -20,9 +20,7 @@
 * Movie decoder. Based on the FPSE v0.08 Mdec decoder.
 */
 
-#include "r3000a.h"
 #include "psxhw.h"
-#include "psxdma.h"
 #include "mdec.h"
 
 // Need to find endianess issue.
@@ -92,7 +90,7 @@ static const u32 zscan[ DCTSIZE2 ] =
 
 // MAME {{{{{{{{{{{{{{{{{
 #ifdef MAME_MDEC
-#	ifdef __ppc__
+#	if defined(GEKKO) || defined(__BIGENDIAN__)
 #		define WORD_XOR_LE(a) ((a) ^ 2)
 #	else
 #		define WORD_XOR_LE(a) ((a) ^ 0)
@@ -858,7 +856,7 @@ void psxDma1(u32 adr, u32 bcr, u32 chcr) {
 		}
 	}
 #endif
-	HW_DMA1_CHCR&= SWAP32(~0x11000000);
+	HW_DMA1_CHCR &= SWAP32(~0x11000000);
 	psxDmaInterrupt(1);
 }
 #ifndef MAME_MDEC

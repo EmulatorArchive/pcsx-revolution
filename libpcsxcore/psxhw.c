@@ -23,8 +23,11 @@
 */
 
 #include "r3000a.h"
+#include "psxmem.h"
+#include "plugins.h"
 #include "sio.h"
 #include "psxcounters.h"
+#include "psxhw.h"
 #include "mdec.h"
 #include "cdrom.h"
 #include "psxhw.h"
@@ -638,6 +641,7 @@ void psxHwWrite32(u32 add, u32 value) {
 		{
 			u32 tmp = (~value) & SWAPu32(HW_DMA_ICR);
 			HW_DMA_ICR = SWAPu32(((tmp ^ value) & 0xffffff) ^ tmp);
+			psxDmaUpdate();
 			return;
 		}
 
@@ -661,7 +665,7 @@ void psxHwWrite32(u32 add, u32 value) {
 #ifdef PSXHW_LOG
 			PSXHW_LOG("COUNTER 0 COUNT 32bit write %lx\n", value);
 #endif
-			psxRcntWcount(0, value & 0xffff); return;
+			psxRcntWcount(0, value); return;
 		case 0x1f801104:
 #ifdef PSXHW_LOG
 			PSXHW_LOG("COUNTER 0 MODE 32bit write %lx\n", value);
@@ -671,13 +675,13 @@ void psxHwWrite32(u32 add, u32 value) {
 #ifdef PSXHW_LOG
 			PSXHW_LOG("COUNTER 0 TARGET 32bit write %lx\n", value);
 #endif
-			psxRcntWtarget(0, value & 0xffff); return; //  HW_DMA_ICR&= SWAP32((~value)&0xff000000);
+			psxRcntWtarget(0, value); return; //  HW_DMA_ICR&= SWAP32((~value)&0xff000000);
 
 		case 0x1f801110:
 #ifdef PSXHW_LOG
 			PSXHW_LOG("COUNTER 1 COUNT 32bit write %lx\n", value);
 #endif
-			psxRcntWcount(1, value & 0xffff); return;
+			psxRcntWcount(1, value); return;
 		case 0x1f801114:
 #ifdef PSXHW_LOG
 			PSXHW_LOG("COUNTER 1 MODE 32bit write %lx\n", value);
@@ -687,13 +691,13 @@ void psxHwWrite32(u32 add, u32 value) {
 #ifdef PSXHW_LOG
 			PSXHW_LOG("COUNTER 1 TARGET 32bit write %lx\n", value);
 #endif
-			psxRcntWtarget(1, value & 0xffff); return;
+			psxRcntWtarget(1, value); return;
 
 		case 0x1f801120:
 #ifdef PSXHW_LOG
 			PSXHW_LOG("COUNTER 2 COUNT 32bit write %lx\n", value);
 #endif
-			psxRcntWcount(2, value & 0xffff); return;
+			psxRcntWcount(2, value); return;
 		case 0x1f801124:
 #ifdef PSXHW_LOG
 			PSXHW_LOG("COUNTER 2 MODE 32bit write %lx\n", value);
@@ -703,7 +707,7 @@ void psxHwWrite32(u32 add, u32 value) {
 #ifdef PSXHW_LOG
 			PSXHW_LOG("COUNTER 2 TARGET 32bit write %lx\n", value);
 #endif
-			psxRcntWtarget(2, value & 0xffff); return;
+			psxRcntWtarget(2, value); return;
 
 		default:
 			psxHu32ref(add) = SWAPu32(value);

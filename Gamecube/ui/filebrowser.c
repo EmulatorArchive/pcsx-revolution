@@ -165,9 +165,11 @@ static ret_action textFileBrowser(file_browser_st *file_struct){
 static mount_state (*mount_dev[DEVICES_COUNT])(int) = {
 	MountFAT
 ,	MountFAT
+#ifdef HW_RVL
 ,	ConnectShare
 #ifdef DVD_FIXED
 ,	MountDVD
+#endif
 #endif
 };
 

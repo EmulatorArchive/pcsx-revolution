@@ -25,7 +25,7 @@
 
 typedef struct
 {
-#if defined(__ppc__) || defined(__BIGENDIAN__)
+#if defined(GEKKO) || defined(__BIGENDIAN__)
 	u32 garbage:22;
 
 	u32 Div:1;
@@ -45,11 +45,11 @@ typedef struct
 
 	u32 unused:1;
 
-	u32 Disabled:1;
+	u32 Stop:1;
 #else
 	// General count enable/status.  If 0, no counting happens.
 	// This flag is set/unset by the gates.
-	u32 Disabled:1;
+	u32 Stop:1;
 
 	u32 unused:1;
 	
@@ -86,14 +86,16 @@ typedef struct
 } psxcnt_mode;
 
 typedef struct {
-	u32 count, target;
+	u16 count, target;
 	union {
 		u32 mode;
 		psxcnt_mode mode_b;
 	};
-	u32 sCycle, Cycle, rate, interrupt;
+	u32 rate;
+	s32 cyclepass;
+	u32 interrupt;
 	u32 IsCounting:1;
-	u32 FutureTarget:1;
+	u32 IsFutureTarget:1;
 } psxCounter;
 
 extern psxCounter psxCounters[3];
@@ -104,10 +106,11 @@ void psxRcntUpdate2();
 void psxRcntUpdate3();
 void psxRcntUpdate4();
 
+void RcntAdvanceCycles(s32);
 void psxRcntInit();
-void psxRcntWcount(u32 index, u32 value);
+void psxRcntWcount(u32 index, u16 value);
+void psxRcntWtarget(u32 index, u16 value);
 void psxRcntWmode(u32 index, u32 value);
-void psxRcntWtarget(u32 index, u32 value);
 u16 psxRcntRcount(u32 index);
 u32 psxRcntRmode(u32 index);
 int psxRcntFreeze(gzFile f, int Mode);

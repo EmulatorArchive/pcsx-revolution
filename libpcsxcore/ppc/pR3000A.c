@@ -24,6 +24,7 @@
 #include <time.h>
 #include <sys/types.h>
 
+#include "plugins.h"
 #include "psxcommon.h"
 #include "psxmem.h"
 #include "psxcounters.h"

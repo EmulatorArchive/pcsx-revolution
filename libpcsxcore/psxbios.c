@@ -22,6 +22,11 @@
 * Internal emulated HLE BIOS.
 */
 
+#include "psxcommon.h"
+#include "r3000a.h"
+#include "psxmem.h"
+#include "misc.h"
+#include "sio.h"
 #include "psxbios.h"
 #include "psxhw.h"
 #include "psxcommon.h"

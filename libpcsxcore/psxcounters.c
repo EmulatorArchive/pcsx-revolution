@@ -63,10 +63,30 @@ static vSyncCounter_t vSyncCounter;
 // We need it because of PixelClock rate - 13.5MHz.
 static const PsxFixedBits = 12;
 
+static void print_cnt(index) {
+	SysPrintf("Stop: %d\n", psxCounters[index].mode_b.Stop);
+	SysPrintf("Stop: %d\n", psxCounters[index].mode_b.unused);
+	SysPrintf("Stop: %d\n", psxCounters[index].mode_b.Reset);
+	SysPrintf("Stop: %d\n", psxCounters[index].mode_b.Tar);
+	SysPrintf("Stop: %d\n", psxCounters[index].mode_b.IRQTARGET);
+	SysPrintf("Stop: %d\n", psxCounters[index].mode_b.IRQOVF);
+	SysPrintf("Stop: %d\n", psxCounters[index].mode_b.Repeat);
+	SysPrintf("Stop: %d\n", psxCounters[index].mode_b.unused2);
+	SysPrintf("Stop: %d\n", psxCounters[index].mode_b.ClockSource);
+	SysPrintf("Stop: %d\n", psxCounters[index].mode_b.Div);
+	SysPrintf("Count: %d\n", psxCounters[index].count);
+	SysPrintf("target: %d\n", psxCounters[index].target);
+	SysPrintf("rate: %d\n", psxCounters[index].rate >> PsxFixedBits);
+	SysPrintf("rate: %b\n", psxCounters[index].IsFutureTarget);
+	SysPrintf("===============\n");
+}
+
 static u32 _rcntRate(u32 index) {
+	psxCounters[index].rate = (1 << PsxFixedBits) / BIAS;
+
 	if(index == 2) {
 		if(psxCounters[index].mode_b.Div != 0)
-			psxCounters[index].rate = 8 << PsxFixedBits; // 1/8 speed
+			psxCounters[index].rate = (8 << PsxFixedBits) / BIAS; // 1/8 speed
 	}
 	else if(psxCounters[index].mode_b.ClockSource != 0) {
 		if(index == 0) {
@@ -87,11 +107,21 @@ static u32 _rcntRate(u32 index) {
 			psxCounters[index].rate = (vSyncRate.frame / (width * ((vSyncRate.scans / 3) * 2)));
 		}
 		else {
-			psxCounters[index].rate = (vSyncRate.frame / vSyncRate.scans) * BIAS;
+			psxCounters[index].rate = (vSyncRate.frame / vSyncRate.scans);
 			//SysPrintf("hSync = %d\n", psxCounters[index].rate >> PsxFixedBits);
 		}
 	}
 	return psxCounters[index].rate;
+}
+
+static __inline void _update_counted_timepass( u32 index )
+{
+	if( psxIsActiveEvent(index) )
+	{
+		s32 pendingCycles = psxCounters[index].cyclepass + GetPendingCycles();
+		s32 delta = (pendingCycles << PsxFixedBits) / _rcntRate(index);
+		psxCounters[index].count += delta;
+	}
 }
 
 static __inline u32 _rcntTarget(u32 index) {
@@ -104,15 +134,16 @@ static __inline u32 _rcntTarget(u32 index) {
 }
 
 static void psxRcntUpd(unsigned long index) {
-	if (psxCounters[index].mode_b.Disabled != 0) return;
+	if (psxCounters[index].mode_b.Stop == 0) {
 
-	psxCounters[index].sCycle = psxGetCycle();
+		if (psxCounters[index].mode_b.IRQTARGET != 0 || psxCounters[index].mode_b.IRQOVF != 0) {
+			s32 count = ((_rcntTarget(index) - psxCounters[index].count) * _rcntRate(index)) >> PsxFixedBits;
 
-	if (psxCounters[index].mode_b.IRQTARGET != 0 || psxCounters[index].mode_b.IRQOVF != 0) {
-		s32 count = ((_rcntTarget(index) - psxCounters[index].count) * _rcntRate(index)) / (BIAS << PsxFixedBits);
-		if (count > 0)
-			psx_int_add(index, count);
+			if (count > 0)
+				psx_int_add(index, count);
+		}
 	}
+	psxCounters[index].cyclepass = 0;
 }
 
 void psxRcntInit() {
@@ -124,9 +155,10 @@ void psxRcntInit() {
 
 	int i;
 	for (i = 0; i < 3; i++) {
-		psxCounters[i].sCycle = psxRegs.cycle;
+		psxCounters[i].IsFutureTarget = 1;
+		psxCounters[i].cyclepass = 0;
 		psxCounters[i].rate = 1 << PsxFixedBits;
-		psxCounters[i].interrupt = i + 4;
+		psxCounters[i].interrupt = PsxInt_RTC0 + i;
 	}
 }
 
@@ -186,18 +218,29 @@ void psxRcntUpdate3() {
 }
 
 static __inline void update_cnt(u32 index) {
-	if (psxCounters[index].mode_b.IRQTARGET != 0) {
+	if (psxCounters[index].mode_b.IRQTARGET != 0 || psxCounters[index].mode_b.Tar != 0) {
 		psxCounters[index].count = psxCounters[index].target;
-		psxRaiseExtInt(psxCounters[index].interrupt);
 
-		if(psxCounters[index].mode_b.Tar != 0) {
-			// Reset on target
-			psxCounters[index].count = 0;
+		if(psxCounters[index].IsFutureTarget == 0) {
+			if(psxCounters[index].mode_b.IRQTARGET != 0) {
+				psxRaiseExtInt(psxCounters[index].interrupt);
+			}
+
+			if(psxCounters[index].mode_b.Tar != 0) {
+				// Reset on target
+				psxCounters[index].count = 0;
+				if (psxCounters[index].mode_b.Repeat == 0) {
+					psxCounters[index].IsFutureTarget = 1;
+				}
+			}
+			else
+				psxCounters[index].IsFutureTarget = 1;
 		}
 	}
 
 	if (psxCounters[index].mode_b.IRQOVF != 0) {
 		psxCounters[index].count = 0;
+		psxCounters[index].IsFutureTarget = 0;
 		psxRaiseExtInt(psxCounters[index].interrupt);
 	}
 	if (psxCounters[index].mode_b.Repeat != 0) {
@@ -224,8 +267,9 @@ void psxRcntUpdate4() {
 	}
 }
 
-void psxRcntWcount(u32 index, u32 value) {
+void psxRcntWcount(u32 index, u16 value) {
 	psxCounters[index].count = value;
+	psxCounters[index].IsFutureTarget = 0;
 	psxRcntUpd(index);
 }
 
@@ -234,33 +278,45 @@ void psxRcntWmode(u32 index, u32 value)  {
 	psxCounters[index].mode = value;
 	if(psxCounters[index].mode_b.Reset != 0)
 		psxCounters[index].count = 0;
-
+	psxCounters[index].IsFutureTarget = 0;
 	psxRcntUpd(index);
 }
 
-void psxRcntWtarget(u32 index, u32 value) {
+void psxRcntWtarget(u32 index, u16 value) {
 //	SysPrintf("writeCtarget[%ld] = %lx\n", index, value);
 	psxCounters[index].target = value;
-#if 1
-	if(psxIsActiveEvent(index)) \
-		psxCounters[index].count = psxRcntRcount(index);
-#endif
+
+	_update_counted_timepass(index);
+	
+	psxCounters[index].IsFutureTarget = (psxCounters[index].target <= psxCounters[index].count);
+
 	psxRcntUpd(index);
 }
 
 u16 psxRcntRcount(u32 index) {
-	if (psxCounters[index].mode_b.Disabled != 0) return psxCounters[index].count;
+	u16 ret = psxCounters[index].count;
 
-	u64 ret = psxCounters[index].count;
-
-	if(Config.RCntFix) {
-		ret += ((psxGetCycle() - psxCounters[index].sCycle) << PsxFixedBits) / _rcntRate(index);
-	} 
-	else {
-		ret += ((psxGetCycle() - psxCounters[index].sCycle) * (BIAS << PsxFixedBits)) / _rcntRate(index);
+	if (psxCounters[index].mode_b.Stop == 0) {
+		if(Config.RCntFix) {
+			s32 pendingCycles = psxCounters[index].cyclepass + GetPendingCycles();
+			s32 delta = (pendingCycles << PsxFixedBits) / (_rcntRate(index) * BIAS);
+			ret += delta;
+		}
+		else {
+			s32 pendingCycles = psxCounters[index].cyclepass + GetPendingCycles();
+			s32 delta = (pendingCycles << PsxFixedBits) / _rcntRate(index);
+			ret += delta;
+		}
 	}
 
+	//if(index == 2 && psxCounters[index].mode_b.Div != 0) SysPrintf("Rcount[%d] = 0x%x rate = 0x%x\n", index, ret, psxCounters[index].rate);
 	return ret;
+}
+
+void RcntAdvanceCycles(s32 delta) {
+	int i;
+	for(i = 0; i < 3; i++)
+		psxCounters[i].cyclepass += delta;
 }
 
 int psxRcntFreeze(gzFile f, int Mode) {
