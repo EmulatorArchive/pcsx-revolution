@@ -1109,7 +1109,7 @@ void psxDma3(u32 madr, u32 bcr, u32 chcr) {
 			break;
 	}
 
-	HW_DMA3_CHCR &= SWAP32(~0x01000000);
+	HW_DMA3_CHCR &= SWAP32(~0x11000000);
 	psxDmaInterrupt( 3 );
 }
 

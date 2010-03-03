@@ -59,6 +59,7 @@ typedef enum
 	PsxEvt_SPU,				// 10
 	
 	PsxEvt_MDEC,			// 11
+	PsxEvt_OTC,				// 12
 
 	PsxEvt_CountNonIdle,
 

@@ -25,17 +25,49 @@
 #include "r3000a.h"
 #include "psxhw.h"
 #include "psxmem.h"
-#include "psxhw.h"
 #include "psxdma.h"
+#include "plugins.h"
+#include "psxhw.h"
 
 // Dma0/1 in Mdec.c
 // Dma3   in CdRom.c
 
+#define DMA_UPDATE
+
+// MAME code
+void psxDmaUpdate() {
+#ifdef DMA_UPDATE
+	int n_int = (SWAPu32(HW_DMA_ICR) >> 24) & 0x7f;
+	int n_mask = (SWAPu32(HW_DMA_ICR) >> 16) & 0xff;
+	
+	if( ( n_mask & 0x80 ) != 0 && ( n_int & n_mask ) != 0 )
+	{
+		HW_DMA_ICR |= SWAPu32(0x80000000);
+		psxRaiseExtInt( PsxInt_DMA );
+	}
+	else if( ( HW_DMA_ICR & SWAPu32(0x80000000) ) != 0 )
+	{
+		HW_DMA_ICR &= SWAPu32(~0x80000000);
+	}
+
+	HW_DMA_ICR &= SWAPu32(0x00ffffff | ( SWAPu32(HW_DMA_ICR) << 8 ));
+#endif
+}
+
 void psxDmaInterrupt(u32 channel) {
-	if (SWAPu32(HW_DMA_ICR) & (1 << (16 + channel))) {
+#ifndef DMA_UPDATE
+	if (SWAPu32(HW_DMA_ICR) & (1 << (16 + channel))) 
+#endif
+	{
+		
 		HW_DMA_ICR|= SWAP32(1 << (24 + channel));
 		psxRegs.CP0.n.Cause |= 1 << (9 + channel);
+#ifdef DMA_UPDATE
+		psxDmaUpdate();
+#else
 		psxRaiseExtInt( PsxInt_DMA );
+#endif
+		
 	}
 }
 
@@ -74,7 +106,7 @@ void psxDma4(u32 madr, u32 bcr, u32 chcr) { // SPU
 #endif
 				break;
 			}
-			
+
     		SPU_readDMAMem(ptr, size);
 			psxCpu->Clear(madr, size);
 			break;
@@ -86,7 +118,7 @@ void psxDma4(u32 madr, u32 bcr, u32 chcr) { // SPU
 #endif
 	}
 
-	HW_DMA4_CHCR &= SWAP32(~0x01000000);
+	HW_DMA4_CHCR &= SWAP32(~0x11000000);
 	psxDmaInterrupt(4);
 }
 
@@ -126,9 +158,7 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 			}
 			GPU_writeDataMem(ptr, size);
 			psx_int_add(PsxEvt_GPU, (size / 4) / BIAS);
-
 			return;
-//			break;
 
 		case 0x01000401: // dma chain
 #ifdef PSXDMA_LOG
@@ -144,13 +174,17 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 #endif
 	}
 
-	HW_DMA2_CHCR &= SWAP32(~0x01000000);
-	psxDmaInterrupt(2);
+	gpuInterrupt();
 }
 
 void gpuInterrupt() {
-	HW_DMA2_CHCR &= SWAP32(~0x01000000);
+	HW_DMA2_CHCR &= SWAP32(~0x11000000);
 	psxDmaInterrupt(2);
+}
+
+void otcInterrupt() {
+	HW_DMA6_CHCR &= SWAP32(~0x11000000);
+	psxDmaInterrupt(6);
 }
 
 void psxDma6(u32 madr, u32 bcr, u32 chcr) {
@@ -165,15 +199,12 @@ void psxDma6(u32 madr, u32 bcr, u32 chcr) {
 #ifdef CPU_LOG
 			CPU_LOG("*** DMA6 OT *** NULL Pointer!!!\n");
 #endif
-			HW_DMA6_CHCR &= SWAP32(~0x01000000);
-			psxDmaInterrupt(6);
+			otcInterrupt();
 			return;
 		}
-
 		while (bcr--) {
 			madr -= 4;
 			*mem-- = SWAP32(madr & 0xffffff);
-
 		}
 		mem++; *mem = 0xffffff;
 	}
@@ -183,8 +214,5 @@ void psxDma6(u32 madr, u32 bcr, u32 chcr) {
 		PSXDMA_LOG("*** DMA6 OT - unknown *** %lx addr = %lx size = %lx\n", chcr, madr, bcr);
 	}
 #endif
-
-	HW_DMA6_CHCR &= SWAP32(~0x01000000);
-	psxDmaInterrupt(6);
+	psx_int_add(PsxEvt_OTC, 2150);		// cnt1?
 }
-

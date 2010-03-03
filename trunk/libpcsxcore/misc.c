@@ -22,14 +22,14 @@
 * Miscellaneous functions, including savestates and CD-ROM loading.
 */
 
-#include "cdrom.h"
-#include "mdec.h"
 #include "sio.h"
 #include "coff.h"
 #include "plugins.h"
 #include "r3000a.h"
 #include "psxmem.h"
 #include "misc.h"
+#include "cdrom.h"
+#include "mdec.h"
 
 int Log = 0;
 

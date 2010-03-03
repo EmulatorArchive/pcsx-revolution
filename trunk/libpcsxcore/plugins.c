@@ -22,6 +22,9 @@
 * Plugin library callback/access functions.
 */
 
+#include "r3000a.h"
+#include "psxmem.h"
+#include "spu.h"
 #include "plugins.h"
 #include "cdriso.h"
 #include "r3000a.h"

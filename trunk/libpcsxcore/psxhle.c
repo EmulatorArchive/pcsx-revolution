@@ -22,6 +22,10 @@
 * Internal PSX HLE functions.
 */
 
+#include "psxcommon.h"
+#include "r3000a.h"
+#include "psxmem.h"
+#include "misc.h"
 #include "psxhle.h"
 #include "psxbios.h"
 #include "r3000a.h"

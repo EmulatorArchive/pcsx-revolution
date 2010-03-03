@@ -22,6 +22,9 @@
 * R3000A CPU functions.
 */
 
+#include "psxdma.h"
+#include "psxhw.h"
+#include "sio.h"
 #include "r3000a.h"
 #include "cdrom.h"
 #include "mdec.h"
@@ -87,6 +90,7 @@ static void ResetEvents()
 	Events.list[PsxEvt_Cdrom].Execute		= cdrInterrupt;
 	Events.list[PsxEvt_CdromRead].Execute	= cdrReadInterrupt;
 	Events.list[PsxEvt_GPU].Execute 		= gpuInterrupt;
+	Events.list[PsxEvt_OTC].Execute 		= otcInterrupt;
 	//Events.list[PsxEvt_SPU].Execute 		= spuInterrupt;
 
 	Events.list[PsxEvt_Idle].Execute 		= _evthandler_Idle;
@@ -195,13 +199,13 @@ __inline void psx_int_add( PsxEventType n, s32 ecycle )
 	// It's usually indicative os something amiss in our emulation.
 	if(Events.list[n].next != NULL)
 	{
+// 		SysPrintf("Event: %d\t Cycle: %d\tecycle: %d\ttime: %d\told time: %d\n", n, psxRegs.cycle, ecycle, psxRegs.cycle + ecycle, Events.list[n].time);
+		return;
 		psx_event_remove( &Events.list[n] );
-		//SysPrintf("Event: %d\t Cycle: %d\tecycle: %d\ttime: %d\told time: %d\n", n, psxRegs.cycle, ecycle, psxRegs.cycle + ecycle, Events.list[n].time);
 	}
 #ifdef PRINT_EVENTS
 	SysPrintf("Event: %ld\t Cycle: %ld\tcycles: %ld\n", n, psxRegs.cycle, ecycle);
 #endif
-	//if(n < 3) SysPrintf("Event: %ld\t Cycle: %ld\tcycles: %ld\n", n, psxRegs.cycle, ecycle);
 	psx_event_add( &Events.list[n], ecycle );
 }
 
@@ -314,6 +318,9 @@ void psxBranchTest() {
 	SysPrintf("psxBranchTest: \n");
 #endif
 	while( 1 ) {
+
+		RcntAdvanceCycles( psxRegs.evtCycleDuration );
+
 		s32 oldtime = psxRegs.evtCycleCountdown;
 
 		psxRegs.evtCycleCountdown	= 0;

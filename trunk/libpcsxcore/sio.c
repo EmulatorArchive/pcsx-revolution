@@ -26,7 +26,6 @@
 #include "r3000a.h"
 #include "psxmem.h"
 #include "plugins.h"
-#include "psemu_plugin_defs.h"
 #include "psxhw.h"
 #include "sio.h"
 
