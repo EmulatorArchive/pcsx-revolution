@@ -167,16 +167,19 @@ TEXT_MENU_ACTION Reset() {
 }
 
 TEXT_MENU_ACTION SelectGame() {
-	clrscr();
-	int ret = GameBrowser();
+
+	ret_action ret = GameBrowser();
+
 	if( ret == 0 ) {
-		return Reset();
+		ret = Reset();
 	}
 	else if( ret < 0 ) {
-		return ERR_BROWSER;
-	}
+		ret = ERR_BROWSER;
+	} 
+	else ret = UPDATE_MENU;
 
-	return UPDATE_MENU;
+	clrscr();
+	return ret;
 }
 
 TEXT_MENU_ACTION Configure() {

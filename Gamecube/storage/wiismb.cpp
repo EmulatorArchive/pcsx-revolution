@@ -58,7 +58,13 @@ static void CloseShare()
 	NetworkConnected = false; // trigger a network reinit
 }
 
-static mount_state ConnectShare2() {
+mount_state ConnectShare (int i)
+{
+	// Crashes or stalls system in GameCube mode - so disable
+	#ifndef HW_RVL
+	return NOT_MOUNTED;
+	#endif
+
 	if( SMBReadConfig() == -1 )
 	{
 		printf("Config not found");
@@ -88,15 +94,15 @@ static mount_state ConnectShare2() {
 		return NOT_MOUNTED;
 	}
 
-	if(ShareConnected)
+	if(ShareConnected != MOUNTED)
 		CloseShare();
 
-	if(!NetworkConnected)
+	if(NetworkConnected != true)
 		NetworkInit();
 
-	if(NetworkConnected)
+	if( NetworkConnected )
 	{
-		if(!ShareConnected)
+		if(ShareConnected != MOUNTED)
 		{
 			if( smbInit(Settings.smb.user, Settings.smb.pwd,
 					Settings.smb.share, Settings.smb.ip) == true )
@@ -106,14 +112,4 @@ static mount_state ConnectShare2() {
 		}
 	}
 	return ShareConnected;
-}
-
-mount_state ConnectShare (int i)
-{
-	// Crashes or stalls system in GameCube mode - so disable
-	#ifndef HW_RVL
-	return NOT_MOUNTED;
-	#endif
-
-	return ConnectShare2();
 } 

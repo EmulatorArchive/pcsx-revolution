@@ -102,7 +102,7 @@ void PsxEvents::Schedule( PsxEventType n, s32 time ) {
 	// Find the sorted insertion point into the List of active events:
 	events_t* curEvt = this->Next;
 	events_t* prevEvt = NULL;
-	s32 runningDelta = -GetPendingCycles();
+	s32 runningDelta = -psxRegs.GetPendingCycles();
 	
 	while( true )
 	{
@@ -144,7 +144,7 @@ void PsxEvents::Cancel( PsxEventType n ) {
 	if( this->Next == &this->List[n] )
 	{
 		this->Next = this->List[n].next;
-		int psxPending 				= GetPendingCycles();
+		int psxPending 				= psxRegs.GetPendingCycles();
 		psxRegs.evtCycleDuration	= this->Next->RelativeDelta;
 		psxRegs.evtCycleCountdown	= this->Next->RelativeDelta - psxPending;
 	}

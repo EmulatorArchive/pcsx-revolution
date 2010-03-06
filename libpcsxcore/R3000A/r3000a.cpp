@@ -49,16 +49,6 @@ int psxInit() {
 	return psxCpu->Init();
 }
 
-u32 __inline psxGetCycle()
-{
-	return psxRegs.cycle + (psxRegs.evtCycleDuration - psxRegs.evtCycleCountdown);
-}
-
-s32 GetPendingCycles()
-{
-	return psxRegs.evtCycleDuration - psxRegs.evtCycleCountdown;
-}
-
 void psxReset() {
 #ifndef GEKKO
 	FreeCheatSearchResults();

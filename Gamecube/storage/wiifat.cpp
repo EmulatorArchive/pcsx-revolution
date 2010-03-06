@@ -42,7 +42,7 @@ static const DISC_INTERFACE *fat_interface[FAT_DEVICES_COUNT] = {
 #endif
 };
 
-static char fat_name[FAT_DEVICES_COUNT][5] = {
+static const char *fat_name[FAT_DEVICES_COUNT] = {
 #ifdef HW_RVL
 	"sd",
 	"usb"
@@ -64,8 +64,6 @@ mount_state MountFAT(int device)
 	if (device >= FAT_DEVICES_COUNT) return NOT_MOUNTED;
 
 	mount_state mounted = MOUNTED; // assume our disc is already mounted
-
-// 	const DISC_INTERFACE* disc = fat_interface[device];
 
 	if(isMounted[device] == NOT_MOUNTED)
 	{

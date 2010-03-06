@@ -181,10 +181,10 @@ int main(int argc, char *argv[]) {
 		strcpy(Config.Mcd1, "sd:/pcsx-r/memcards/Mcd001.mcr");
 		strcpy(Config.Mcd2, "sd:/pcsx-r/memcards/Mcd002.mcr");
 #else
-		strcpy(Config.BiosDir, "/pcsx-r/bios/");
+		strcpy(Config.BiosDir, "carda:/pcsx-r/bios/");
 
-		strcpy(Config.Mcd1, "/pcsx-r/memcards/Mcd001.mcr");
-		strcpy(Config.Mcd2, "/pcsx-r/memcards/Mcd002.mcr");
+		strcpy(Config.Mcd1, "carda:/pcsx-r/memcards/Mcd001.mcr");
+		strcpy(Config.Mcd2, "carda:/pcsx-r/memcards/Mcd002.mcr");
 #endif
 		Config.Cpu 		= 1;	//interpreter = 1, dynarec = 0
 

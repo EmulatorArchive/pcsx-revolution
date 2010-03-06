@@ -83,14 +83,15 @@ typedef union {
 	PAIR r[32];
 } psxCP0Regs;
 
-typedef struct {
+class psxRegisters {
+	public:
+	u32 cycle;
 	psxGPRRegs GPR;		/* General Purpose Registers */
 	psxCP0Regs CP0;		/* Coprocessor0 Registers */
 	PAIR cp2d[32];	 	/* Cop2 data registers */
 	PAIR cp2c[32]; 		/* Cop2 ctrl registers */
     u32 pc;				/* Program counter */
     u32 code;			/* The instruction */
-	u32 cycle;
 
 	u32 IsDelaySlot:1;
 
@@ -104,6 +105,14 @@ typedef struct {
 	// other words: counts down from evtCycleDuration to 0; event is raised when 0
 	// is reached.
 	s32 evtCycleCountdown;
+	
+	u32 GetCycle() {
+		return cycle + (evtCycleDuration - evtCycleCountdown);
+	}
+
+	s32 GetPendingCycles() {
+		return evtCycleDuration - evtCycleCountdown;
+	}
 
 #ifdef GTE_TIMING
 	// number of cycles pending on the current GTE instruction 
@@ -112,7 +121,7 @@ typedef struct {
 	// (faster than flushing to zero on every cycle update).
 	s32 GteUnitCycles;
 #endif
-} psxRegisters;
+};
 
 extern psxRegisters psxRegs;
 
@@ -172,9 +181,6 @@ int  psxTestLoadDelay(int reg, u32 tmp);
 void psxDelayTest(int reg, u32 bpc);
 void psxTestSWInts();
 void psxTestHWInts();
-
-u32 psxGetCycle();
-s32 GetPendingCycles();
 
 void advance_pc(s32 offset);
 
