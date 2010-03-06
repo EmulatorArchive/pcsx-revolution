@@ -21,6 +21,8 @@
 
 #include "psxcommon.h"
 
+namespace R3000A {
+
 typedef struct {
 	int  (*Init)();
 	void (*Reset)();
@@ -160,32 +162,22 @@ extern psxRegisters psxRegs;
 #define _rLoS_	(psxRegs.GPR.r[32].sd)
 #define _rHiS_	(psxRegs.GPR.r[33].sd)
 
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int  psxInit();
 void psxReset();
 void psxShutdown();
 
-#ifdef __cplusplus
-} // extern "C" 
-#endif
-
 void psxException(u32 code, u32 bd);
-void psxBranchTest();
 void psxExecuteBios();
 int  psxTestLoadDelay(int reg, u32 tmp);
 void psxDelayTest(int reg, u32 bpc);
 void psxTestSWInts();
 void psxTestHWInts();
-void psxJumpTest();
 
 u32 psxGetCycle();
 s32 GetPendingCycles();
 
 void advance_pc(s32 offset);
-void psxTestIntc();
+
+} // namespace R3000A
 
 #endif /* __R3000A_H__ */

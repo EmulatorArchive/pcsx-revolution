@@ -21,16 +21,8 @@
 
 #include "psxcommon.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void psxDmaInterrupt(u32 channel);
 void psxDma3(u32 madr, u32 bcr, u32 chcr);
-
-#ifdef __cplusplus
-} // extern "C" 
-#endif
 
 void psxDmaUpdate();
 void psxDma2(u32 madr, u32 bcr, u32 chcr);

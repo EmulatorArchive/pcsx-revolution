@@ -24,14 +24,9 @@
 #include "sio.h"
 #include "plugins.h"
 
-//#define PRINT_EVENTS
+namespace R3000A {
 
-typedef struct int_timer {
-	u32 RelativeDelta;
-	u32 OrigDelta;
-	void (*Execute)();
-	struct int_timer *next;
-} events_t;
+PsxEvents Interrupt;
 
 static void _evthandler_Exception()
 {
@@ -52,76 +47,60 @@ static const u32 SpuRate = (768 * 32);
 static void _evthandler_SPU() {
 	if (SPU_async) {
 		SPU_async(SpuRate);		// Peops SPU doesn't really matter what we send.
-		psx_int_add(PsxEvt_SPU, SpuRate);
+		Interrupt.Schedule(PsxEvt_SPU, SpuRate);
 	}
 }
 static void _evthandler_Idle();
-
-class PsxEvents {
-	protected:
-		events_t List[PsxEvt_CountAll];
-		events_t *Next;
-
-	public:
-		void Add( PsxEventType n, s32 time );
-		void Remove( PsxEventType n );
-	
-		void IdleEventHandler() {
-			Next = &List[PsxEvt_Idle];
-		}
-		
-		void Reset() {
-			List[PsxEvt_Exception].Execute	= _evthandler_Exception;
-			List[PsxEvt_SIO].Execute		= sioInterrupt;
-			List[PsxEvt_Cdrom].Execute		= cdrInterrupt;
-			List[PsxEvt_CdromRead].Execute	= cdrReadInterrupt;
-			List[PsxEvt_GPU].Execute 		= gpuInterrupt;
-			List[PsxEvt_OTC].Execute 		= otcInterrupt;
-			List[PsxEvt_SPU].Execute 		= _evthandler_SPU;
-			List[PsxEvt_Counter0].Execute	= psxRcntUpdate0;
-			List[PsxEvt_Counter1].Execute	= psxRcntUpdate1;
-			List[PsxEvt_Counter2].Execute	= psxRcntUpdate2;
-			List[PsxEvt_vSync].Execute 		= psxRcntVSync;
-			List[PsxEvt_vBlank].Execute 	= psxRcntVBlank;
-
-			List[PsxEvt_Idle].Execute 		= _evthandler_Idle;
-			List[PsxEvt_Idle].RelativeDelta 			= 0x4000;
-			List[PsxEvt_Idle].OrigDelta 		= 0x4000;
-	
-			Next = &List[PsxEvt_Idle];
-		}
-		
-		bool IsActiveEvent(PsxEventType n) {
-			return (List[n].next != NULL);
-		}
-		
-		void ExecutePendingEvents();
-};
-
-static PsxEvents Events;
 
 static void _evthandler_Idle()
 {
 	// Note: the idle event handler should only be invoked at times when the full List of
 	// active/pending events is empty:
-	Events.IdleEventHandler();
+	Interrupt.IdleEventHandler();
 }
 
 void ResetEvents()
 {
 // 	if(Events) delete Events;
 // 	Events = new PsxEvents;
-	memset(&Events, 0, sizeof(Events));
+	memset(&Interrupt, 0, sizeof(Interrupt));
 
-	Events.Reset();
+	Interrupt.Reset();
 }
 
-void PsxEvents::Add( PsxEventType n, s32 time ) {
-// 	events_t *event = &List[n];
-	List[n].OrigDelta = time;
+void PsxEvents::Reset() {
+	this->List[PsxEvt_Exception].Execute	= _evthandler_Exception;
+	this->List[PsxEvt_SIO].Execute		= sioInterrupt;
+	this->List[PsxEvt_Cdrom].Execute		= cdrInterrupt;
+	this->List[PsxEvt_CdromRead].Execute	= cdrReadInterrupt;
+	this->List[PsxEvt_GPU].Execute 		= gpuInterrupt;
+	this->List[PsxEvt_OTC].Execute 		= otcInterrupt;
+	this->List[PsxEvt_SPU].Execute 		= _evthandler_SPU;
+	this->List[PsxEvt_Counter0].Execute	= psxRcntUpdate0;
+	this->List[PsxEvt_Counter1].Execute	= psxRcntUpdate1;
+	this->List[PsxEvt_Counter2].Execute	= psxRcntUpdate2;
+	this->List[PsxEvt_vSync].Execute 		= psxRcntVSync;
+	this->List[PsxEvt_vBlank].Execute 	= psxRcntVBlank;
+
+	this->List[PsxEvt_Idle].Execute 		= _evthandler_Idle;
+	this->List[PsxEvt_Idle].RelativeDelta 			= 0x4000;
+	this->List[PsxEvt_Idle].OrigDelta 		= 0x4000;
+
+	this->Next = &this->List[PsxEvt_Idle];
+}
+
+void PsxEvents::Schedule( PsxEventType n, s32 time ) {
+	// Generally speaking games shouldn't throw ints that haven't been cleared yet.
+	// It's usually indicative os something amiss in our emulation.
+	if( IsScheduled(n) ) {
+// 		return;
+		Cancel( n );
+	}
+
+	this->List[n].OrigDelta = time;
 
 	// Find the sorted insertion point into the List of active events:
-	events_t* curEvt = Next;
+	events_t* curEvt = this->Next;
 	events_t* prevEvt = NULL;
 	s32 runningDelta = -GetPendingCycles();
 	
@@ -129,24 +108,24 @@ void PsxEvents::Add( PsxEventType n, s32 time ) {
 	{
 		// Note: curEvt->next represents the Idle node, which should always be scheduled
 		// last .. so the following conditional checks for it and schedules in front of it.
-		if( (curEvt == &List[PsxEvt_Idle]) || ((runningDelta + curEvt->RelativeDelta) > time) )
+		if( (curEvt == &this->List[PsxEvt_Idle]) || ((runningDelta + curEvt->RelativeDelta) > time) )
 		{
-			List[n].next = curEvt;
-			List[n].RelativeDelta = time - runningDelta;
-			curEvt->RelativeDelta -= List[n].RelativeDelta;
+			this->List[n].next = curEvt;
+			this->List[n].RelativeDelta = time - runningDelta;
+			curEvt->RelativeDelta -= this->List[n].RelativeDelta;
 
 			if( prevEvt == NULL )
 			{
-				Next = &List[n];
+				this->Next = &this->List[n];
 
 				// Node is being inserted at the head of the List, so reschedule the PSX's
 				// master counters as needed.
 
-				psxRegs.evtCycleDuration  = List[n].RelativeDelta;
-				psxRegs.evtCycleCountdown = List[n].OrigDelta;
+				psxRegs.evtCycleDuration  = this->List[n].RelativeDelta;
+				psxRegs.evtCycleCountdown = this->List[n].OrigDelta;
 			}
 			else
-				prevEvt->next = &List[n];
+				prevEvt->next = &this->List[n];
 			break;
 		}
 		runningDelta += curEvt->RelativeDelta;
@@ -154,37 +133,37 @@ void PsxEvents::Add( PsxEventType n, s32 time ) {
 		curEvt  = curEvt->next;
 	}
 
-	List[PsxEvt_Idle].RelativeDelta = 0x4000;
+	this->List[PsxEvt_Idle].RelativeDelta = 0x4000;
 }
 
-void PsxEvents::Remove( PsxEventType n ) {
-// 	events_t *event = &List[n];
-	if( List[n].next == NULL ) return;		// not even scheduled.
-	List[n].next->RelativeDelta += List[n].RelativeDelta;
+void PsxEvents::Cancel( PsxEventType n ) {
+// 	events_t *event = &this->List[n];
+	if( this->List[n].next == NULL ) return;		// not even scheduled.
+	this->List[n].next->RelativeDelta += this->List[n].RelativeDelta;
 
-	if( Next == &List[n] )
+	if( this->Next == &this->List[n] )
 	{
-		Next = List[n].next;
+		this->Next = this->List[n].next;
 		int psxPending 				= GetPendingCycles();
-		psxRegs.evtCycleDuration	= Next->RelativeDelta;
-		psxRegs.evtCycleCountdown	= Next->RelativeDelta - psxPending;
+		psxRegs.evtCycleDuration	= this->Next->RelativeDelta;
+		psxRegs.evtCycleCountdown	= this->Next->RelativeDelta - psxPending;
 	}
 	else
 	{
-		events_t* curEvt = Next;
+		events_t* curEvt = this->Next;
 		while( true )
 		{
-			if( curEvt->next == &List[n] )
+			if( curEvt->next == &this->List[n] )
 			{
-				curEvt->next = List[n].next;
+				curEvt->next = this->List[n].next;
 				break;
 			}
 			curEvt = curEvt->next;
 		}
 	}
 
-	List[n].next = NULL;
-	List[PsxEvt_Idle].RelativeDelta = 0x4000;
+	this->List[n].next = NULL;
+	this->List[PsxEvt_Idle].RelativeDelta = 0x4000;
 }
 
 void PsxEvents::ExecutePendingEvents() {
@@ -201,14 +180,14 @@ void PsxEvents::ExecutePendingEvents() {
 		psxRegs.cycle 				+= psxRegs.evtCycleDuration;
 		psxRegs.evtCycleDuration	= 0;
 		
-		events_t* exeEvt = Next;
-		Next 	 = exeEvt->next;
+		events_t* exeEvt = this->Next;
+		this->Next 	 = exeEvt->next;
 		exeEvt->next	 = NULL;
 
 		exeEvt->Execute();
 
-		psxRegs.evtCycleDuration	 = Next->RelativeDelta;
-		psxRegs.evtCycleCountdown	 = oldtime + Next->RelativeDelta;
+		psxRegs.evtCycleDuration	 = this->Next->RelativeDelta;
+		psxRegs.evtCycleCountdown	 = oldtime + this->Next->RelativeDelta;
 		if( psxRegs.evtCycleCountdown > 0 ) break;
 	}
 #ifdef GTE_TIMING
@@ -219,33 +198,9 @@ void PsxEvents::ExecutePendingEvents() {
 #endif
 }
 
-void psx_int_add( PsxEventType n, s32 ecycle )
-{
-	// Generally speaking games shouldn't throw ints that haven't been cleared yet.
-	// It's usually indicative os something amiss in our emulation.
-	if(Events.IsActiveEvent(n))
-	{
-// 		SysPrintf("Event: %d\t Cycle: %d\tecycle: %d\ttime: %d\told time: %d\n", n, psxRegs.OrigDelta, ecycle, psxRegs.OrigDelta + ecycle, Events.List[n].RelativeDelta);
-		return;
-		Events.Remove( n );
-	}
-#ifdef PRINT_EVENTS
-	SysPrintf("Event: %ld\t Cycle: %ld\tcycles: %ld\n", n, psxRegs.OrigDelta, ecycle);
-#endif
-	Events.Add( n, ecycle );
-}
-
-void psx_int_remove( PsxEventType n )
-{
-	Events.Remove( n );
-}
-
-bool psxIsActiveEvent(PsxEventType n) {
-	return (Events.IsActiveEvent(n));
-}
-
 void psxBranchTest() {
 	if (psxRegs.evtCycleCountdown > 0) return;
-	Events.ExecutePendingEvents();
+	Interrupt.ExecutePendingEvents();
 }
 
+}

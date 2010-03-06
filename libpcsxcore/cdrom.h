@@ -85,14 +85,6 @@ void cdrWrite1(unsigned char rt);
 void cdrWrite2(unsigned char rt);
 void cdrWrite3(unsigned char rt);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int cdrFreeze(gzFile f, int Mode);
-
-#ifdef __cplusplus
-} // extern "C" 
-#endif
 
 #endif /* __CDROM_H__ */

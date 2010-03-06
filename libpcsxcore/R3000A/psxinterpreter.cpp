@@ -21,11 +21,14 @@
  */
 
 #include "psxcommon.h"
+#include "psxevents.h"
 #include "r3000a.h"
 #include "gte.h"
 #include "psxhle.h"
 #include "psxhw.h"
 #include "R3000AOpcodeTable.h"
+
+using namespace R3000A;
 
 static int branch2 = 0;
 static u32 branchPC;
@@ -185,7 +188,7 @@ static void delayReadWrite(int reg, u32 bpc) {
 #define _tRs_     ((tmp >> 21) & 0x1F)  // The rs part of the instruction register 
 #define _tSa_     ((tmp >>  6) & 0x1F)  // The sa part of the instruction register
 
-int psxTestLoadDelay(int reg, u32 tmp) {
+int R3000A::psxTestLoadDelay(int reg, u32 tmp) {
 	if (tmp == 0) return 0; // NOP
 	switch (_fOp_(tmp)) {
 		case 0x00: // SPECIAL
@@ -329,7 +332,7 @@ int psxTestLoadDelay(int reg, u32 tmp) {
 	return 0;
 }
 
-void psxDelayTest(int reg, u32 bpc) {
+void R3000A::psxDelayTest(int reg, u32 bpc) {
 	u32 *code;
 	u32 tmp;
 
@@ -661,7 +664,6 @@ void psxJAL() {	_SetLink(31); doBranch(_JumpTarget_); }
 *********************************************************/
 void psxJR()   {
 	doBranch(_rRsU_);
-	psxJumpTest();
 }
 
 void psxJALR() {
@@ -802,7 +804,7 @@ __inline void psxSWR() {
 void psxMFC0() { if (!_Rt_) return; _rRtU_ = _rFsU_; }
 void psxCFC0() { if (!_Rt_) return; _rRtU_ = _rFsU_; }
 
-void psxTestSWInts() {
+void R3000A::psxTestSWInts() {
 	// the next code is untested, if u know please
 	// tell me if it works ok or not (linuzappz)
 	if (psxRegs.CP0.n.Cause & psxRegs.CP0.n.Status & 0x0300 &&
@@ -923,7 +925,7 @@ inline void execI() {
 #endif
 }
 
-R3000Acpu psxInt = {
+R3000Acpu R3000A::psxInt = {
 	intInit,
 	intReset,
 	intExecute,

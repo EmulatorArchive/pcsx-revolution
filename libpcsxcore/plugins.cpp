@@ -29,6 +29,8 @@
 #include "psxmem.h"
 #include <time.h>
 
+using namespace R3000A;
+
 char cdrfilename[MAXPATHLEN] = "";
 int cdOpenCase = 0;
 

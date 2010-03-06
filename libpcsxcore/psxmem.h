@@ -147,10 +147,6 @@ extern u8** psxMemRLUT;
 #define PSXREC
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int  psxMemInit();
 void psxMemReset();
 void psxMemShutdown();
@@ -162,10 +158,6 @@ void psxMemWrite8 (u32 mem, u8 value);
 void psxMemWrite16(u32 mem, u16 value);
 void psxMemWrite32(u32 mem, u32 value);
 void *psxMemPointer(u32 mem);
-
-#ifdef __cplusplus
-} // extern "C" 
-#endif
 
 #endif /* __PSXMEMORY_H__ */
 

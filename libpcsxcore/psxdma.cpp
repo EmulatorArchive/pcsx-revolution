@@ -28,6 +28,8 @@
 #include "psxhw.h"
 #include "psxevents.h"
 
+using namespace R3000A;
+
 // Dma0/1 in Mdec.c
 // Dma3   in CdRom.c
 
@@ -156,7 +158,7 @@ void psxDma2(u32 madr, u32 bcr, u32 chcr) { // GPU
 				break;
 			}
 			GPU_writeDataMem(ptr, size);
-			psx_int_add(PsxEvt_GPU, (size / 4) / BIAS);
+			Interrupt.Schedule(PsxEvt_GPU, (size / 4) / BIAS);
 			return;
 
 		case 0x01000401: // dma chain
@@ -213,5 +215,5 @@ void psxDma6(u32 madr, u32 bcr, u32 chcr) {
 		PSXDMA_LOG("*** DMA6 OT - unknown *** %lx addr = %lx size = %lx\n", chcr, madr, bcr);
 	}
 #endif
-	psx_int_add(PsxEvt_OTC, 2150);		// cnt1?
+	Interrupt.Schedule(PsxEvt_OTC, 2150);		// cnt1?
 }

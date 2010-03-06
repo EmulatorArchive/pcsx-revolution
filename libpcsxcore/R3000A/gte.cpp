@@ -28,6 +28,8 @@
 #pragma warning(disable:4761)
 #endif
 
+namespace R3000A {
+
 static inline s64 BOUNDS( s64 n_value, s64 n_max, int n_maxflag, s64 n_min, int n_minflag )
 {
 	if( n_value > n_max )
@@ -936,3 +938,5 @@ if( gteop == 0x1280414 )
 	gteG2 = Lm_C2( gteMAC2 >> 4 );
 	gteB2 = Lm_C3( gteMAC3 >> 4 );
 }
+
+} // namespace R3000A

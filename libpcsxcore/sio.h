@@ -89,10 +89,6 @@ unsigned char sioRead8();
 void sioWrite8(unsigned char value);
 void sioWriteCtrl16(unsigned short value);
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int sioFreeze(gzFile f, int Mode);
 
 void LoadMcd(int mcd, char *str);
@@ -104,9 +100,5 @@ void ConvertMcd(char *mcd, char *data);
 void GetMcdBlockInfo(int mcd, int block, McdBlock *info);
 
 void netError();
-
-#ifdef __cplusplus
-} // extern "C" 
-#endif
 
 #endif

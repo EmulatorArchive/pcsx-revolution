@@ -22,6 +22,8 @@
 #include "psxcommon.h"
 #include "r3000a.h"
 
+namespace R3000A {
+
 #ifdef GTE_TIMING
 u32 GteStall;
 #endif
@@ -198,5 +200,7 @@ void gteRTPT();
 void gteGPF();
 void gteGPL();
 void gteNCCT();
+
+}
 
 #endif /* __GTE_H__ */

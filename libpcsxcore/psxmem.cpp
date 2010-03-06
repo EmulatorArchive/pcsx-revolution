@@ -24,6 +24,8 @@
 #include "r3000a.h"
 #include "psxhw.h"
 
+using namespace R3000A;
+
 #ifdef HW_RVL
 #include "../Gamecube/MEM2.h"
 #endif

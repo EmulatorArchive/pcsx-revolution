@@ -34,10 +34,11 @@
 #include "mdec.h"
 #include "plugins.h"
 
+using namespace R3000A;
+
 #ifdef GEKKO
 #	define _LANGUAGE_ASSEMBLY
 #	include <ogc/machine/asm.h>
-#	include "Config.h"
 #endif
 
 //#define NO_CONSTANT
@@ -692,7 +693,7 @@ done:;
 	move_to_mem((u32)(u8*)ptr);
 }
 
-R3000Acpu psxRec = {
+R3000Acpu R3000A::psxRec = {
 	recInit,
 	recReset,
 	recExecute,

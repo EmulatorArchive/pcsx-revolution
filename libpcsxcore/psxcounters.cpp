@@ -28,6 +28,8 @@
 #include "cheat.h"
 #include "system.h"
 
+namespace R3000A {
+
 // We need it because of PixelClock rate - 13.5MHz.
 static const u32 PsxFixedBits = 12;
 
@@ -98,10 +100,8 @@ typedef struct
 } psxcnt_mode;
 
 class psxCounter {
-	public:
-		u8 index;
-
 	protected:
+		PsxEventType index;
 		u16 Count, Target;
 		union {
 			u32 mode;
@@ -115,18 +115,18 @@ class psxCounter {
 
 	public:
 		psxCounter() :
-			index( 0xcd )			// some kinda..
+			index( PsxEvt_Idle )			// some kinda..
 		,	Interrupt( 0xcdcd )		// ... invalid object state!
 		{
 		}
 		
-		psxCounter(u8 cntidx) : 
+		psxCounter( PsxEventType cntidx ) : 
 			index( cntidx ),
 			IsFutureTarget( true ),
 			IsCounting( true ),
 			cyclepass( 0 ),
 			Rate( 1 << PsxFixedBits ),
-			Interrupt( cntidx + 4 ),
+			Interrupt( PsxInt_RTC0 + cntidx ),
 			Count( 0 ),
 			Target( 0 ),
 			mode( 0 )
@@ -202,7 +202,7 @@ class psxCounter {
 					}
 
 					if (count > 0)
-						psx_int_add((PsxEventType)index, count);
+						R3000A::Interrupt.Schedule(index, count);
 				}
 			}
 			cyclepass = 0;
@@ -226,7 +226,7 @@ class psxCounter {
 		
 		void _update_counted_timepass( )
 		{
-			if( psxIsActiveEvent((PsxEventType)index) )
+			if( R3000A::Interrupt.IsScheduled( index ) )
 			{
 				s32 pendingCycles = cyclepass + GetPendingCycles();
 				s32 delta = (pendingCycles << PsxFixedBits) / Rate;
@@ -309,7 +309,7 @@ static psxCounter *psxCounters[3] = {NULL, NULL, NULL};
 void psxRcntInit() {
 	for( int i=0; i<3; ++i ) {
 		if(psxCounters[i] != NULL) delete psxCounters[i];
-		psxCounters[i] = new psxCounter( i );
+		psxCounters[i] = new psxCounter( ((PsxEventType)i) );
 		psxCounters[i]->Schedule();
 	}
 
@@ -352,13 +352,13 @@ void psxRcntVSync() {
 #ifdef GTE_LOG
 	GTE_LOG("VSync\n");
 #endif
-	psx_int_add(PsxEvt_vBlank, vSyncRate.Render);
+	Interrupt.Schedule(PsxEvt_vBlank, vSyncRate.Render);
 }
 
 void psxRcntVBlank() {
 	psxRaiseExtInt(PsxInt_VBlank);
 
-	psx_int_add(PsxEvt_vSync, vSyncRate.Blank);
+	Interrupt.Schedule(PsxEvt_vSync, vSyncRate.Blank);
 }
 
 void psxRcntUpdate0() {
@@ -409,4 +409,6 @@ int psxRcntFreeze(gzFile f, int Mode) {
 	gzfreezel(Unused);
 
 	return 0;
+}
+
 }

@@ -31,6 +31,8 @@
 #include "psxhw.h"
 #include "psxdma.h"
 
+using namespace R3000A;
+
 void psxHwReset() {
     if (Config.Sio) psxHu32ref(0x1070) |= SWAP32(0x80);
     if (Config.SpuIrq) psxHu32ref(0x1070) |= SWAP32(0x200);
@@ -719,6 +721,19 @@ void psxHwWrite32(u32 add, u32 value) {
 #ifdef PSXHW_LOG
 	PSXHW_LOG("*Known 32bit write at address %lx value %lx\n", add, value);
 #endif
+}
+
+void psxTestIntc()
+{
+	if( (psxHu32(0x1070) & psxHu32(0x1074)) == 0 ) return;
+
+	Interrupt.Schedule( PsxEvt_Exception, 0 );
+}
+
+void psxRaiseExtInt( PsxIrq irq )
+{
+	psxHu32ref(0x1070) |= SWAPu32(1 << irq);
+	psxTestIntc();
 }
 
 int psxHwFreeze(gzFile f, int Mode) {
