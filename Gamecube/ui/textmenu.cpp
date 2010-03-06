@@ -168,7 +168,7 @@ TEXT_MENU_ACTION Reset() {
 
 TEXT_MENU_ACTION SelectGame() {
 
-	ret_action ret = GameBrowser();
+	int ret = GameBrowser();
 
 	if( ret == 0 ) {
 		ret = Reset();
@@ -179,7 +179,7 @@ TEXT_MENU_ACTION SelectGame() {
 	else ret = UPDATE_MENU;
 
 	clrscr();
-	return ret;
+	return (ret_action)ret;
 }
 
 TEXT_MENU_ACTION Configure() {
