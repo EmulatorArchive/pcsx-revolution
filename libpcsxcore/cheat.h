@@ -32,6 +32,10 @@ typedef struct {
 	int			Enabled;
 } Cheat;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void ClearAllCheats();
 
 void LoadCheats(const char *filename);
@@ -74,6 +78,10 @@ void CheatSearchDifferent32();
 void CheatSearchNoChange8();
 void CheatSearchNoChange16();
 void CheatSearchNoChange32();
+
+#ifdef __cplusplus
+} // extern "C" 
+#endif
 
 extern Cheat *Cheats;
 extern CheatCode *CheatCodes;

@@ -33,7 +33,7 @@ unsigned long gpuDisp;
 
 int StatesC = 0;
 extern int UseGui;
-int cdOpenCase = 0;
+// int cdOpenCase = 0;
 int ShowPic=0;
 
 void gpuShowPic() {

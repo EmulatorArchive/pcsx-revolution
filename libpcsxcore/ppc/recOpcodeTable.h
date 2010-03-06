@@ -1,5 +1,60 @@
+/*  PCSX-Revolution - PS Emulator for Nintendo Wii
+ *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
+ *
+ *  PCSX-Revolution is free software: you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public 
+ *  License as published by the Free Software Foundation, either 
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  PCSX-Revolution is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License 
+ *  along with PCSX-Revolution.
+ *  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef _recR3000ATABLE_H_
 #define _recR3000ATABLE_H_
+
+#include "R3000AOpcodeTable.h"
+
+#define REC_FUNC(f) \
+static void rec##f() { \
+	iFlushRegs(); \
+	LIW(r3, (u32)psxRegs.code); \
+	STWRtoPR(&psxRegs.code, r3); \
+	LIW(r3, (u32)pc); \
+	STWRtoPR(&psxRegs.pc, r3); \
+	CALLFunc((u32)psx##f); \
+}
+
+#define REC_SYS(f) \
+void psx##f();\
+static void rec##f() { \
+	iFlushRegs(); \
+	LIW(r3, (u32)psxRegs.code); \
+	STWRtoPR(&psxRegs.code, r3); \
+	LIW(r3, (u32)pc); \
+	STWRtoPR(&psxRegs.pc, r3); \
+	CALLFunc((u32)psx##f); \
+	branch = 2; \
+	iRet(); \
+}
+
+#define REC_BRANCH(f) \
+static void rec##f() { \
+	iFlushRegs(); \
+	LIW(r3, (u32)psxRegs.code); \
+	STWRtoPR(&psxRegs.code, r3); \
+	LIW(r3, (u32)pc); \
+	STWRtoPR(&psxRegs.pc, r3); \
+	CALLFunc((u32)psx##f); \
+	branch = 2; \
+	iRet(); \
+}
 
 /* - Arithmetic with immediate operand - */
 /*********************************************************
@@ -450,35 +505,36 @@ static void recDIV() {
 	}
 	
 	CMPWI(r9, 0);
-	BNE_L(b32Ptr[0]);	// if(Rt == 0)
+	BNE_L( b32Ptr[10] );	// if(Rt == 0)
 
 	NOT(r9, r3);
 	STWRtoPR(&_rHiS_, r3);
 	SRAWI(r9, r9, 31);
 	ORI(r9, r9, 1);
 	STWRtoPR(&_rLoS_, r9);
-	B_L(b32Ptr[2]);
+	B_L( b32Ptr[12] );
 
-	B_DST(b32Ptr[0]);
+	B_DST( b32Ptr[10] );
 	LIS(r10, -32768);
 	CMPW(r3, r10);
-	BEQ_L(b32Ptr[3]);	// if(( Rs == 0x80000000 )
-	B_FROM(b32Ptr[4]);
+	BEQ_L( b32Ptr[13] );	// if(( Rs == 0x80000000 )
+	B_FROM( b32Ptr[14] );
 	DIVW(r10, r3, r9);	// rLo = Rs / Rt 
 	MULLW(r9, r10, r9);
 	STWRtoPR(&_rLoS_, r10);
 	SUBF(r9, r9, r3);	// rHi = Rs % Rt
 	STWRtoPR(&_rHiS_, r9);
-	B_L(b32Ptr[2]);
+	B_L( b32Ptr[11] );
 	
-	B_DST(b32Ptr[3]);
+	B_DST( b32Ptr[13] );
 	CMPWI(r9, -1);
-	BNE(*b32Ptr[4]);	// && Rt == 0xffffffff)
+	BNE( *b32Ptr[14] );	// && Rt == 0xffffffff)
 	STWRtoPR(&_rLoS_, r3);
 	LI(r3, 0);
 	STWRtoPR(&_rHiS_, r3);
 	
-	B_DST(b32Ptr[2]);
+	B_DST( b32Ptr[11] );
+	B_DST( b32Ptr[12] );
 }
 
 static void recDIVU() {
@@ -513,21 +569,21 @@ static void recDIVU() {
 	}
 
 	CMPWI(r9, 0);
-	BEQ_L(b32Ptr[0]);
+	BEQ_L( b32Ptr[10] );
 
 	DIVWU(r10, r3, r9);	// rLo = Rs / Rt 
 	MULLW(r9, r10, r9);
 	STWRtoPR(&_rLoU_, r10);
 	SUBF(r9, r9, r3);	// rHi = Rs % Rt
 	STWRtoPR(&_rHiU_, r9);
-	B_L(b32Ptr[2]);
+	B_L( b32Ptr[12] );
 
-	B_DST(b32Ptr[0]);
+	B_DST( b32Ptr[10] );
 	LI(r9, -1);
 	STWRtoPR(&_rHiU_, r3);
 	STWRtoPR(&_rLoU_, r9);
 
-	B_DST(b32Ptr[2]);
+	B_DST( b32Ptr[12] );
 }
 #endif
 //End of * Register mult/div & Register trap logic  
@@ -542,8 +598,9 @@ static void recSWL() {
 #if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
-		int t = addr >> 16;
 		const u32 shift = (addr & 3) << 3;
+		addr &= ~3;
+		int t = addr >> 16;
 
 		if ((t & 0x1fe0) == 0 && (t & 0x1fff) != 0) {
 			LWMtoR(r3, (uptr)&psxM[addr & 0x1ffffc]);
@@ -704,8 +761,9 @@ static void recSWR() {
 #if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
-		int t = addr >> 16;
 		const u32 shift = (addr & 3) << 3;
+		addr &= ~3;
+		int t = addr >> 16;
 
 		if ((t & 0x1fe0) == 0 && (t & 0x1fff) != 0) {
 			LWMtoR(r12, (uptr)&psxM[addr & 0x1ffffc]);
@@ -866,7 +924,6 @@ static void recSWR() {
 	OR(PPCARG2, r4, r10);
 
 	CALLFunc((uptr)psxMemWrite32);
-	resp += 24;
 }
 #endif
 #if 0
@@ -876,8 +933,9 @@ static void recLWL() {
 #if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
-		int t = addr >> 16;
 		const u32 shift = (addr & 3) << 3;
+		addr &= ~3;
+		int t = addr >> 16;
 
 		if ((t & 0x1fe0) == 0 && (t & 0x1fff) != 0) {
 			if (!_Rt_) return;
@@ -954,8 +1012,10 @@ static void recLWR() {
 #if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
-		int t = addr >> 16;
 		const u32 shift = (addr & 3) << 3;
+		addr &= ~3;
+		int t = addr >> 16;
+		
 
 		if ((t & 0x1fe0) == 0 && (t & 0x1fff) != 0) {
 			if (!_Rt_) return;
@@ -1033,7 +1093,7 @@ REC_FUNC(LHU);
 #else
 static void recLB() {
 // Rt = mem[Rs + Im] (signed)
-#if 1
+#if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -1072,12 +1132,11 @@ static void recLB() {
 		EXTSB(r3, r3);
 		STWRtoPR(&_rRtS_, r3);
 	}
-	resp += 16;
 }
 
 static void recLBU() {
 // Rt = mem[Rs + Im] (unsigned)
-#if 1
+#if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -1113,15 +1172,13 @@ static void recLBU() {
 
 	if (_Rt_) {
 		iRegs[_Rt_].state = ST_UNK;
-		//RLWINM(r3, r3, 0, 24, 31);
 		STWRtoPR(&_rRtU_, r3);
 	}
-	resp += 16;
 }
 
 static void recLH() {
 // Rt = mem[Rs + Im] (signed)
-#if 1
+#if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -1129,7 +1186,7 @@ static void recLH() {
 		if ((t & 0xfff0) == 0xbfc0) {
 			if (!_Rt_) return;
 			// since bios is readonly it won't change
-			MapConst(_Rt_, psxRs16(addr));
+			MapConst(_Rt_, psxRu16(addr));
 			return;
 		}
 		if ((t & 0x1fe0) == 0 && (t & 0x1fff) != 0) {
@@ -1160,12 +1217,11 @@ static void recLH() {
 		EXTSH(r3, r3);
 		STWRtoPR(&_rRtS_, r3);
 	}
-	resp += 16;
 }
 
 static void recLHU() {
 // Rt = mem[Rs + Im] (unsigned)
-#if 1
+#if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -1183,7 +1239,6 @@ static void recLHU() {
 			LWMtoR(r3, (uptr)&psxM[addr & 0x1fffff]);
 			RLWINM(r3, r3, 0, 16, 31);
 			STWRtoPR(&_rRtU_, r3);
-			resp += 8;
 			return;
 		}
 		if (t == 0x1f80 && addr < 0x1f801000) {
@@ -1193,7 +1248,6 @@ static void recLHU() {
 			LWMtoR(r3, (uptr)&psxH[addr & 0xfff]);
 			RLWINM(r3, r3, 0, 16, 31);
 			STWRtoPR(&_rRtU_, r3);
-			resp += 8;
 			return;
 		}
 
@@ -1204,9 +1258,8 @@ static void recLHU() {
 
 					LIW(PPCARG1, addr);
 					CALLFunc((uptr)SPU_readRegister);
-					RLWINM(r3, r3, 0, 16, 31);
+// 					RLWINM(r3, r3, 0, 16, 31);
 					STWRtoPR(&_rRtU_, r3);
-					resp += 8;
 					return;
 			}
 			switch (addr) {
@@ -1216,31 +1269,28 @@ static void recLHU() {
 
 					LIW(PPCARG1, (addr >> 4) & 0x3);
 					CALLFunc((uptr)psxRcntRcount);
-					RLWINM(r3, r3, 0, 16, 31);
+// 					RLWINM(r3, r3, 0, 16, 31);
 					STWRtoPR(&_rRtU_, r3);
-					resp += 16;
 					return;
 
 				case 0x1f801104: case 0x1f801114: case 0x1f801124:
 					if (!_Rt_) return;
 					iRegs[_Rt_].state = ST_UNK;
 
-					LIW(r3, (uptr)&psxCounters);
-					LWZ(r3, r3, OFFSET(&psxCounters, (&psxCounters[(addr >> 4) & 0x3].mode)));
+					LIW(PPCARG1, (addr >> 4) & 0x3);
+					CALLFunc((uptr)psxRcntRmode);
 					RLWINM(r3, r3, 0, 16, 31);
 					STWRtoPR(&_rRtU_, r3);
-					resp += 8;
 					return;
 	
 				case 0x1f801108: case 0x1f801118: case 0x1f801128:
 					if (!_Rt_) return;
 					iRegs[_Rt_].state = ST_UNK;
 
-					LIW(r3, (uptr)&psxCounters);
-					LWZ(r3, r3, OFFSET(&psxCounters, (&psxCounters[(addr >> 4) & 0x3].target)));
-					RLWINM(r3, r3, 0, 16, 31);
+					LIW(PPCARG1, (addr >> 4) & 0x3);
+					CALLFunc((uptr)psxRcntRtarget);
+// 					RLWINM(r3, r3, 0, 16, 31);
 					STWRtoPR(&_rRtU_, r3);
-					resp += 8;
 					return;
 			}
 		}
@@ -1255,7 +1305,6 @@ static void recLHU() {
 		//RLWINM(r3, r3, 0, 16, 31);
 		STWRtoPR(&_rRtU_, r3);
 	}
-	resp += 16;
 }
 #endif
 
@@ -1264,8 +1313,7 @@ REC_FUNC(LW);
 #else
 static void recLW() {
 // Rt = mem[Rs + Im] (unsigned)
-
-#if 1
+#if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -1336,13 +1384,12 @@ static void recLW() {
 	CALLFunc((uptr)psxMemRead32);
 	if (_Rt_) {
 		iRegs[_Rt_].state = ST_UNK;
-		STWRtoPR(&_rRtS_, r3);
+		STWRtoPR(&_rRtU_, r3);
 	}
-	resp += 16;
 }
 #endif
 
-#if 0
+#if 1
 REC_FUNC(SB);
 REC_FUNC(SH);
 REC_FUNC(SW);
@@ -1386,12 +1433,11 @@ static void recSB() {
 		LBPRtoR(PPCARG2, &psxRegs.GPR.r[_Rt_].b.l);
 	}
 	CALLFunc((u32)psxMemWrite8);
-	resp += 8;
 }
 
 static void recSH() {
 // mem[Rs + Im] = Rt
-#if 1
+#if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -1424,7 +1470,6 @@ static void recSH() {
 					RLWINM(PPCARG2, PPCARG2, 0, 16, 31);
 				}
 				CALLFunc((uptr)&SPU_writeRegister);
-				resp+= 8;
 				return;
 			}*/
 			switch (addr) {
@@ -1469,12 +1514,11 @@ static void recSH() {
 		LHPRtoR(PPCARG2, &psxRegs.GPR.r[_Rt_].w.l);
 	}
 	CALLFunc((u32)psxMemWrite16);
-	resp += 8;
 }
 
 static void recSW() {
 // mem[Rs + Im] = Rt
-#if 1
+#if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -1523,7 +1567,6 @@ static void recSW() {
 						LWPRtoR(PPCARG1, &_rRtU_);
 					}
 					CALLFunc((u32)&GPU_writeData);
-					//resp+= 4;
 					return;
 
 				case 0x1f801814:
@@ -1533,7 +1576,6 @@ static void recSW() {
 						LWPRtoR(PPCARG1, &_rRtU_);
 					}
 					CALLFunc((u32)&GPU_writeStatus);
-					//resp+= 4;
 					return;
 					
 				case 0x1f801820:
@@ -1543,7 +1585,6 @@ static void recSW() {
 						LWPRtoR(PPCARG1, &_rRtU_);
 					}
 					CALLFunc((u32)&mdecWrite0);
-					//resp+= 4;
 					return;
 
 				case 0x1f801824:
@@ -1553,7 +1594,6 @@ static void recSW() {
 						LWPRtoR(PPCARG1, &_rRtU_);
 					}
 					CALLFunc((u32)&mdecWrite1);
-					//resp+= 4;
 					return;
 			}
 		}
@@ -1567,7 +1607,6 @@ static void recSW() {
 		LWPRtoR(PPCARG2, &_rRtU_);
 	}
 	CALLFunc((u32)psxMemWrite32);
-	resp += 8;
 }
 #endif
 
@@ -2192,6 +2231,10 @@ static void recHLE() {
 	CALLFunc((u32)psxHLEt[psxRegs.code & 0xffff]);
 	branch = 2;
 	iRet();
+}
+
+static void recNULL() {
+//	SysMessage("recUNK: %8.8x\n", psxRegs.code);
 }
 
 #endif

@@ -51,7 +51,7 @@ extern "C" {
 #endif
 
 // Pre-formatted string (use sprintf before sending to print)
-void DEBUG_print(char* string,int pos);
+void DEBUG_print(const char* string, int pos);
 void DEBUG_stats(int stats_id, char *info, unsigned int stats_type, unsigned int adjustment_value);
 
 // Should be called before get_text. Ages the strings, and remove old ones

@@ -1,22 +1,20 @@
-/***************************************************************************
- *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
- *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   51 Franklin Steet, Fifth Floor, Boston, MA 02111-1307 USA.            *
- ***************************************************************************/
+/*  PCSX-Revolution - PS Emulator for Nintendo Wii
+ *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
+ *
+ *  PCSX-Revolution is free software: you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public 
+ *  License as published by the Free Software Foundation, either 
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  PCSX-Revolution is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License 
+ *  along with PCSX-Revolution.
+ *  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef __PSXMEMORY_H__
 #define __PSXMEMORY_H__
@@ -72,7 +70,7 @@ static __inline__ void PUTLE32(uint32_t *ptr, uint32_t val) {
 
 #endif
 
-s8 *psxM;
+extern s8 *psxM;
 #define psxMs8(mem)		psxM[(mem) & 0x1fffff]
 #define psxMs16(mem)	(GETLE16((s16*)&psxM[(mem) & 0x1fffff]))
 #define psxMs32(mem)	(GETLE32((s32*)&psxM[(mem) & 0x1fffff]))
@@ -87,7 +85,7 @@ s8 *psxM;
 #define psxMu16ref(mem)	(*(u16*)&psxM[(mem) & 0x1fffff])
 #define psxMu32ref(mem)	(*(u32*)&psxM[(mem) & 0x1fffff])
 
-s8 *psxP;
+extern s8 *psxP;
 #define psxPs8(mem)	    psxP[(mem) & 0xffff]
 #define psxPs16(mem)	(GETLE16((s16*)&psxP[(mem) & 0xffff]))
 #define psxPs32(mem)	(GETLE32((s32*)&psxP[(mem) & 0xffff]))
@@ -102,7 +100,7 @@ s8 *psxP;
 #define psxPu16ref(mem)	(*(u16*)&psxP[(mem) & 0xffff])
 #define psxPu32ref(mem)	(*(u32*)&psxP[(mem) & 0xffff])
 
-s8 *psxR;
+extern s8 *psxR;
 #define psxRs8(mem)		psxR[(mem) & 0x7ffff]
 #define psxRs16(mem)	(GETLE16((s16*)&psxR[(mem) & 0x7ffff]))
 #define psxRs32(mem)	(GETLE32((s32*)&psxR[(mem) & 0x7ffff]))
@@ -117,7 +115,7 @@ s8 *psxR;
 #define psxRu16ref(mem)	(*(u16*)&psxR[(mem) & 0x7ffff])
 #define psxRu32ref(mem)	(*(u32*)&psxR[(mem) & 0x7ffff])
 
-s8 *psxH;
+extern s8 *psxH;
 #define psxHs8(mem)		psxH[(mem) & 0xffff]
 #define psxHs16(mem)	(GETLE16((s16*)&psxH[(mem) & 0xffff]))
 #define psxHs32(mem)	(GETLE32((s32*)&psxH[(mem) & 0xffff]))
@@ -132,8 +130,8 @@ s8 *psxH;
 #define psxHu16ref(mem)	(*(u16*)&psxH[(mem) & 0xffff])
 #define psxHu32ref(mem)	(*(u32*)&psxH[(mem) & 0xffff])
 
-u8** psxMemWLUT;
-u8** psxMemRLUT;
+extern u8** psxMemWLUT;
+extern u8** psxMemRLUT;
 
 #define PSXM(mem)		(psxMemRLUT[(mem) >> 16] == 0 ? NULL : (u8*)(psxMemRLUT[(mem) >> 16] + ((mem) & 0xffff)))
 #define PSXMs8(mem)		(*(s8 *)PSXM(mem))
@@ -149,6 +147,10 @@ u8** psxMemRLUT;
 #define PSXREC
 #endif
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int  psxMemInit();
 void psxMemReset();
 void psxMemShutdown();
@@ -160,6 +162,10 @@ void psxMemWrite8 (u32 mem, u8 value);
 void psxMemWrite16(u32 mem, u16 value);
 void psxMemWrite32(u32 mem, u32 value);
 void *psxMemPointer(u32 mem);
+
+#ifdef __cplusplus
+} // extern "C" 
+#endif
 
 #endif /* __PSXMEMORY_H__ */
 

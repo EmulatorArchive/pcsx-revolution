@@ -34,6 +34,7 @@
 #include "../libpcsxcore/sio.h"
 #include "../libpcsxcore/plugins.h"
 #include "../libpcsxcore/r3000a.h"
+#include "../libpcsxcore/debug.h"
 
 #include "Linux.h"
 #include "ConfDlg.h"
@@ -490,7 +491,7 @@ void SysClose() {
 	if (emuLog != NULL) fclose(emuLog);
 }
 
-void SysPrintf(char *fmt, ...) {
+void SysPrintf(const char *fmt, ...) {
 	va_list list;
 	char msg[512];
 
@@ -518,11 +519,11 @@ void SysPrintf(char *fmt, ...) {
 #endif
 }
 
-void *SysLoadLibrary(char *lib) {
+void *SysLoadLibrary(const char *lib) {
 	return dlopen(lib, RTLD_NOW);
 }
 
-void *SysLoadSym(void *lib, char *sym) {
+void *SysLoadSym(void *lib, const char *sym) {
 	return dlsym(lib, sym);
 }
 
