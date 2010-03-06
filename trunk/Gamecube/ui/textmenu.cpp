@@ -26,6 +26,8 @@
 #include "misc.h"
 #include "Config.h"
 
+using namespace R3000A;
+
 #define SAVE_STATE 0
 
 #ifdef HW_RVL

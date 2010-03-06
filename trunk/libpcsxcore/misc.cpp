@@ -31,6 +31,8 @@
 #include "psxbios.h"
 #include "psxcounters.h"
 
+using namespace R3000A;
+
 int Log = 0;
 
 char CdromId[10] = "";

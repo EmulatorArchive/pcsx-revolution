@@ -21,7 +21,7 @@
 
 #include "psxcommon.h"
 
-// namespace Events {
+namespace R3000A {
 
 typedef enum
 {
@@ -52,19 +52,41 @@ typedef enum
 	PsxEvt_CountAll		// total number of schedulable event types in the Psx
 } PsxEventType;
 
+typedef struct int_timer {
+	u32 RelativeDelta;
+	u32 OrigDelta;
+	void (*Execute)();
+	struct int_timer *next;
+} events_t;
+
+class PsxEvents {
+	protected:
+		events_t List[PsxEvt_CountAll];
+		events_t *Next;
+
+	public:
+		void Schedule( PsxEventType n, s32 time );
+		void Cancel( PsxEventType n );
+	
+		void IdleEventHandler() {
+			this->Next = &this->List[PsxEvt_Idle];
+		}
+		
+		void Reset();
+
+		__inline bool IsScheduled(PsxEventType n) {
+			return (this->List[n].next != NULL);
+		}
+
+		void ExecutePendingEvents();
+};
+
+extern PsxEvents Interrupt;
+
 void ResetEvents();
 
-bool psxIsActiveEvent(PsxEventType n);
+void psxBranchTest();
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void psx_int_add(PsxEventType n, s32 ecycle);
-void psx_int_remove(PsxEventType n);
-
-#ifdef __cplusplus
-} // extern "C" 
-#endif
+} // namespace
 
 #endif // _PSXEVENTS_H_

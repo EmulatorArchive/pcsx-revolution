@@ -21,6 +21,9 @@
 */
 
 #include "psxcommon.h"
+#include "r3000a.h"
+
+using namespace R3000A;
 
 char ostr[256];
 

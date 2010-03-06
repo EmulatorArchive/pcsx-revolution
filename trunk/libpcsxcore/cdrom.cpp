@@ -31,6 +31,8 @@
 #include "misc.h"
 #include "decode_xa.h"
 
+using namespace R3000A;
+
 /* CD-ROM magic numbers */
 #define CdlSync        0
 #define CdlNop         1
@@ -101,8 +103,8 @@ static const u32 cdReadTime = ((PSXCLK / 75) / BIAS);	// 0x37200
 static struct CdrStat stat;
 static struct SubQ *subq;
 
-#define CDR_INT(eCycle)    psx_int_add(PsxEvt_Cdrom, eCycle);
-#define CDREAD_INT(eCycle) psx_int_add(PsxEvt_CdromRead, eCycle);
+#define CDR_INT(eCycle)    Interrupt.Schedule(PsxEvt_Cdrom, eCycle);
+#define CDREAD_INT(eCycle) Interrupt.Schedule(PsxEvt_CdromRead, eCycle);
 
 static void AddIrqQueue(unsigned char irq, unsigned long ecycle) {
 	cdr.Irq = irq;
@@ -123,7 +125,7 @@ static void StartReading(u32 type) {
 static void StopReading() {
 	if (cdr.Reading) {
 		cdr.Reading = 0;
-		psx_int_remove(PsxEvt_CdromRead);
+		Interrupt.Cancel(PsxEvt_CdromRead);
 	}
 	cdr.StatP &= ~0x20;
 }

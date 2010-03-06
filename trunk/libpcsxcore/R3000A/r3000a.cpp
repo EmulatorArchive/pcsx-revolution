@@ -26,9 +26,10 @@
 #include "psxbios.h"
 #include "psxevents.h"
 
+namespace R3000A {
+
 R3000Acpu *psxCpu;
 psxRegisters psxRegs;
-// Events_t Events;
 
 int psxInit() {
 	SysPrintf(_("Running PCSX-Revolution Version %s (%s).\n"), PACKAGE_VERSION, __DATE__);
@@ -56,22 +57,6 @@ u32 __inline psxGetCycle()
 s32 GetPendingCycles()
 {
 	return psxRegs.evtCycleDuration - psxRegs.evtCycleCountdown;
-}
-
-void psxTestIntc()
-{
-	if( (psxHu32(0x1070) & psxHu32(0x1074)) == 0 ) return;
-
-	psx_int_add( PsxEvt_Exception, 0 );
-}
-
-void psxRaiseExtInt( PsxIrq irq )
-{
-#ifdef PRINT_EVENTS
-	SysPrintf("ExtInt: %ld\n", irq);
-#endif
-	psxHu32ref(0x1070) |= SWAPu32(1 << irq);
-	psxTestIntc();
 }
 
 void psxReset() {
@@ -148,11 +133,7 @@ void psxException(u32 code, u32 bd) {
 		// "hokuto no ken" / "Crash Bandicot 2" ... fix
 		PSXMu32ref(psxRegs.CP0.n.EPC)&= SWAPu32(~0x02000000);
 	}
-
-	if (Config.HLE) psxBiosException();
-}
-
-void psxJumpTest() {
+	
 	if (!Config.HLE && Config.PsxOut) {
 		u32 call = psxRegs.GPR.n.t1 & 0xff;
 		switch (psxRegs.pc & 0x1fffff) {
@@ -181,6 +162,8 @@ void psxJumpTest() {
 				break;
 		}
 	}
+
+	if (Config.HLE) psxBiosException();
 }
 
 void psxExecuteBios() {
@@ -188,3 +171,4 @@ void psxExecuteBios() {
 		psxCpu->ExecuteBlock();
 }
 
+}

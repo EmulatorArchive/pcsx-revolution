@@ -24,7 +24,7 @@
 #include "r3000a.h"
 #include "psxevents.h"
 
-// namespace Counters {
+namespace R3000A {
 
 void psxRcntUpdate0();
 void psxRcntUpdate1();
@@ -42,19 +42,10 @@ u16 psxRcntRcount(PsxEventType index);
 u32 psxRcntRmode(PsxEventType index);
 u16 psxRcntRtarget(PsxEventType index);
 
-// } // namespace Counters
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 int psxRcntFreeze(gzFile f, int Mode);
 
-// void psxUpdateVSyncRate();
 void CalcRate(u32 region);
 
-#ifdef __cplusplus
-} // extern "C" 
-#endif
+}; // namespace
 
 #endif /* __PSXCOUNTERS_H__ */

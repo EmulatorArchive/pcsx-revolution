@@ -19,16 +19,7 @@
 #ifndef TEXTMENU_H
 #define TEXTMENU_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 void Main_menu();
-
-#ifdef __cplusplus
-} // extern "C" 
-#endif
-
 int GameBrowser();
 char *StateBrowser();
 void Config_menu();

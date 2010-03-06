@@ -19,26 +19,19 @@
 #include <gccore.h>
 #include <malloc.h>
 #include <stdio.h>
-#include <stdlib.h>
+
 #include <unistd.h>
 #include <stdarg.h>
 #include <errno.h>
 #include <string.h>
 #include <math.h>
 #include "system.h"
-#include "r3000a.h"
 #include "DEBUG.h"
 
 #include "Config.h"
 #include "gcMisc.h"
 
 #include "pad.h"
-
-#ifdef USE_GUI
-#include "gui/guimenu.h"
-#else
-#include "ui/textmenu.h"
-#endif
 
 #include "storage/wiifat.h"
 //#include "storage/wiidvd.h"
@@ -203,48 +196,9 @@ int main(int argc, char *argv[]) {
 		init_default_pads();
 	}
 
-	Main_menu();
-	
-	psxCpu->Execute();
+	SysRunGui();
 
 	return 0;
-}
-
-void SysPrintf(const char *fmt, ...) {
-	if (Config.PsxOut) {
-		va_list list;
-		char msg[512];
-
-		va_start(list, fmt);
-		vsprintf(msg, fmt, list);
-		va_end(list);
-	
-		printf ("%s", msg);
-	}
-}
-
-int SysInit() {
-    SysPrintf("start SysInit()\r\n");
-
-    SysPrintf("psxInit()\r\n");
-	psxInit();
-
-    SysPrintf("LoadPlugins()\r\n");
-	if(LoadPlugins()==-1)
-		SysPrintf("ErrorLoadingPlugins()\r\n");
-	SysPrintf("end SysInit()\r\n");
-	return 0;
-}
-
-void SysReset() {
-    SysPrintf("start SysReset()\r\n");
-	psxReset();
-	SysPrintf("end SysReset()\r\n");
-}
-
-void SysClose() {
-	psxShutdown();
-	ReleasePlugins();
 }
 
 void *SysLoadLibrary(const char *lib) {
@@ -262,28 +216,4 @@ void *SysLoadSym(void *lib, const char *sym) {
 		if(plugin->syms[i].sym && !strcmp(sym, plugin->syms[i].sym))
 			return plugin->syms[i].pntr;
 	return NULL;
-}
-
-const char *SysLibError() {
-	return NULL;
-}
-
-void SysCloseLibrary(void *lib) {
-//	dlclose(lib);
-}
-
-int framesdone = 0;
-void SysUpdate() {
-#ifdef SHOW_DEBUG
-
-#endif
-}
-
-void SysRunGui() {
-	Main_menu();
-	psxCpu->Execute();
-}
-
-void SysMessage(const char *fmt, ...) {
-	
 }

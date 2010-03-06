@@ -28,6 +28,8 @@
 #include "sio.h"
 #include "psxevents.h"
 
+using namespace R3000A;
+
 // *** FOR WORKS ON PADS AND MEMORY CARDS *****
 
 unsigned char cardh[4] = { 0x00, 0x00, 0x5a, 0x5d };
@@ -43,7 +45,7 @@ char Mcd1Data[MCD_SIZE], Mcd2Data[MCD_SIZE];
 
 // (PSXCLK / SIOCLK) * BIAS = 270; (SIOCLK = 250kHz) (Firnis)
 static const u32 sioCycles = (PSXCLK / 250000) * BIAS;
-#define SIO_INT() psx_int_add(PsxEvt_SIO, sioCycles );
+#define SIO_INT() Interrupt.Schedule(PsxEvt_SIO, sioCycles );
 
 void sioInit()
 {
@@ -296,7 +298,7 @@ void sioWriteCtrl16(unsigned short value) {
 	if ((sio.CtrlReg & SIO_RESET) || (!sio.CtrlReg)) {
 		sio.padst = 0; sio.mcdst = 0; sio.parp = 0;
 		sio.StatReg = TX_RDY | TX_EMPTY;
-		psx_int_remove(PsxEvt_SIO);
+		Interrupt.Cancel(PsxEvt_SIO);
 	}
 }
 

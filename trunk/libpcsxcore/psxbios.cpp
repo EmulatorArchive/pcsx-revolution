@@ -31,6 +31,8 @@
 #include "psxbios.h"
 #include "psxevents.h"
 
+using namespace R3000A;
+
 //We try to emulate bios :) HELP US :P
 
 const char *biosA0n[256] = {
