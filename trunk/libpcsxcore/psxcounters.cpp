@@ -132,25 +132,7 @@ class psxCounter {
 			mode( 0 )
 		{
 		}
-		
-		void print_cnt() {
-			SysPrintf("Stop: %d\n", mode_b.Stop);
-			SysPrintf("Stop: %d\n", mode_b.unused);
-			SysPrintf("Stop: %d\n", mode_b.Reset);
-			SysPrintf("Stop: %d\n", mode_b.Tar);
-			SysPrintf("Stop: %d\n", mode_b.IRQTARGET);
-			SysPrintf("Stop: %d\n", mode_b.IRQOVF);
-			SysPrintf("Stop: %d\n", mode_b.Repeat);
-			SysPrintf("Stop: %d\n", mode_b.unused2);
-			SysPrintf("Stop: %d\n", mode_b.ClockSource);
-			SysPrintf("Stop: %d\n", mode_b.Div);
-			SysPrintf("Count: %d\n", Count);
-			SysPrintf("target: %d\n", Target);
-			SysPrintf("rate: %d\n", Rate >> PsxFixedBits);
-			SysPrintf("rate: %b\n", IsFutureTarget);
-			SysPrintf("===============\n");
-		}
-		
+
 		void AdvanceCycle(s32 delta) {
 			cyclepass += delta;
 		}
@@ -164,12 +146,12 @@ class psxCounter {
 			u16 ret = Count;
 			if (mode_b.Stop == 0) {
 				if(Config.RCntFix) {
-					s32 pendingCycles = cyclepass + GetPendingCycles();
+					s32 pendingCycles = cyclepass + psxRegs.GetPendingCycles();
 					s32 delta = (pendingCycles << PsxFixedBits) / (Rate * BIAS);
 					ret += delta;
 				}
 				else {
-					s32 pendingCycles = cyclepass + GetPendingCycles();
+					s32 pendingCycles = cyclepass + psxRegs.GetPendingCycles();
 					s32 delta = (pendingCycles << PsxFixedBits) / Rate;
 					ret += delta;
 				}
@@ -178,11 +160,11 @@ class psxCounter {
 			return ret;
 		}
 		
-		u16 ReadTarget() {
+		u16 __inline ReadTarget() {
 			return Target;
 		}
 		
-		u16 ReadMode() {
+		u16 __inline ReadMode() {
 			return mode;
 		}
 		
@@ -228,7 +210,7 @@ class psxCounter {
 		{
 			if( R3000A::Interrupt.IsScheduled( index ) )
 			{
-				s32 pendingCycles = cyclepass + GetPendingCycles();
+				s32 pendingCycles = cyclepass + psxRegs.GetPendingCycles();
 				s32 delta = (pendingCycles << PsxFixedBits) / Rate;
 				Count += delta;
 			}
