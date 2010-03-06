@@ -1,19 +1,19 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2003  Pcsx Team
+/*  PCSX-Revolution - PS Emulator for Nintendo Wii
+ *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  PCSX-Revolution is free software: you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public 
+ *  License as published by the Free Software Foundation, either 
+ *  version 2 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  PCSX-Revolution is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License 
+ *  along with PCSX-Revolution.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef __PGTE_H__
@@ -40,24 +40,24 @@ int psxCP2time[64] = {
 
 #define CP2_FUNC(f) \
 static void rec##f() { \
-	if (pc < cop2readypc) idlecyclecount += (cop2readypc - pc)>>2; \
+	/*if (pc < cop2readypc) idlecyclecount += (cop2readypc - pc)>>2; */\
 	iFlushRegs(); \
 	LIW(r9, (u32)psxRegs.code); \
 	STWRtoPR(&psxRegs.code, r9); \
 	CALLFunc ((u32)gte##f); \
-	cop2readypc = pc + (psxCP2time[_fFunct_(psxRegs.code)]<<2); \
+	/*cop2readypc = pc + (psxCP2time[_fFunct_(psxRegs.code)]<<2);*/ \
 }
 
 #define CP2_FUNCNC(f) \
 static void rec##f() { \
-	if (pc < cop2readypc) idlecyclecount += ((cop2readypc - pc)>>2); \
+/*	if (pc < cop2readypc) idlecyclecount += ((cop2readypc - pc)>>2); */\
 	iFlushRegs(); \
 	CALLFunc ((u32)gte##f); \
 /*	branch = 2; */\
-	cop2readypc = pc + psxCP2time[_fFunct_(psxRegs.code)]; \
+/*	cop2readypc = pc + psxCP2time[_fFunct_(psxRegs.code)]; */\
 }
 
-#if 0
+#if 1
 CP2_FUNC(LWC2);
 #else
 static void recLWC2() {
@@ -146,7 +146,7 @@ static void recLWC2() {
 }
 #endif
 
-#if 0
+#if 1
 CP2_FUNC(CFC2);
 #else
 static void recCFC2() {
@@ -159,7 +159,7 @@ static void recCFC2() {
 }
 #endif
 
-#if 0
+#if 1
 CP2_FUNC(CTC2);
 #else
 static void recCTC2() {
@@ -173,7 +173,7 @@ static void recCTC2() {
 }
 #endif
 
-#if 0
+#if 1
 CP2_FUNC(MFC2);
 #else
 static void recMFC2() {
@@ -221,7 +221,7 @@ static void recMFC2() {
 	resp += 16;
 }
 #endif
-#if 0
+#if 1
 CP2_FUNC(MTC2);
 #else
 static void recMTC2() {
@@ -290,7 +290,7 @@ static void recMTC2() {
 }
 #endif
 
-#if 0
+#if 1
 CP2_FUNC(SWC2);
 #else
 static void recSWC2() {
@@ -383,28 +383,29 @@ static void recSWC2() {
 }
 #endif
 
-CP2_FUNCNC(RTPS);
 CP2_FUNC(OP);
-CP2_FUNCNC(NCLIP);
 CP2_FUNC(DPCS);
 CP2_FUNC(INTPL);
 CP2_FUNC(MVMVA);
-CP2_FUNCNC(NCDS);
-CP2_FUNCNC(NCDT);
-CP2_FUNCNC(CDP);
-CP2_FUNCNC(NCCS);
-CP2_FUNCNC(CC);
-CP2_FUNCNC(NCS);
-CP2_FUNCNC(NCT);
+CP2_FUNC(NCDT);
+CP2_FUNC(CC);
+CP2_FUNC(NCT);
 CP2_FUNC(SQR);
 CP2_FUNC(DCPL);
 CP2_FUNC(DPCT);
-CP2_FUNCNC(AVSZ3);
-CP2_FUNCNC(AVSZ4);
 CP2_FUNC(RTPT);
 CP2_FUNC(GPF);
 CP2_FUNC(GPL);
-CP2_FUNCNC(NCCT);
+CP2_FUNC(NCCT);
+
+CP2_FUNCNC(RTPS);
+CP2_FUNCNC(AVSZ3);
+CP2_FUNCNC(AVSZ4);
+CP2_FUNCNC(CDP);
+CP2_FUNCNC(NCS);
+CP2_FUNCNC(NCCS);
+CP2_FUNCNC(NCDS);
+CP2_FUNCNC(NCLIP);
 
 #if 0
 

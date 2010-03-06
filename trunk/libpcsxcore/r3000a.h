@@ -1,22 +1,20 @@
-/***************************************************************************
- *   Copyright (C) 2007 Ryan Schultz, PCSX-df Team, PCSX team              *
- *   schultz.ryan@gmail.com, http://rschultz.ath.cx/code.php               *
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- *   This program is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
- *   GNU General Public License for more details.                          *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, write to the                         *
- *   Free Software Foundation, Inc.,                                       *
- *   51 Franklin Steet, Fifth Floor, Boston, MA 02111-1307 USA.            *
- ***************************************************************************/
+/*  PCSX-Revolution - PS Emulator for Nintendo Wii
+ *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
+ *
+ *  PCSX-Revolution is free software: you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public 
+ *  License as published by the Free Software Foundation, either 
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  PCSX-Revolution is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License 
+ *  along with PCSX-Revolution.
+ *  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #ifndef __R3000A_H__
 #define __R3000A_H__
@@ -32,7 +30,8 @@ typedef struct {
 	void (*Shutdown)();
 } R3000Acpu;
 
-R3000Acpu *psxCpu;
+extern R3000Acpu *psxCpu;
+
 extern R3000Acpu psxInt;
 #if (defined(__x86_64__) || defined(__i386__) || defined(__sh__) || defined(__ppc__)) && !defined(NOPSXREC)
 extern R3000Acpu psxRec;
@@ -40,49 +39,6 @@ extern R3000Acpu psxRec;
 #endif
 
 //#define GTE_TIMING
-
-typedef enum
-{
-	PsxEvt_Counter0 = 0,
-
-	PsxEvt_Counter1,
-	PsxEvt_Counter2,
-	PsxEvt_Counter3,
-	PsxEvt_Counter4,
-
-	PsxEvt_Exception,		// 5
-	PsxEvt_SIO,				// 6
-	PsxEvt_GPU,				// 7
-
-	PsxEvt_Cdrom,			// 8
-	PsxEvt_CdromRead,		// 9
-	PsxEvt_SPU,				// 10
-	
-	PsxEvt_MDEC,			// 11
-	PsxEvt_OTC,				// 12
-
-	PsxEvt_CountNonIdle,
-
-	// Idle state, no events scheduled.  Placed at -1 since it has no actual
-	// entry in the Event System's event schedule table.
-	PsxEvt_Idle = PsxEvt_CountNonIdle,
-
-	PsxEvt_CountAll		// total number of schedulable event types in the Psx
-} PsxEventType;
-
-typedef struct int_timer {
-	u32 time;
-	u32 cycle;
-	void (*Execute)();
-	struct int_timer *next;
-} events_t;
-
-typedef struct {
-	events_t list[PsxEvt_CountAll];
-	events_t *next;
-} Events_t;
-
-Events_t Events;
 
 typedef union
 {
@@ -161,7 +117,7 @@ extern psxRegisters psxRegs;
 /**** R3000A Instruction Macros ****/
 #define _PC_       psxRegs.pc       // The next PC to be executed
 
-#define _fOp_(code)		((code >> 26) & 0x3F)  // The opcode part of the instruction register 
+#define _fOp_(code)		((code >> 26)       )  // The opcode part of the instruction register 
 #define _fFunct_(code)	((code      ) & 0x3F)  // The funct part of the instruction register 
 #define _fRd_(code)		((code >> 11) & 0x1F)  // The rd part of the instruction register 
 #define _fRt_(code)		((code >> 16) & 0x1F)  // The rt part of the instruction register 
@@ -204,9 +160,19 @@ extern psxRegisters psxRegs;
 #define _rLoS_	(psxRegs.GPR.r[32].sd)
 #define _rHiS_	(psxRegs.GPR.r[33].sd)
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int  psxInit();
 void psxReset();
 void psxShutdown();
+
+#ifdef __cplusplus
+} // extern "C" 
+#endif
+
 void psxException(u32 code, u32 bd);
 void psxBranchTest();
 void psxExecuteBios();
@@ -218,10 +184,6 @@ void psxJumpTest();
 
 u32 psxGetCycle();
 s32 GetPendingCycles();
-
-void psx_int_add(PsxEventType n, s32 ecycle);
-void psx_int_remove(PsxEventType n);
-u8 psxIsActiveEvent(PsxEventType n);
 
 void advance_pc(s32 offset);
 void psxTestIntc();

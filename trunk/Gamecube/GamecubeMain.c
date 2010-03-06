@@ -1,19 +1,19 @@
-/*  Pcsx - Pc Psx Emulator
- *  Copyright (C) 1999-2002  Pcsx Team
+/*  PCSX-Revolution - PS Emulator for Nintendo Wii
+ *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ *  PCSX-Revolution is free software: you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public 
+ *  License as published by the Free Software Foundation, either 
+ *  version 2 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ *  PCSX-Revolution is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *  You should have received a copy of the GNU General Public License 
+ *  along with PCSX-Revolution.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <gccore.h>
@@ -210,7 +210,7 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-void SysPrintf(char *fmt, ...) {
+void SysPrintf(const char *fmt, ...) {
 	if (Config.PsxOut) {
 		va_list list;
 		char msg[512];
@@ -247,7 +247,7 @@ void SysClose() {
 	ReleasePlugins();
 }
 
-void *SysLoadLibrary(char *lib) {
+void *SysLoadLibrary(const char *lib) {
 	int i;
 	for(i=0; i<NUM_PLUGINS; i++)
 		if((plugins[i].lib != NULL) && (!strcmp(lib, plugins[i].lib)))
@@ -255,7 +255,7 @@ void *SysLoadLibrary(char *lib) {
 	return NULL;
 }
 
-void *SysLoadSym(void *lib, char *sym) {
+void *SysLoadSym(void *lib, const char *sym) {
 	PluginTable* plugin = plugins + (int)lib;
 	int i;
 	for(i=0; i<plugin->numSyms; i++)
@@ -284,6 +284,6 @@ void SysRunGui() {
 	psxCpu->Execute();
 }
 
-void SysMessage(char *fmt, ...) {
+void SysMessage(const char *fmt, ...) {
 	
 }

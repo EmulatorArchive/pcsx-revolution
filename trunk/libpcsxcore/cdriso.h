@@ -21,6 +21,38 @@
 #ifndef CDRISO_H
 #define CDRISO_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int imageReaderInit(void);
+
+#ifdef __cplusplus
+} // extern "C" 
+#endif
+
+#ifdef GEKKO
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+long ISOinit(void);
+long ISOshutdown(void);
+long ISOopen(void);
+long ISOclose(void);
+long ISOgetTN(unsigned char *);
+long ISOgetTD(unsigned char , unsigned char *);
+long ISOreadTrack(unsigned char *);
+unsigned char *ISOgetBuffer(void);
+unsigned char *ISOgetBufferSub(void);
+long ISOplay(unsigned char *time);
+long ISOstop(void);
+
+#ifdef __cplusplus
+} // extern "C" 
+#endif
+
+#endif
 
 #endif

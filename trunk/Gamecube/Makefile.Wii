@@ -17,9 +17,9 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	pcsx
 BUILD		:=	build
-SOURCES		:=	source . ./ui ./storage ./PeopsSoftGPU/ ./PeopsSpu109/ ../libpcsxcore/ ../libpcsxcore/ppc/
+SOURCES		:=	source . ./ui ./storage ./GPU/ ./SPU/ ./PAD/ ../libpcsxcore/ ../libpcsxcore/ppc/
 DATA		:=	data  
-INCLUDES	:=	./ ../libpcsxcore/ ../libpcsxcore/ppc/ ./PeopsSpu109/
+INCLUDES	:=	./ ../libpcsxcore/ ../libpcsxcore/ppc/ ./SPU/ ./PAD/
 
 #---------------------------------------------------------------------------------
 # options for code generation

@@ -1,7 +1,19 @@
-/*
- * ppc definitions v0.5.1
- *  Authors: linuzappz <linuzappz@pcsx.net>
- *           alexey silinov
+/*  PCSX-Revolution - PS Emulator for Nintendo Wii
+ *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
+ *
+ *  PCSX-Revolution is free software: you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public 
+ *  License as published by the Free Software Foundation, either 
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  PCSX-Revolution is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License 
+ *  along with PCSX-Revolution.
+ *  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef __PPC_H__
@@ -28,32 +40,22 @@ void ppcSetPtr(u32 *ptr);
 void ppcShutdown();
 
 void ppcAlign(int bytes);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 void returnPC();
 void recRun(void (*func)());
+
+#ifdef __cplusplus
+} // extern "C" 
+#endif
+
 u8 dynMemRead8(u32 mem);
 u16 dynMemRead16(u32 mem);
 u32 dynMemRead32(u32 mem);
 void dynMemWrite32(u32 mem, u32 val);
 
 #endif /* __PPC_H__ */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

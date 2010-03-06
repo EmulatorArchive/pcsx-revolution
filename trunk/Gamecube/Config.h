@@ -1,8 +1,35 @@
+/*  PCSX-Revolution - PS Emulator for Nintendo Wii
+ *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
+ *
+ *  PCSX-Revolution is free software: you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public 
+ *  License as published by the Free Software Foundation, either 
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  PCSX-Revolution is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  See the GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License 
+ *  along with PCSX-Revolution.
+ *  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #ifndef CONFIG_H
 #define CONFIG_H
 
-void SaveConfig();
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int LoadConfig();
+
+#ifdef __cplusplus
+} // extern "C" 
+#endif
+
+void SaveConfig();
 
 void SPUWriteConfig();
 void GPUWriteConfig();
@@ -36,14 +63,14 @@ typedef struct {
 	char	user[20];
 	char	pwd[20];
 	char	share[20];
-} smb_settings;
+} SMB_t;
 
 typedef struct {
 	char filename[255];
 	int device;
 	GPU_t GPU;
 	SPU_t SPU;
-	smb_settings smb;
+	SMB_t smb;
 } settings;
 
 extern settings Settings;

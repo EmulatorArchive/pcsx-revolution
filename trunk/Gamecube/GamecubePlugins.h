@@ -25,6 +25,7 @@
 #include "decode_xa.h"
 #include "psemu_plugin_defs.h"
 #include "plugins.h"
+#include "cdriso.h"
 
 #define SYMS_PER_LIB 32
 typedef struct {
@@ -94,17 +95,17 @@ long CALLBACK PEOPS_SPUfreeze(unsigned long ulFreezeMode,SPUFreeze_t * pF);
 void CALLBACK PEOPS_SPUplayCDDAchannel(short* pcm, int nbytes);
 
 /* CDR */
-long ISOinit(void);
-long ISOshutdown(void);
-long ISOopen(void);
-long ISOclose(void);
-long ISOgetTN(unsigned char *);
-long ISOgetTD(unsigned char , unsigned char *);
-long ISOreadTrack(unsigned char *);
-unsigned char *ISOgetBuffer(void);
-unsigned char *ISOgetBufferSub(void);
-long ISOplay(unsigned char *time);
-long ISOstop(void);
+// long ISOinit(void);
+// long ISOshutdown(void);
+// long ISOopen(void);
+// long ISOclose(void);
+// long ISOgetTN(unsigned char *);
+// long ISOgetTD(unsigned char , unsigned char *);
+// long ISOreadTrack(unsigned char *);
+// unsigned char *ISOgetBuffer(void);
+// unsigned char *ISOgetBufferSub(void);
+// long ISOplay(unsigned char *time);
+// long ISOstop(void);
 
 /* NULL GPU */
 //typedef long (* GPUopen)(unsigned long *, char *, char *);

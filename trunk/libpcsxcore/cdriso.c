@@ -27,9 +27,10 @@
 #	define STATIC 
 #	include "Config.h"
 #	include <ogc/lwp.h>
+#	include <ogc/lwp_threads.h>
 #	include <sys/time.h>
 	char cdrfilename[MAXPATHLEN];
-#else //!GEKKO
+#else	// GEKKO
 #	define STATIC static
 #	ifdef _WIN32
 #		include <process.h>
@@ -38,7 +39,7 @@
 #		include <pthread.h>
 #		include <sys/time.h>
 #	endif
-#endif //GEKKO
+#endif // GEKKO
 
 #define MSF2SECT(m, s, f)		(((m) * 60 + (s) - 2) * 75 + (f))
 #define btoi(b)					((b) / 16 * 10 + (b) % 16) /* BCD to u_char */
@@ -88,8 +89,13 @@ long CALLBACK CDR__getStatus(struct CdrStat *stat);
 
 extern void *hCDRDriver;
 
+typedef enum {
+	DATA,
+	CDDA
+} cd_type;
+
 struct trackinfo {
-	enum {DATA, CDDA} type;
+	cd_type type;
 	char start[3];		// MSF-format
 	char length[3];		// MSF-format
 };
