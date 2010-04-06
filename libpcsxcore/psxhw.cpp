@@ -2,16 +2,16 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -20,7 +20,7 @@
 * Functions for PSX hardware control.
 */
 
-#include "r3000a.h"
+#include "R3000A/r3000a.h"
 #include "psxmem.h"
 #include "plugins.h"
 #include "sio.h"
@@ -28,7 +28,6 @@
 #include "psxhw.h"
 #include "mdec.h"
 #include "cdrom.h"
-#include "psxhw.h"
 #include "psxdma.h"
 
 using namespace R3000A;
@@ -49,14 +48,14 @@ u8 psxHwRead8(u32 add) {
 	unsigned char hard;
 
 	switch (add) {
-		case 0x1f801040: hard = sioRead8();break; 
+		case 0x1f801040: hard = sioRead8();break;
       //  case 0x1f801050: hard = serial_read8(); break;//for use of serial port ignore for now
 		case 0x1f801800: hard = cdrRead0(); break;
 		case 0x1f801801: hard = cdrRead1(); break;
 		case 0x1f801802: hard = cdrRead2(); break;
 		case 0x1f801803: hard = cdrRead3(); break;
 		default:
-			hard = psxHu8(add); 
+			hard = psxHu8(add);
 #ifdef PSXHW_LOG
 			PSXHW_LOG("*Unkwnown 8bit read at address %lx\n", add);
 #endif
@@ -182,14 +181,14 @@ u16 psxHwRead16(u32 add) {
 			if (add >= 0x1f801c00 && add < 0x1f801e00) {
             	hard = SPU_readRegister(add);
 			} else {
-				hard = psxHu16(add); 
+				hard = psxHu16(add);
 #ifdef PSXHW_LOG
 				PSXHW_LOG("*Unkwnown 16bit read at address %lx\n", add);
 #endif
 			}
             return hard;
 	}
-	
+
 #ifdef PSXHW_LOG
 	PSXHW_LOG("*Known 16bit read at address %lx value %x\n", add, hard);
 #endif
@@ -209,7 +208,7 @@ u32 psxHwRead32(u32 add) {
 			PAD_LOG("sio read32 ;ret = %lx\n", hard);
 #endif
 			return hard;
-			
+
 	//	case 0x1f801050: hard = serial_read32(); break;//serial port
 #ifdef PSXHW_LOG
 		case 0x1f801060:
@@ -332,7 +331,7 @@ u32 psxHwRead32(u32 add) {
 			return hard;
 
 		default:
-			hard = psxHu32(add); 
+			hard = psxHu32(add);
 #ifdef PSXHW_LOG
 			PSXHW_LOG("*Unkwnown 32bit read at address %lx\n", add);
 #endif
@@ -405,7 +404,7 @@ void psxHwWrite16(u32 add, u16 value) {
 	//	case 0x1f80105e: serial_baud_write(value); break;
 	//	case 0x1f801054: serial_status_write(value); break;
 
-		case 0x1f801070: 
+		case 0x1f801070:
 #ifdef PSXHW_LOG
 			PSXHW_LOG("IREG 16bit write %x\n", value);
 #endif
@@ -515,7 +514,7 @@ void psxHwWrite32(u32 add, u32 value) {
 			return; // Ram size
 #endif
 
-		case 0x1f801070: 
+		case 0x1f801070:
 #ifdef PSXHW_LOG
 			PSXHW_LOG("IREG 32bit write %lx\n", value);
 #endif
@@ -589,7 +588,7 @@ void psxHwWrite32(u32 add, u32 value) {
 			PSXHW_LOG("DMA3 CHCR 32bit write %lx\n", value);
 #endif
 			DmaExec(3);                  // DMA3 chcr (CDROM DMA)
-			
+
 			return;
 
 #ifdef PSXHW_LOG

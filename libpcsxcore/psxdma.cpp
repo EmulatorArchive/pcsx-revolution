@@ -2,16 +2,16 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -20,7 +20,7 @@
 * Handles PSX DMA functions.
 */
 
-#include "r3000a.h"
+#include "R3000A/r3000a.h"
 #include "psxhw.h"
 #include "psxmem.h"
 #include "psxdma.h"
@@ -40,7 +40,7 @@ void psxDmaUpdate() {
 #ifdef DMA_UPDATE
 	int n_int = (SWAPu32(HW_DMA_ICR) >> 24) & 0x7f;
 	int n_mask = (SWAPu32(HW_DMA_ICR) >> 16) & 0xff;
-	
+
 	if( ( n_mask & 0x80 ) != 0 && ( n_int & n_mask ) != 0 )
 	{
 		HW_DMA_ICR |= SWAPu32(0x80000000);
@@ -57,10 +57,10 @@ void psxDmaUpdate() {
 
 void psxDmaInterrupt(u32 channel) {
 #ifndef DMA_UPDATE
-	if (SWAPu32(HW_DMA_ICR) & (1 << (16 + channel))) 
+	if (SWAPu32(HW_DMA_ICR) & (1 << (16 + channel)))
 #endif
 	{
-		
+
 		HW_DMA_ICR|= SWAP32(1 << (24 + channel));
 		psxRegs.CP0.n.Cause |= 1 << (9 + channel);
 #ifdef DMA_UPDATE
@@ -68,7 +68,7 @@ void psxDmaInterrupt(u32 channel) {
 #else
 		psxRaiseExtInt( PsxInt_DMA );
 #endif
-		
+
 	}
 }
 
@@ -76,7 +76,7 @@ void psxDma4(u32 madr, u32 bcr, u32 chcr) { // SPU
 	u16 *ptr;
 
 	u32 size = (bcr >> 16);
-	if(size == 0) 
+	if(size == 0)
 		size = 0x10000;
 	 size *= (bcr & 0xFFFF);
 	 size *= 2;

@@ -2,16 +2,16 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,7 +21,7 @@
 */
 
 #include "psxmem.h"
-#include "r3000a.h"
+#include "R3000A/r3000a.h"
 #include "psxhw.h"
 
 using namespace R3000A;
@@ -38,18 +38,18 @@ u8** psxMemWLUT;
 u8** psxMemRLUT;
 
 /*  Playstation Memory Map (from Playstation doc by Joshua Walker)
-0x0000_0000-0x0000_ffff		Kernel (64K)	
-0x0001_0000-0x001f_ffff		User Memory (1.9 Meg)	
+0x0000_0000-0x0000_ffff		Kernel (64K)
+0x0001_0000-0x001f_ffff		User Memory (1.9 Meg)
 
-0x1f00_0000-0x1f00_ffff		Parallel Port (64K)	
+0x1f00_0000-0x1f00_ffff		Parallel Port (64K)
 
-0x1f80_0000-0x1f80_03ff		Scratch Pad (1024 bytes)	
+0x1f80_0000-0x1f80_03ff		Scratch Pad (1024 bytes)
 
-0x1f80_1000-0x1f80_2fff		Hardware Registers (8K)	
+0x1f80_1000-0x1f80_2fff		Hardware Registers (8K)
 
-0x8000_0000-0x801f_ffff		Kernel and User Memory Mirror (2 Meg) Cached	
+0x8000_0000-0x801f_ffff		Kernel and User Memory Mirror (2 Meg) Cached
 
-0xa000_0000-0xa01f_ffff		Kernel and User Memory Mirror (2 Meg) Uncached	
+0xa000_0000-0xa01f_ffff		Kernel and User Memory Mirror (2 Meg) Uncached
 
 0xbfc0_0000-0xbfc7_ffff		BIOS (512K)
 */
@@ -62,7 +62,7 @@ int psxMemInit() {
 	memset(psxMemRLUT, 0, 0x10000 * sizeof(void*));
 	memset(psxMemWLUT, 0, 0x10000 * sizeof(void*));
 	psxM = (s8 *) malloc(0x00220000);
-	
+
 	psxP = &psxM[0x200000];
 	psxH = &psxM[0x210000];
 #ifdef HW_RVL
@@ -71,7 +71,7 @@ int psxMemInit() {
 	psxR = (s8*)malloc(0x00080000);
 #endif
 
-	if (psxMemRLUT == NULL || psxMemWLUT == NULL || 
+	if (psxMemRLUT == NULL || psxMemWLUT == NULL ||
 		psxM == NULL || psxP == NULL || psxH == NULL) {
 		SysMessage(_("Error allocating memory!"));
 		return -1;

@@ -22,7 +22,7 @@
 #include "system.h"
 #include "psxcommon.h"
 #include "plugins.h"
-#include "r3000a.h"
+#include "R3000A/r3000a.h"
 #include "ui/textmenu.h"
 
 using namespace R3000A;

@@ -2,16 +2,16 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -34,7 +34,6 @@
 #include "pad.h"
 
 #include "storage/wiifat.h"
-//#include "storage/wiidvd.h"
 
 u32 *xfb[2] = { NULL, NULL };			/*** Framebuffers ***/
 int whichfb = 0;						/*** Frame buffer toggle ***/
@@ -52,54 +51,54 @@ static inline void VideoInit()
 
 	int videowidth = VI_MAX_WIDTH_NTSC;
 	int videoheight = VI_MAX_HEIGHT_NTSC;
-	
+
 	if ((vmode->viTVMode >> 2) == VI_PAL)
 	{
 		videowidth = VI_MAX_WIDTH_PAL;
 		videoheight = VI_MAX_HEIGHT_PAL;
 	}
-	
+
 	vmode->viHeight = ceil((float)(videoheight * 0.95) / 8) * 8;
-	
+
 	vmode->xfbHeight = vmode->viHeight;
 	vmode->efbHeight = max(vmode->xfbHeight, 528);
 #ifdef HW_RVL
 	if (CONF_GetAspectRatio() == CONF_ASPECT_16_9)
 	{
-        vmode->viWidth = videowidth * 0.95;
+		vmode->viWidth = videowidth * 0.95;
 	}
 	else
 #endif
 	{
-        vmode->viWidth = videowidth * 0.93;
+		vmode->viWidth = videowidth * 0.93;
 	}
-	
+
 	vmode->viWidth = ceil((float)vmode->viWidth / 16) * 16;
-	
+
 	vmode->viXOrigin = (videowidth - vmode->viWidth) / 2;
 	vmode->viYOrigin = (videoheight - vmode->viHeight) / 2;
 
 #ifdef HW_RVL
 	s8 hor_offset = 0;
-	
+
 	if (CONF_GetDisplayOffsetH(&hor_offset) > 0)
 		vmode->viXOrigin += hor_offset;
 #endif
-	
+
 	VIDEO_Configure(vmode);
-	
+
 	xfb[0] = (u32 *)MEM_K0_TO_K1(SYS_AllocateFramebuffer(vmode));
 	xfb[1] = (u32 *)MEM_K0_TO_K1(SYS_AllocateFramebuffer(vmode));
 
 	console_init(xfb[0], 20, 64, vmode->fbWidth, vmode->xfbHeight, vmode->fbWidth * 2);
 	VIDEO_ClearFrameBuffer(vmode, xfb[0], COLOR_BLACK);
 	VIDEO_ClearFrameBuffer(vmode, xfb[1], COLOR_BLACK);
-	
+
 	VIDEO_SetNextFramebuffer(xfb[whichfb]);
 	VIDEO_SetBlack(FALSE);
 	VIDEO_Flush();
 	VIDEO_WaitVSync();
-	
+
 	if (vmode->viTVMode & VI_NON_INTERLACE)
 		VIDEO_WaitVSync();
 	else
@@ -110,9 +109,9 @@ static inline void VideoInit()
 	void *gp_fifo = NULL;
 	gp_fifo = MEM_K0_TO_K1 (memalign (32, DEFAULT_FIFO_SIZE));
 	memset (gp_fifo, 0, DEFAULT_FIFO_SIZE);
- 
+
 	GX_Init (gp_fifo, DEFAULT_FIFO_SIZE);
- 
+
 	// clears the bg to color and clears the z buffer
 	GX_SetCopyClear ((GXColor){0,0,0,255}, GX_MAX_Z24);
 	// init viewport
@@ -124,7 +123,7 @@ static inline void VideoInit()
 	GX_SetDispCopySrc(0, 0, max(vmode->fbWidth, 640), vmode->efbHeight);
 	GX_SetDispCopyDst(vmode->fbWidth, xfbHeight);
 	GX_SetCopyFilter(vmode->aa, vmode->sample_pattern, GX_TRUE, vmode->vfilter);
-	
+
 	GX_SetCullMode(GX_CULL_NONE);
 	GX_CopyDisp(xfb[0], GX_TRUE);
 }
@@ -160,7 +159,7 @@ PluginTable plugins[] =
 	  PLUGIN_SLOT_4,
 	  PLUGIN_SLOT_5,
 	  PLUGIN_SLOT_6,
-	  PLUGIN_SLOT_7 
+	  PLUGIN_SLOT_7
 };
 
 long LoadCdBios;

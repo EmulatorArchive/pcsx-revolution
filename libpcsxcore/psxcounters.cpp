@@ -2,16 +2,16 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,7 +21,7 @@
 */
 
 #include "psxhw.h"
-#include "r3000a.h"
+#include "R3000A/r3000a.h"
 #include "psxmem.h"
 #include "psxcounters.h"
 #include "plugins.h"
@@ -43,18 +43,17 @@ typedef union {
 	} width;
 } width_t;
 
-typedef struct {
+struct vSyncRate_t {
 	u32 Render;
 	u32 Blank;
 	u32 region;
 	u32 scans;
 	u32 frame;
-} vSyncRate_t;
+} ;
 
 static vSyncRate_t vSyncRate;
 
-typedef struct
-{
+struct psxcnt_mode {
 #if defined(GEKKO) || defined(__BIGENDIAN__)
 	u32 garbage:22;
 	u32 Div:1;
@@ -97,7 +96,7 @@ typedef struct
 		clock.
 */
 #endif
-} psxcnt_mode;
+};
 
 class psxCounter {
 	protected:
@@ -119,8 +118,8 @@ class psxCounter {
 		,	Interrupt( 0xcdcd )		// ... invalid object state!
 		{
 		}
-		
-		psxCounter( PsxEventType cntidx ) : 
+
+		psxCounter( PsxEventType cntidx ) :
 			index( cntidx ),
 			IsFutureTarget( true ),
 			IsCounting( true ),
@@ -136,12 +135,12 @@ class psxCounter {
 		void AdvanceCycle(s32 delta) {
 			cyclepass += delta;
 		}
-		
+
 		s32 ScaleByRate( s32 delta ) const
 		{
 			return (delta * Rate) >> PsxFixedBits;
 		}
-		
+
 		u16 ReadCount() {
 			u16 ret = Count;
 			if (mode_b.Stop == 0) {
@@ -159,17 +158,17 @@ class psxCounter {
 			//if(index == 2 && mode_b.Div != 0) SysPrintf("Rcount[%d] = 0x%x rate = 0x%x\n", index, ret, Rate);
 			return ret;
 		}
-		
+
 		u16 __inline ReadTarget() {
 			return Target;
 		}
-		
+
 		u16 __inline ReadMode() {
 			return mode;
 		}
-		
+
 		void Update();
-		
+
 		void Schedule() {
 			if (mode_b.Stop == 0) {
 
@@ -189,15 +188,15 @@ class psxCounter {
 			}
 			cyclepass = 0;
 		}
-		
+
 		void WriteMode(u32 newmode);
-		
+
 		void WriteCount(u32 newcount) {
 			Count = newcount;
 			IsFutureTarget = false;
 			Schedule();
 		}
-		
+
 		void WriteTargeg(u16 newtarget) {
 			//	SysPrintf("writeCtarget[%ld] = %lx\n", index, value);
 			Target = newtarget;
@@ -205,7 +204,7 @@ class psxCounter {
 			IsFutureTarget = (Target <= Count);
 			Schedule();
 		}
-		
+
 		void _update_counted_timepass( )
 		{
 			if( R3000A::Interrupt.IsScheduled( index ) )
@@ -222,7 +221,7 @@ void psxCounter::WriteMode(u32 newmode) {
 	mode = newmode;
 	if(mode_b.Reset != 0)
 		Count = 0;
-	
+
 	Rate = (1 << PsxFixedBits) / BIAS;
 	if(index == 2) {
 		if(mode_b.Div != 0)
@@ -230,7 +229,7 @@ void psxCounter::WriteMode(u32 newmode) {
 	}
 	else if(mode_b.ClockSource != 0) {
 		if(index == 0) {
-			// based on resolution. See http://members.at.infoseek.co.jp/DrHell/ps1/ 
+			// based on resolution. See http://members.at.infoseek.co.jp/DrHell/ps1/
 			// something like (vSyncRate.frame / (width * ((vSyncRate.scans / 3) * 2)))
 			width_t screen;
 			u32 width;
@@ -310,7 +309,7 @@ void CalcRate(u32 region) {
 		vSyncRate.scans = 525;
 	}
 	vSyncRate.Blank = (vSyncRate.frame / vSyncRate.scans) * BIAS;
-	
+
 /*
   Region: PAL   Render: 675208;         Blank: 2167;
   Region: NTSC  Render: 562892;         Blank: 2152;

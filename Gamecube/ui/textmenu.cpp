@@ -17,7 +17,7 @@
  */
 
 #include "textmenu.h"
-#include "r3000a.h"
+#include "R3000A/r3000a.h"
 #include "save_state.h"
 #include "gcMisc.h"
 #include "storage/mount.h"

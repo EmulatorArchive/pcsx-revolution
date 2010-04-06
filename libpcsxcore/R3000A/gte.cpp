@@ -2,16 +2,16 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -88,7 +88,7 @@ static inline u32 Lm_E( u32 result )
 
 __inline u32 MFC2(int reg) {
 	switch(reg) {
-		
+
 		case 1: case 3: case 5:
 		case 8: case 9: case 10:
 		case 11:
@@ -109,8 +109,8 @@ __inline u32 MFC2(int reg) {
 			return 0;
 
 		case 29:
-			psxRegs.cp2d[ reg ].d = LIM( gteIR1 >> 7, 0x1f, 0, 0 ) | 
-									( LIM( gteIR2 >> 7, 0x1f, 0, 0 ) << 5 ) | 
+			psxRegs.cp2d[ reg ].d = LIM( gteIR1 >> 7, 0x1f, 0, 0 ) |
+									( LIM( gteIR2 >> 7, 0x1f, 0, 0 ) << 5 ) |
 									( LIM( gteIR3 >> 7, 0x1f, 0, 0 ) << 10 );
 
 			break;
@@ -137,7 +137,7 @@ __inline void MTC2(unsigned long value, int reg) {
 			gteIR3 = ( value & 0x7c00 ) >> 3;
 			break;
 
-		case 30: 
+		case 30:
 		{
 			gteLZCS = value;
 
@@ -191,11 +191,11 @@ __inline void MTC2(unsigned long value, int reg) {
 #endif
 		}
 			break;
-			
+
 		case 7: case 29: case 31:
 // 			SysPrintf("MTC2: psxRegs.CP2D.r[%d] cannot be write\n", reg);
 			return;
-		
+
 		default:
 			psxRegs.cp2d[reg].d = value;
 	}
@@ -361,7 +361,7 @@ void gteMVMVA() {
 	int v = GTE_V( gteop );
 	int cv = GTE_CV( gteop );
 	int lm = GTE_LM( gteop );
-	
+
 	s32 vx = VX( v );
 	s32 vy = VY( v );
 	s32 vz = VZ( v );
@@ -603,7 +603,7 @@ void gteNCDT() {
 	gteIR1 = Lm_B1( gteMAC1, 1 );
 	gteIR2 = Lm_B2( gteMAC2, 1 );
 	gteIR3 = Lm_B3( gteMAC3, 1 );
-} 
+}
 
 void gteOP() {
 #ifdef PRINT_INST
@@ -723,7 +723,6 @@ void gteDPCS() {
 	gteFLAG = 0;
 
 	int shift = 12 * GTE_SF( gteop );
-	int lm = GTE_LM( gteop );
 
 	gteMAC1 = A1(( ( gteR << 16 ) + ( gteIR0 * Lm_B1( A1( (s64) gteRFC - ( gteR << 4 ) ) << ( 12 - shift ), 0 ) ) ) >> 12);
 	gteMAC2 = A2(( ( gteG << 16 ) + ( gteIR0 * Lm_B2( A2( (s64) gteGFC - ( gteG << 4 ) ) << ( 12 - shift ), 0 ) ) ) >> 12);
@@ -748,9 +747,6 @@ void gteDPCT() {
 	GteStall = 17;
 #endif
 	gteFLAG = 0;
-
-	int shift = 12 * GTE_SF( gteop );
-	int lm = GTE_LM( gteop );
 
 	int v;
 

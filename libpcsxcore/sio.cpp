@@ -2,16 +2,16 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,7 +21,7 @@
 */
 
 #include <sys/stat.h>
-#include "r3000a.h"
+#include "R3000A/r3000a.h"
 #include "psxmem.h"
 #include "plugins.h"
 #include "psxhw.h"
@@ -55,7 +55,7 @@ void sioInit()
 	sio.StatReg = TX_RDY | TX_EMPTY;
 	sio.packetsize = 0;
 	sio.terminator = 0x55; // Command terminator 'U'
-	
+
 	LoadMcds();
 }
 
@@ -225,7 +225,7 @@ void sioWrite8(unsigned char value) {
 			}
 			sio.mcdst = 5;
 			return;
-		case 5:	
+		case 5:
 			sio.parp++;
 			if (sio.rdwr == 2) {
 				if (sio.parp < 128) sio.buf[sio.parp+1] = value;
@@ -331,11 +331,11 @@ void LoadMcd(int mcd, char *str) {
 			struct stat buf;
 
 			if (stat(str, &buf) != -1) {
-				if (buf.st_size == MCD_SIZE + 64) 
+				if (buf.st_size == MCD_SIZE + 64)
 					fseek(f, 64, SEEK_SET);
 				else if(buf.st_size == MCD_SIZE + 3904)
 					fseek(f, 3904, SEEK_SET);
-			}			
+			}
 			fread(data, 1, MCD_SIZE, f);
 			fclose(f);
 		}
@@ -346,7 +346,7 @@ void LoadMcd(int mcd, char *str) {
 		struct stat buf;
 		SysPrintf(_("Loading memory card %s\n"), str);
 		if (stat(str, &buf) != -1) {
-			if (buf.st_size == MCD_SIZE + 64) 
+			if (buf.st_size == MCD_SIZE + 64)
 				fseek(f, 64, SEEK_SET);
 			else if(buf.st_size == MCD_SIZE + 3904)
 				fseek(f, 3904, SEEK_SET);
@@ -363,7 +363,7 @@ void LoadMcds() {
 
 void SaveMcd(char *mcd, char *data, uint32_t adr, int size) {
 	FILE *f;
-	
+
 	f = fopen(mcd, "r+b");
 	if (f != NULL) {
 		struct stat buf;
@@ -396,7 +396,7 @@ void SaveMcd(char *mcd, char *data, uint32_t adr, int size) {
 }
 
 void CreateMcd(char *mcd) {
-	FILE *f;	
+	FILE *f;
 	struct stat buf;
 	int s = MCD_SIZE;
 	int i = 0, j;
@@ -405,8 +405,8 @@ void CreateMcd(char *mcd) {
 	if (f == NULL)
 		return;
 
-	if (stat(mcd, &buf)!=-1) {		
-		if ((buf.st_size == MCD_SIZE + 3904) || strstr(mcd, ".gme")) {			
+	if (stat(mcd, &buf)!=-1) {
+		if ((buf.st_size == MCD_SIZE + 3904) || strstr(mcd, ".gme")) {
 			s = s + 3904;
 			fputc('1', f);
 			s--;
@@ -441,9 +441,9 @@ void CreateMcd(char *mcd) {
 			fputc(1, f);
 			s--;
 			fputc('M', f);
-			s--; 
+			s--;
 			fputc('Q', f);
-			s--; 
+			s--;
 			for (i = 0; i < 14; i++) {
 				fputc(0xa0, f);
 				s--;
@@ -510,13 +510,13 @@ void ConvertMcd(char *mcd, char *data) {
 	int i = 0;
 	int s = MCD_SIZE;
 
-	if (strstr(mcd, ".gme")) {		
+	if (strstr(mcd, ".gme")) {
 		f = fopen(mcd, "wb");
-		if (f != NULL) {		
+		if (f != NULL) {
 			fwrite(data-3904, 1, MCD_SIZE+3904, f);
 			fclose(f);
-		}		
-		f = fopen(mcd, "r+");		
+		}
+		f = fopen(mcd, "r+");
 		s = s + 3904;
 		fputc('1', f); s--;
 		fputc('2', f); s--;
@@ -531,7 +531,7 @@ void ConvertMcd(char *mcd, char *data) {
 		fputc('D', f); s--;
 		for(i=0;i<7;i++) {
 			fputc(0, f); s--;
-		}		
+		}
 		fputc(1, f); s--;
 		fputc(0, f); s--;
 		fputc(1, f); s--;
@@ -544,14 +544,14 @@ void ConvertMcd(char *mcd, char *data) {
 		fputc(0xff, f);
 		while (s-- > (MCD_SIZE+1)) fputc(0, f);
 		fclose(f);
-	} else if(strstr(mcd, ".mem") || strstr(mcd,".vgs")) {		
+	} else if(strstr(mcd, ".mem") || strstr(mcd,".vgs")) {
 		f = fopen(mcd, "wb");
-		if (f != NULL) {		
+		if (f != NULL) {
 			fwrite(data-64, 1, MCD_SIZE+64, f);
 			fclose(f);
-		}		
-		f = fopen(mcd, "r+");		
-		s = s + 64;				
+		}
+		f = fopen(mcd, "r+");
+		s = s + 64;
 		fputc('V', f); s--;
 		fputc('g', f); s--;
 		fputc('s', f); s--;
@@ -568,7 +568,7 @@ void ConvertMcd(char *mcd, char *data) {
 		fclose(f);
 	} else {
 		f = fopen(mcd, "wb");
-		if (f != NULL) {		
+		if (f != NULL) {
 			fwrite(data, 1, MCD_SIZE, f);
 			fclose(f);
 		}

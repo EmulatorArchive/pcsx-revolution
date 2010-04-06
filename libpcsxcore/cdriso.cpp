@@ -24,12 +24,11 @@
 #include "psxmem.h"
 
 #ifdef GEKKO
-#	define STATIC 
+#	define STATIC extern "C"
 #	include "Config.h"
 #	include <ogc/lwp.h>
 #	include <ogc/lwp_threads.h>
 #	include <sys/time.h>
-	char cdrfilename[MAXPATHLEN];
 #else	// GEKKO
 #	define STATIC static
 #	ifdef _WIN32
@@ -808,7 +807,7 @@ STATIC long CALLBACK ISOstop(void) {
 }
 
 // gets subchannel data
-unsigned char* CALLBACK ISOgetBufferSub(void) {
+STATIC unsigned char* CALLBACK ISOgetBufferSub(void) {
 	if (subHandle != NULL) {
 		return subbuffer;
 	}
@@ -816,7 +815,7 @@ unsigned char* CALLBACK ISOgetBufferSub(void) {
 	return NULL;
 }
 
-static long CALLBACK ISOgetStatus(struct CdrStat *stat) {
+STATIC long CALLBACK ISOgetStatus(struct CdrStat *stat) {
 	int sec;
 
 	CDR__getStatus(stat);

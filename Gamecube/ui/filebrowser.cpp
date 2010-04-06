@@ -28,14 +28,14 @@
 #include "Config.h"
 
 #define TYPE_FILTER(x)	(strstr(x, ".bin") || strstr(x, ".BIN")   \
-						|| strstr(x, ".iso") || strstr(x, ".ISO") \
-						|| strstr(x, ".mdf") || strstr(x, ".MDF") \
-						|| strstr(x, ".img") || strstr(x, ".IMG"))
+			|| strstr(x, ".iso") || strstr(x, ".ISO") \
+			|| strstr(x, ".mdf") || strstr(x, ".MDF") \
+			|| strstr(x, ".img") || strstr(x, ".IMG"))
 
 typedef enum {
 	BROWSER_FILE_NOT_FOUND	= -1,
 	BROWSER_FILE_SELECTED	= 0,
-	BROWSER_CANCELED		= 1,
+	BROWSER_CANCELED	= 1,
 	BROWSER_CHANGE_FOLDER	= 2
 } ret_action;
 
@@ -61,7 +61,7 @@ static void browse_back(char *str){
 		str[idx] = '\0';
 		if( ch == '/' ) {
 			if( str[idx-1] == ':' )		// root folder.
-				str[idx] = '/';			// Check is here, because it happens only once per call.
+				str[idx] = '/';		// Check is here, because it happens only once per function call.
 			break;
 		}
 	}
