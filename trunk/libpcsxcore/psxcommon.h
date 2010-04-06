@@ -2,22 +2,22 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* 
-* This file contains common definitions and includes for all parts of the 
+/*
+* This file contains common definitions and includes for all parts of the
 * emulator core.
 */
 
@@ -28,7 +28,7 @@
 #include <gccore.h>
 // #include "Config.h"
 #else
-#include "config.h"
+//#include "config.h"
 #endif
 
 /* System includes */
@@ -69,22 +69,21 @@ typedef uintptr_t uptr;
 
 /* Enables NLS/internationalization if active */
 #ifdef ENABLE_NLS
-
-#include <libintl.h>
-
-#undef _
-#define _(String) gettext(String)
-#ifdef gettext_noop
-#  define N_(String) gettext_noop (String)
+#   include <libintl.h>
+#   undef _
+#   define _(String) gettext(String)
+#   ifdef gettext_noop
+#       define N_(String) gettext_noop (String)
+#   else
+#       define N_(String) (String)
+#   endif
 #else
-#  define N_(String) (String)
+#   define _(msgid) msgid
+#   define N_(msgid) msgid
 #endif
 
-#else
-
-#define _(msgid) msgid
-#define N_(msgid) msgid
-
+#ifndef MAXPATHLEN
+#   define MAXPATHLEN 256
 #endif
 
 extern int Log;
@@ -123,9 +122,6 @@ typedef struct {
 	long RCntFix;
 	long UseNet;
 	long VSyncWA;
-#ifdef _WIN32
-	char Lang[256];
-#endif
 } PcsxConfig;
 
 extern PcsxConfig Config;

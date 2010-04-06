@@ -19,7 +19,7 @@
 #ifndef _recR3000ATABLE_H_
 #define _recR3000ATABLE_H_
 
-#include "R3000AOpcodeTable.h"
+#include "../R3000AOpcodeTable.h"
 
 #define REC_FUNC(f) \
 static void rec##f() { \

@@ -22,11 +22,10 @@
 #define __IGTE_H__
 
 #include "../r3000a.h"
-#include "../psxmem.h"
+#include "psxmem.h"
 #include "../gte.h"
 
 #define CP2_FUNC(f) \
-void gte##f(); \
 static void rec##f() { \
 	iFlushRegs(); \
 	MOV32ItoM((uptr)&psxRegs.code, (u32)psxRegs.code); \
@@ -35,7 +34,6 @@ static void rec##f() { \
 }
 
 #define CP2_FUNCNC(f) \
-void gte##f(); \
 static void rec##f() { \
 	iFlushRegs(); \
 	CALLFunc((uptr)gte##f); \
@@ -134,7 +132,7 @@ static void recMFC2() {
 			MOV32RtoM((uptr)&psxRegs.GPR.r[_Rt_], EAX);
 			break;
 
-		case 15: 
+		case 15:
 			MOV32MtoR(EAX, (uptr)&gteSXY2);
 			MOV32RtoM((uptr)&psxRegs.cp2d[ _Rd_ ].d, EAX);
 			MOV32RtoM((uptr)&psxRegs.GPR.r[_Rt_], EAX);
@@ -144,8 +142,8 @@ static void recMFC2() {
 			MOV32ItoM((uptr)&psxRegs.code, (u32)psxRegs.code);
 			CALLFunc((uptr)gteMFC2);
 			/*
-				psxRegs.cp2d[ reg ] = LIM( gteIR1 >> 7, 0x1f, 0, 0 ) | 
-									( LIM( gteIR2 >> 7, 0x1f, 0, 0 ) << 5 ) | 
+				psxRegs.cp2d[ reg ] = LIM( gteIR1 >> 7, 0x1f, 0, 0 ) |
+									( LIM( gteIR2 >> 7, 0x1f, 0, 0 ) << 5 ) |
 									( LIM( gteIR3 >> 7, 0x1f, 0, 0 ) << 10 );
 			*/
 			break;
@@ -163,8 +161,6 @@ CP2_FUNC(MTC2);
 #else
 static void recMTC2() {
 // Cop2D->Rd = Rt
-	int fixt = 0;
-
 //	iFlushRegs();
 
 	switch (_Rd_) {
@@ -174,7 +170,7 @@ static void recMTC2() {
 			MOV32RtoM((uptr)&gteSXY0, EAX);
 			MOV32MtoR(EAX, (uptr)&gteSXY2);
 			MOV32RtoM((uptr)&gteSXY1, EAX);
-			
+
 			if (IsConst(_Rt_)) {
 				MOV32ItoR(EAX, iRegs[_Rt_].k);
 			}
@@ -207,12 +203,12 @@ static void recMTC2() {
 			SHR32ItoR(EDX, 3);
 			MOV32RtoM((uptr)&gteIR3, EDX);
 			break;
-			
+
 		case 30:
 			MOV32ItoM((uptr)&psxRegs.code, (u32)psxRegs.code);
 			CALLFunc((uptr)gteMTC2);
 			break;
-			
+
 		default:
 			if (IsConst(_Rt_)) {
 				MOV32ItoM((uptr)&psxRegs.cp2d[_Rd_].d, iRegs[_Rt_].k);
@@ -311,14 +307,14 @@ if(_Rt_ != 30) { // TODO
 			SHR32ItoR(EDX, 3);
 			MOV32RtoM((uptr)&gteIR3, EDX);
 			break;
-		
+
 		case 30:
 			iFlushRegs();
 			MOV32ItoM((uptr)&psxRegs.code, (u32)psxRegs.code);
 			CALLFunc((uptr)gteLWC2);
 			return;
-			
-		default: 
+
+		default:
 			MOV32RtoM((uptr)&psxRegs.cp2d[_Rt_].d, EAX);
 	}
 	// All GTE memory access takes time of 2 instructions
@@ -342,7 +338,7 @@ static void recSWC2() {
 			MOV32RtoM((uptr)&psxRegs.cp2d[ _Rt_ ].d, EAX);
 			break;
 
-		case 15: 
+		case 15:
 			MOV32MtoR(EAX, (uptr)&gteSXY2);
 			MOV32RtoM((uptr)&psxRegs.cp2d[ _Rt_ ].d, EAX);
 			break;
@@ -388,31 +384,31 @@ CP2_FUNCNC(RTPS);
 #else
 void recRTPS() {
 	MOV32ItoM((uptr)&gteFLAG, 0);
-/* 0x0000000000423550 <gteRTPS+0>: sub    $0x8,%rsp 
+/* 0x0000000000423550 <gteRTPS+0>: sub    $0x8,%rsp
 0x0000000000423554 <gteRTPS+4>: movswl 0x330dad(%rip),%edx        # EDX = gteVX0
 0x000000000042355b <gteRTPS+11>:        movswl 0x330d26(%rip),%eax        # EAX = gteR11
 0x0000000000423562 <gteRTPS+18>:        movl   $0x0,0x330e18(%rip)        # gteFLAG = 0
-0x000000000042356c <gteRTPS+28>:        imul   %edx,%eax                  # gteVX0 * gteR11                        
+0x000000000042356c <gteRTPS+28>:        imul   %edx,%eax                  # gteVX0 * gteR11
 0x000000000042356f <gteRTPS+31>:        movswl 0x330d94(%rip),%edx        # EDX = gteVY0
-0x0000000000423576 <gteRTPS+38>:        movslq %eax,%rsi                                          
+0x0000000000423576 <gteRTPS+38>:        movslq %eax,%rsi
 0x0000000000423579 <gteRTPS+41>:        movslq 0x330d9c(%rip),%rax        # RAX = gteTRX
-0x0000000000423580 <gteRTPS+48>:        shl    $0xc,%rax                  # gteTRX << 12                       
-0x0000000000423584 <gteRTPS+52>:        add    %rax,%rsi                                          
+0x0000000000423580 <gteRTPS+48>:        shl    $0xc,%rax                  # gteTRX << 12
+0x0000000000423584 <gteRTPS+52>:        add    %rax,%rsi
 0x0000000000423587 <gteRTPS+55>:        movswl 0x330cfc(%rip),%eax        # 0x75428a <psxRegs+266>
-0x000000000042358e <gteRTPS+62>:        imul   %edx,%eax                                          
-0x0000000000423591 <gteRTPS+65>:        movslq %eax,%rdx                                          
+0x000000000042358e <gteRTPS+62>:        imul   %edx,%eax
+0x0000000000423591 <gteRTPS+65>:        movslq %eax,%rdx
 0x0000000000423594 <gteRTPS+68>:        movswl 0x330cf1(%rip),%eax        # 0x75428c <psxRegs+268>
-0x000000000042359b <gteRTPS+75>:        add    %rdx,%rsi                                          
+0x000000000042359b <gteRTPS+75>:        add    %rdx,%rsi
 0x000000000042359e <gteRTPS+78>:        movswl 0x330d67(%rip),%edx        # 0x75430c <psxRegs+396>
-0x00000000004235a5 <gteRTPS+85>:        imul   %edx,%eax                                          
-0x00000000004235a8 <gteRTPS+88>:        cltq                                                      
-0x00000000004235aa <gteRTPS+90>:        add    %rax,%rsi                                          
-0x00000000004235ad <gteRTPS+93>:        sar    $0xc,%rsi                                          
-0x00000000004235b1 <gteRTPS+97>:        cmp    $0x7fffffff,%rsi                                   
-0x00000000004235b8 <gteRTPS+104>:       jle    0x423a50 <gteRTPS+1280>                            
-0x00000000004235be <gteRTPS+110>:       movl   $0x40000000,0x330dbc(%rip)        # 0x754384 <psxRegs+516>           
-0x00000000004235c8 <gteRTPS+120>:       xor    %eax,%eax                                          
-0x00000000004235ca <gteRTPS+122>:       mov    $0x457572,%edi                                     
+0x00000000004235a5 <gteRTPS+85>:        imul   %edx,%eax
+0x00000000004235a8 <gteRTPS+88>:        cltq
+0x00000000004235aa <gteRTPS+90>:        add    %rax,%rsi
+0x00000000004235ad <gteRTPS+93>:        sar    $0xc,%rsi
+0x00000000004235b1 <gteRTPS+97>:        cmp    $0x7fffffff,%rsi
+0x00000000004235b8 <gteRTPS+104>:       jle    0x423a50 <gteRTPS+1280>
+0x00000000004235be <gteRTPS+110>:       movl   $0x40000000,0x330dbc(%rip)        # 0x754384 <psxRegs+516>
+0x00000000004235c8 <gteRTPS+120>:       xor    %eax,%eax
+0x00000000004235ca <gteRTPS+122>:       mov    $0x457572,%edi
 0x00000000004235cf <gteRTPS+127>:       mov    %esi,0x330d17(%rip)        # 0x7542ec <psxRegs+364>
 
 0x00000000004235d5 <gteRTPS+133>:       callq  0x405a60 <SysPrintf>
@@ -422,194 +418,194 @@ void recRTPS() {
 0x00000000004235ef <gteRTPS+159>:       movswl 0x330d1a(%rip),%edx        # 0x754310 <psxRegs+400>
 0x00000000004235f6 <gteRTPS+166>:       movswl 0x330c8f(%rip),%ecx        # 0x75428c <psxRegs+268>
 0x00000000004235fd <gteRTPS+173>:       movswl 0x330d0d(%rip),%r8d        # 0x754312 <psxRegs+402>
-0x0000000000423605 <gteRTPS+181>:       imul   %edi,%eax                                          
-0x0000000000423608 <gteRTPS+184>:       imul   %esi,%edx                                          
-0x000000000042360b <gteRTPS+187>:       cltq                                                      
-0x000000000042360d <gteRTPS+189>:       movslq %edx,%rdx                                          
-0x0000000000423610 <gteRTPS+192>:       lea    (%rax,%rdx,1),%rdx                                 
+0x0000000000423605 <gteRTPS+181>:       imul   %edi,%eax
+0x0000000000423608 <gteRTPS+184>:       imul   %esi,%edx
+0x000000000042360b <gteRTPS+187>:       cltq
+0x000000000042360d <gteRTPS+189>:       movslq %edx,%rdx
+0x0000000000423610 <gteRTPS+192>:       lea    (%rax,%rdx,1),%rdx
 0x0000000000423614 <gteRTPS+196>:       movslq 0x330d05(%rip),%rax        # 0x754320 <psxRegs+416>
-0x000000000042361b <gteRTPS+203>:       imul   %ecx,%r8d                                          
-0x000000000042361f <gteRTPS+207>:       shl    $0xc,%rax                                          
-0x0000000000423623 <gteRTPS+211>:       movslq %r8d,%r8                                           
-0x0000000000423626 <gteRTPS+214>:       lea    (%rdx,%rax,1),%rax                                 
-0x000000000042362a <gteRTPS+218>:       lea    (%rax,%r8,1),%rdx                                  
-0x000000000042362e <gteRTPS+222>:       sar    $0xc,%rdx                                          
-0x0000000000423632 <gteRTPS+226>:       cmp    $0x7fffffff,%rdx                                   
-0x0000000000423639 <gteRTPS+233>:       jle    0x423a30 <gteRTPS+1248>                            
-0x000000000042363f <gteRTPS+239>:       orl    $0x20000000,0x330d3b(%rip)        # 0x754384 <psxRegs+516>                                                                                           
+0x000000000042361b <gteRTPS+203>:       imul   %ecx,%r8d
+0x000000000042361f <gteRTPS+207>:       shl    $0xc,%rax
+0x0000000000423623 <gteRTPS+211>:       movslq %r8d,%r8
+0x0000000000423626 <gteRTPS+214>:       lea    (%rdx,%rax,1),%rax
+0x000000000042362a <gteRTPS+218>:       lea    (%rax,%r8,1),%rdx
+0x000000000042362e <gteRTPS+222>:       sar    $0xc,%rdx
+0x0000000000423632 <gteRTPS+226>:       cmp    $0x7fffffff,%rdx
+0x0000000000423639 <gteRTPS+233>:       jle    0x423a30 <gteRTPS+1248>
+0x000000000042363f <gteRTPS+239>:       orl    $0x20000000,0x330d3b(%rip)        # 0x754384 <psxRegs+516>
 0x0000000000423649 <gteRTPS+249>:       movswl 0x330cc6(%rip),%eax        # 0x754316 <psxRegs+406>
 0x0000000000423650 <gteRTPS+256>:       mov    %edx,0x330c9a(%rip)        # 0x7542f0 <psxRegs+368>
 
 0x0000000000423656 <gteRTPS+262>:       movswl 0x330cb7(%rip),%edx        # 0x754314 <psxRegs+404>
-0x000000000042365d <gteRTPS+269>:       imul   %eax,%esi                                          
-0x0000000000423660 <gteRTPS+272>:       imul   %edi,%edx                                          
-0x0000000000423663 <gteRTPS+275>:       movslq %esi,%rsi                                          
-0x0000000000423666 <gteRTPS+278>:       movslq %edx,%rdx                                          
-0x0000000000423669 <gteRTPS+281>:       lea    (%rdx,%rsi,1),%rax                                 
+0x000000000042365d <gteRTPS+269>:       imul   %eax,%esi
+0x0000000000423660 <gteRTPS+272>:       imul   %edi,%edx
+0x0000000000423663 <gteRTPS+275>:       movslq %esi,%rsi
+0x0000000000423666 <gteRTPS+278>:       movslq %edx,%rdx
+0x0000000000423669 <gteRTPS+281>:       lea    (%rdx,%rsi,1),%rax
 0x000000000042366d <gteRTPS+285>:       movslq 0x330cb0(%rip),%rdx        # 0x754324 <psxRegs+420>
-0x0000000000423674 <gteRTPS+292>:       shl    $0xc,%rdx                                          
-0x0000000000423678 <gteRTPS+296>:       lea    (%rax,%rdx,1),%rdx                                 
+0x0000000000423674 <gteRTPS+292>:       shl    $0xc,%rdx
+0x0000000000423678 <gteRTPS+296>:       lea    (%rax,%rdx,1),%rdx
 0x000000000042367c <gteRTPS+300>:       movswl 0x330c95(%rip),%eax        # 0x754318 <psxRegs+408>
-0x0000000000423683 <gteRTPS+307>:       imul   %eax,%ecx                                          
-0x0000000000423686 <gteRTPS+310>:       movslq %ecx,%rcx                                          
-0x0000000000423689 <gteRTPS+313>:       lea    (%rdx,%rcx,1),%rax                                 
-0x000000000042368d <gteRTPS+317>:       sar    $0xc,%rax                                          
-0x0000000000423691 <gteRTPS+321>:       cmp    $0x7fffffff,%rax                                   
-0x0000000000423697 <gteRTPS+327>:       jle    0x423a10 <gteRTPS+1216>                            
-0x000000000042369d <gteRTPS+333>:       orl    $0x10000000,0x330cdd(%rip)        # 0x754384 <psxRegs+516>                                                                                           
+0x0000000000423683 <gteRTPS+307>:       imul   %eax,%ecx
+0x0000000000423686 <gteRTPS+310>:       movslq %ecx,%rcx
+0x0000000000423689 <gteRTPS+313>:       lea    (%rdx,%rcx,1),%rax
+0x000000000042368d <gteRTPS+317>:       sar    $0xc,%rax
+0x0000000000423691 <gteRTPS+321>:       cmp    $0x7fffffff,%rax
+0x0000000000423697 <gteRTPS+327>:       jle    0x423a10 <gteRTPS+1216>
+0x000000000042369d <gteRTPS+333>:       orl    $0x10000000,0x330cdd(%rip)        # 0x754384 <psxRegs+516>
 0x00000000004236a7 <gteRTPS+343>:       mov    %eax,0x330c47(%rip)        # 0x7542f4 <psxRegs+372>
 0x00000000004236ad <gteRTPS+349>:       mov    0x330c39(%rip),%eax        # 0x7542ec <psxRegs+364>
-0x00000000004236b3 <gteRTPS+355>:       cmp    $0x7fff,%eax                                       
-0x00000000004236b8 <gteRTPS+360>:       jle    0x4239f0 <gteRTPS+1184>                            
-0x00000000004236be <gteRTPS+366>:       orl    $0x81000000,0x330cbc(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x00000000004236c8 <gteRTPS+376>:       mov    $0x7fff,%eax                                       
+0x00000000004236b3 <gteRTPS+355>:       cmp    $0x7fff,%eax
+0x00000000004236b8 <gteRTPS+360>:       jle    0x4239f0 <gteRTPS+1184>
+0x00000000004236be <gteRTPS+366>:       orl    $0x81000000,0x330cbc(%rip)        # 0x754384 <psxRegs+516>
+0x00000000004236c8 <gteRTPS+376>:       mov    $0x7fff,%eax
 0x00000000004236cd <gteRTPS+381>:       mov    %eax,0x330bd9(%rip)        # 0x7542ac <psxRegs+300>
 0x00000000004236d3 <gteRTPS+387>:       mov    0x330c17(%rip),%eax        # 0x7542f0 <psxRegs+368>
-0x00000000004236d9 <gteRTPS+393>:       cmp    $0x7fff,%eax                                       
+0x00000000004236d9 <gteRTPS+393>:       cmp    $0x7fff,%eax
 
-0x00000000004236de <gteRTPS+398>:       jle    0x4239d0 <gteRTPS+1152>                            
-0x00000000004236e4 <gteRTPS+404>:       orl    $0x80800000,0x330c96(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x00000000004236ee <gteRTPS+414>:       mov    $0x7fff,%eax                                       
+0x00000000004236de <gteRTPS+398>:       jle    0x4239d0 <gteRTPS+1152>
+0x00000000004236e4 <gteRTPS+404>:       orl    $0x80800000,0x330c96(%rip)        # 0x754384 <psxRegs+516>
+0x00000000004236ee <gteRTPS+414>:       mov    $0x7fff,%eax
 0x00000000004236f3 <gteRTPS+419>:       mov    %eax,0x330bb7(%rip)        # 0x7542b0 <psxRegs+304>
 0x00000000004236f9 <gteRTPS+425>:       mov    0x330bf5(%rip),%eax        # 0x7542f4 <psxRegs+372>
-0x00000000004236ff <gteRTPS+431>:       cmp    $0x7fff,%eax                                       
-0x0000000000423704 <gteRTPS+436>:       mov    %eax,%edx                                          
-0x0000000000423706 <gteRTPS+438>:       jle    0x4239b0 <gteRTPS+1120>                            
-0x000000000042370c <gteRTPS+444>:       orl    $0x400000,0x330c6e(%rip)        # 0x754384 <psxRegs+516>                                                                                             
-0x0000000000423716 <gteRTPS+454>:       mov    $0x7fff,%edx                                       
+0x00000000004236ff <gteRTPS+431>:       cmp    $0x7fff,%eax
+0x0000000000423704 <gteRTPS+436>:       mov    %eax,%edx
+0x0000000000423706 <gteRTPS+438>:       jle    0x4239b0 <gteRTPS+1120>
+0x000000000042370c <gteRTPS+444>:       orl    $0x400000,0x330c6e(%rip)        # 0x754384 <psxRegs+516>
+0x0000000000423716 <gteRTPS+454>:       mov    $0x7fff,%edx
 0x000000000042371b <gteRTPS+459>:       mov    %edx,0x330b93(%rip)        # 0x7542b4 <psxRegs+308>
 0x0000000000423721 <gteRTPS+465>:       movzwl 0x330ba4(%rip),%edx        # 0x7542cc <psxRegs+332>
-0x0000000000423728 <gteRTPS+472>:       cmp    $0xffff,%eax                                       
-0x000000000042372d <gteRTPS+477>:       mov    %dx,0x330b94(%rip)        # 0x7542c8 <psxRegs+328> 
+0x0000000000423728 <gteRTPS+472>:       cmp    $0xffff,%eax
+0x000000000042372d <gteRTPS+477>:       mov    %dx,0x330b94(%rip)        # 0x7542c8 <psxRegs+328>
 0x0000000000423734 <gteRTPS+484>:       movzwl 0x330b95(%rip),%edx        # 0x7542d0 <psxRegs+336>
-0x000000000042373b <gteRTPS+491>:       mov    %dx,0x330b8a(%rip)        # 0x7542cc <psxRegs+332> 
+0x000000000042373b <gteRTPS+491>:       mov    %dx,0x330b8a(%rip)        # 0x7542cc <psxRegs+332>
 0x0000000000423742 <gteRTPS+498>:       movzwl 0x330b8b(%rip),%edx        # 0x7542d4 <psxRegs+340>
-0x0000000000423749 <gteRTPS+505>:       mov    %dx,0x330b80(%rip)        # 0x7542d0 <psxRegs+336> 
-0x0000000000423750 <gteRTPS+512>:       jle    0x423990 <gteRTPS+1088>                            
-0x0000000000423756 <gteRTPS+518>:       orl    $0x80040000,0x330c24(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x0000000000423760 <gteRTPS+528>:       mov    $0xffff,%ecx                                       
-0x0000000000423765 <gteRTPS+533>:       mov    $0xffffffff,%edx                                   
-0x000000000042376a <gteRTPS+538>:       cvtsi2sd %ecx,%xmm1                                       
+0x0000000000423749 <gteRTPS+505>:       mov    %dx,0x330b80(%rip)        # 0x7542d0 <psxRegs+336>
+0x0000000000423750 <gteRTPS+512>:       jle    0x423990 <gteRTPS+1088>
+0x0000000000423756 <gteRTPS+518>:       orl    $0x80040000,0x330c24(%rip)        # 0x754384 <psxRegs+516>
+0x0000000000423760 <gteRTPS+528>:       mov    $0xffff,%ecx
+0x0000000000423765 <gteRTPS+533>:       mov    $0xffffffff,%edx
+0x000000000042376a <gteRTPS+538>:       cvtsi2sd %ecx,%xmm1
 0x000000000042376e <gteRTPS+542>:       movzwl 0x330bfb(%rip),%eax        # 0x754370 <psxRegs+496>
-0x0000000000423775 <gteRTPS+549>:       mov    %dx,0x330b58(%rip)        # 0x7542d4 <psxRegs+340> 
+0x0000000000423775 <gteRTPS+549>:       mov    %dx,0x330b58(%rip)        # 0x7542d4 <psxRegs+340>
 
-0x000000000042377c <gteRTPS+556>:       shl    $0x10,%eax                                         
-0x000000000042377f <gteRTPS+559>:       cvtsi2sd %eax,%xmm0                                       
-0x0000000000423783 <gteRTPS+563>:       addsd  0x343ad(%rip),%xmm1        # 0x457b38              
-0x000000000042378b <gteRTPS+571>:       divsd  %xmm1,%xmm0                                        
-0x000000000042378f <gteRTPS+575>:       cvttsd2si %xmm0,%rdx                                      
-0x0000000000423794 <gteRTPS+580>:       cmp    $0x1ffff,%edx                                      
-0x000000000042379a <gteRTPS+586>:       movslq %edx,%rax                                          
-0x000000000042379d <gteRTPS+589>:       jbe    0x4237ae <gteRTPS+606>                             
-0x000000000042379f <gteRTPS+591>:       orl    $0x80020000,0x330bdb(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x00000000004237a9 <gteRTPS+601>:       mov    $0x1ffff,%eax                                      
+0x000000000042377c <gteRTPS+556>:       shl    $0x10,%eax
+0x000000000042377f <gteRTPS+559>:       cvtsi2sd %eax,%xmm0
+0x0000000000423783 <gteRTPS+563>:       addsd  0x343ad(%rip),%xmm1        # 0x457b38
+0x000000000042378b <gteRTPS+571>:       divsd  %xmm1,%xmm0
+0x000000000042378f <gteRTPS+575>:       cvttsd2si %xmm0,%rdx
+0x0000000000423794 <gteRTPS+580>:       cmp    $0x1ffff,%edx
+0x000000000042379a <gteRTPS+586>:       movslq %edx,%rax
+0x000000000042379d <gteRTPS+589>:       jbe    0x4237ae <gteRTPS+606>
+0x000000000042379f <gteRTPS+591>:       orl    $0x80020000,0x330bdb(%rip)        # 0x754384 <psxRegs+516>
+0x00000000004237a9 <gteRTPS+601>:       mov    $0x1ffff,%eax
 0x00000000004237ae <gteRTPS+606>:       mov    0x330b08(%rip),%edx        # 0x7542bc <psxRegs+316>
 0x00000000004237b4 <gteRTPS+612>:       movslq 0x330bad(%rip),%rcx        # 0x754368 <psxRegs+488>
 0x00000000004237bb <gteRTPS+619>:       mov    %edx,0x330af7(%rip)        # 0x7542b8 <psxRegs+312>
 0x00000000004237c1 <gteRTPS+625>:       mov    0x330af9(%rip),%edx        # 0x7542c0 <psxRegs+320>
 0x00000000004237c7 <gteRTPS+631>:       mov    %edx,0x330aef(%rip)        # 0x7542bc <psxRegs+316>
 0x00000000004237cd <gteRTPS+637>:       movslq 0x330ad8(%rip),%rdx        # 0x7542ac <psxRegs+300>
-0x00000000004237d4 <gteRTPS+644>:       imul   %rax,%rdx                                          
-0x00000000004237d8 <gteRTPS+648>:       add    %rcx,%rdx                                          
-0x00000000004237db <gteRTPS+651>:       cmp    $0x7fffffff,%rdx                                   
-0x00000000004237e2 <gteRTPS+658>:       jle    0x423970 <gteRTPS+1056>                            
-0x00000000004237e8 <gteRTPS+664>:       orl    $0x80010000,0x330b92(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x00000000004237f2 <gteRTPS+674>:       shr    $0x10,%rdx                                         
-0x00000000004237f6 <gteRTPS+678>:       cmp    $0x3ff,%edx                                        
-0x00000000004237fc <gteRTPS+684>:       jle    0x423948 <gteRTPS+1016>                            
-0x0000000000423802 <gteRTPS+690>:       orl    $0x80004000,0x330b78(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x000000000042380c <gteRTPS+700>:       mov    $0x3ff,%ecx                                        
+0x00000000004237d4 <gteRTPS+644>:       imul   %rax,%rdx
+0x00000000004237d8 <gteRTPS+648>:       add    %rcx,%rdx
+0x00000000004237db <gteRTPS+651>:       cmp    $0x7fffffff,%rdx
+0x00000000004237e2 <gteRTPS+658>:       jle    0x423970 <gteRTPS+1056>
+0x00000000004237e8 <gteRTPS+664>:       orl    $0x80010000,0x330b92(%rip)        # 0x754384 <psxRegs+516>
+0x00000000004237f2 <gteRTPS+674>:       shr    $0x10,%rdx
+0x00000000004237f6 <gteRTPS+678>:       cmp    $0x3ff,%edx
+0x00000000004237fc <gteRTPS+684>:       jle    0x423948 <gteRTPS+1016>
+0x0000000000423802 <gteRTPS+690>:       orl    $0x80004000,0x330b78(%rip)        # 0x754384 <psxRegs+516>
+0x000000000042380c <gteRTPS+700>:       mov    $0x3ff,%ecx
 
 0x0000000000423811 <gteRTPS+705>:       movslq 0x330a98(%rip),%rdx        # 0x7542b0 <psxRegs+304>
-0x0000000000423818 <gteRTPS+712>:       mov    %cx,0x330aa1(%rip)        # 0x7542c0 <psxRegs+320> 
+0x0000000000423818 <gteRTPS+712>:       mov    %cx,0x330aa1(%rip)        # 0x7542c0 <psxRegs+320>
 0x000000000042381f <gteRTPS+719>:       movslq 0x330b46(%rip),%rcx        # 0x75436c <psxRegs+492>
-0x0000000000423826 <gteRTPS+726>:       imul   %rax,%rdx                                          
-0x000000000042382a <gteRTPS+730>:       add    %rcx,%rdx                                          
-0x000000000042382d <gteRTPS+733>:       cmp    $0x7fffffff,%rdx                                   
-0x0000000000423834 <gteRTPS+740>:       jle    0x423928 <gteRTPS+984>                             
-0x000000000042383a <gteRTPS+746>:       orl    $0x80010000,0x330b40(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x0000000000423844 <gteRTPS+756>:       shr    $0x10,%rdx                                         
-0x0000000000423848 <gteRTPS+760>:       cmp    $0x3ff,%edx                                        
-0x000000000042384e <gteRTPS+766>:       jle    0x423900 <gteRTPS+944>                             
-0x0000000000423854 <gteRTPS+772>:       orl    $0x80002000,0x330b26(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x000000000042385e <gteRTPS+782>:       mov    $0x3ff,%ecx                                        
+0x0000000000423826 <gteRTPS+726>:       imul   %rax,%rdx
+0x000000000042382a <gteRTPS+730>:       add    %rcx,%rdx
+0x000000000042382d <gteRTPS+733>:       cmp    $0x7fffffff,%rdx
+0x0000000000423834 <gteRTPS+740>:       jle    0x423928 <gteRTPS+984>
+0x000000000042383a <gteRTPS+746>:       orl    $0x80010000,0x330b40(%rip)        # 0x754384 <psxRegs+516>
+0x0000000000423844 <gteRTPS+756>:       shr    $0x10,%rdx
+0x0000000000423848 <gteRTPS+760>:       cmp    $0x3ff,%edx
+0x000000000042384e <gteRTPS+766>:       jle    0x423900 <gteRTPS+944>
+0x0000000000423854 <gteRTPS+772>:       orl    $0x80002000,0x330b26(%rip)        # 0x754384 <psxRegs+516>
+0x000000000042385e <gteRTPS+782>:       mov    $0x3ff,%ecx
 0x0000000000423863 <gteRTPS+787>:       movswq 0x330b09(%rip),%rdx        # 0x754374 <psxRegs+500>
-0x000000000042386b <gteRTPS+795>:       mov    %cx,0x330a50(%rip)        # 0x7542c2 <psxRegs+322> 
-0x0000000000423872 <gteRTPS+802>:       shl    $0x8,%rdx                                          
-0x0000000000423876 <gteRTPS+806>:       imul   %rdx,%rax                                          
+0x000000000042386b <gteRTPS+795>:       mov    %cx,0x330a50(%rip)        # 0x7542c2 <psxRegs+322>
+0x0000000000423872 <gteRTPS+802>:       shl    $0x8,%rdx
+0x0000000000423876 <gteRTPS+806>:       imul   %rdx,%rax
 0x000000000042387a <gteRTPS+810>:       movslq 0x330af7(%rip),%rdx        # 0x754378 <psxRegs+504>
-0x0000000000423881 <gteRTPS+817>:       sar    $0x8,%rax                                          
-0x0000000000423885 <gteRTPS+821>:       add    %rdx,%rax                                          
-0x0000000000423888 <gteRTPS+824>:       sar    $0x4,%rax                                          
-0x000000000042388c <gteRTPS+828>:       cmp    $0x7fffffff,%rax                                   
-0x0000000000423892 <gteRTPS+834>:       jle    0x4238c0 <gteRTPS+880>                             
-0x0000000000423894 <gteRTPS+836>:       orl    $0x80010000,0x330ae6(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x000000000042389e <gteRTPS+846>:       cmp    $0xfff,%eax                                        
+0x0000000000423881 <gteRTPS+817>:       sar    $0x8,%rax
+0x0000000000423885 <gteRTPS+821>:       add    %rdx,%rax
+0x0000000000423888 <gteRTPS+824>:       sar    $0x4,%rax
+0x000000000042388c <gteRTPS+828>:       cmp    $0x7fffffff,%rax
+0x0000000000423892 <gteRTPS+834>:       jle    0x4238c0 <gteRTPS+880>
+0x0000000000423894 <gteRTPS+836>:       orl    $0x80010000,0x330ae6(%rip)        # 0x754384 <psxRegs+516>
+0x000000000042389e <gteRTPS+846>:       cmp    $0xfff,%eax
 0x00000000004238a3 <gteRTPS+851>:       mov    %eax,0x330a3f(%rip)        # 0x7542e8 <psxRegs+360>
-0x00000000004238a9 <gteRTPS+857>:       jg     0x4238df <gteRTPS+911>                             
+0x00000000004238a9 <gteRTPS+857>:       jg     0x4238df <gteRTPS+911>
 
-0x00000000004238ab <gteRTPS+859>:       test   %eax,%eax                                          
-0x00000000004238ad <gteRTPS+861>:       js     0x423a70 <gteRTPS+1312>                            
+0x00000000004238ab <gteRTPS+859>:       test   %eax,%eax
+0x00000000004238ad <gteRTPS+861>:       js     0x423a70 <gteRTPS+1312>
 0x00000000004238b3 <gteRTPS+867>:       mov    %eax,0x3309ef(%rip)        # 0x7542a8 <psxRegs+296>
-0x00000000004238b9 <gteRTPS+873>:       add    $0x8,%rsp                                          
-0x00000000004238bd <gteRTPS+877>:       retq                                                      
-0x00000000004238be <gteRTPS+878>:       xchg   %ax,%ax                                            
-0x00000000004238c0 <gteRTPS+880>:       cmp    $0xffffffff80000000,%rax                           
-0x00000000004238c6 <gteRTPS+886>:       jge    0x42389e <gteRTPS+846>                             
-0x00000000004238c8 <gteRTPS+888>:       orl    $0x80008000,0x330ab2(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x00000000004238d2 <gteRTPS+898>:       cmp    $0xfff,%eax                                        
+0x00000000004238b9 <gteRTPS+873>:       add    $0x8,%rsp
+0x00000000004238bd <gteRTPS+877>:       retq
+0x00000000004238be <gteRTPS+878>:       xchg   %ax,%ax
+0x00000000004238c0 <gteRTPS+880>:       cmp    $0xffffffff80000000,%rax
+0x00000000004238c6 <gteRTPS+886>:       jge    0x42389e <gteRTPS+846>
+0x00000000004238c8 <gteRTPS+888>:       orl    $0x80008000,0x330ab2(%rip)        # 0x754384 <psxRegs+516>
+0x00000000004238d2 <gteRTPS+898>:       cmp    $0xfff,%eax
 0x00000000004238d7 <gteRTPS+903>:       mov    %eax,0x330a0b(%rip)        # 0x7542e8 <psxRegs+360>
-0x00000000004238dd <gteRTPS+909>:       jle    0x4238ab <gteRTPS+859>                             
-0x00000000004238df <gteRTPS+911>:       mov    $0xfff,%eax                                        
-0x00000000004238e4 <gteRTPS+916>:       orl    $0x1000,0x330a96(%rip)        # 0x754384 <psxRegs+516>                                                                                               
+0x00000000004238dd <gteRTPS+909>:       jle    0x4238ab <gteRTPS+859>
+0x00000000004238df <gteRTPS+911>:       mov    $0xfff,%eax
+0x00000000004238e4 <gteRTPS+916>:       orl    $0x1000,0x330a96(%rip)        # 0x754384 <psxRegs+516>
 0x00000000004238ee <gteRTPS+926>:       mov    %eax,0x3309b4(%rip)        # 0x7542a8 <psxRegs+296>
-0x00000000004238f4 <gteRTPS+932>:       add    $0x8,%rsp                                          
-0x00000000004238f8 <gteRTPS+936>:       retq                                                      
-0x00000000004238f9 <gteRTPS+937>:       nopl   0x0(%rax)                                          
-0x0000000000423900 <gteRTPS+944>:       cmp    $0xfffffc00,%edx                                   
-0x0000000000423906 <gteRTPS+950>:       mov    %edx,%ecx                                          
-0x0000000000423908 <gteRTPS+952>:       jge    0x423863 <gteRTPS+787>                             
-0x000000000042390e <gteRTPS+958>:       orl    $0x80002000,0x330a6c(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x0000000000423918 <gteRTPS+968>:       mov    $0xfffffc00,%ecx                                   
-0x000000000042391d <gteRTPS+973>:       jmpq   0x423863 <gteRTPS+787>                             
-0x0000000000423922 <gteRTPS+978>:       nopw   0x0(%rax,%rax,1)                                   
-0x0000000000423928 <gteRTPS+984>:       cmp    $0xffffffff80000000,%rdx                           
-0x000000000042392f <gteRTPS+991>:       jge    0x423844 <gteRTPS+756>                             
-0x0000000000423935 <gteRTPS+997>:       orl    $0x80008000,0x330a45(%rip)        # 0x754384 <psxRegs+516>                                                                                           
+0x00000000004238f4 <gteRTPS+932>:       add    $0x8,%rsp
+0x00000000004238f8 <gteRTPS+936>:       retq
+0x00000000004238f9 <gteRTPS+937>:       nopl   0x0(%rax)
+0x0000000000423900 <gteRTPS+944>:       cmp    $0xfffffc00,%edx
+0x0000000000423906 <gteRTPS+950>:       mov    %edx,%ecx
+0x0000000000423908 <gteRTPS+952>:       jge    0x423863 <gteRTPS+787>
+0x000000000042390e <gteRTPS+958>:       orl    $0x80002000,0x330a6c(%rip)        # 0x754384 <psxRegs+516>
+0x0000000000423918 <gteRTPS+968>:       mov    $0xfffffc00,%ecx
+0x000000000042391d <gteRTPS+973>:       jmpq   0x423863 <gteRTPS+787>
+0x0000000000423922 <gteRTPS+978>:       nopw   0x0(%rax,%rax,1)
+0x0000000000423928 <gteRTPS+984>:       cmp    $0xffffffff80000000,%rdx
+0x000000000042392f <gteRTPS+991>:       jge    0x423844 <gteRTPS+756>
+0x0000000000423935 <gteRTPS+997>:       orl    $0x80008000,0x330a45(%rip)        # 0x754384 <psxRegs+516>
 
-0x000000000042393f <gteRTPS+1007>:      jmpq   0x423844 <gteRTPS+756>                             
-0x0000000000423944 <gteRTPS+1012>:      nopl   0x0(%rax)                                          
-0x0000000000423948 <gteRTPS+1016>:      cmp    $0xfffffc00,%edx                                   
-0x000000000042394e <gteRTPS+1022>:      mov    %edx,%ecx                                          
-0x0000000000423950 <gteRTPS+1024>:      jge    0x423811 <gteRTPS+705>                             
-0x0000000000423956 <gteRTPS+1030>:      orl    $0x80004000,0x330a24(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x0000000000423960 <gteRTPS+1040>:      mov    $0xfffffc00,%ecx                                   
-0x0000000000423965 <gteRTPS+1045>:      jmpq   0x423811 <gteRTPS+705>                             
-0x000000000042396a <gteRTPS+1050>:      nopw   0x0(%rax,%rax,1)                                   
-0x0000000000423970 <gteRTPS+1056>:      cmp    $0xffffffff80000000,%rdx                           
-0x0000000000423977 <gteRTPS+1063>:      jge    0x4237f2 <gteRTPS+674>                             
-0x000000000042397d <gteRTPS+1069>:      orl    $0x80008000,0x3309fd(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x0000000000423987 <gteRTPS+1079>:      jmpq   0x4237f2 <gteRTPS+674>                             
-0x000000000042398c <gteRTPS+1084>:      nopl   0x0(%rax)                                          
-0x0000000000423990 <gteRTPS+1088>:      test   %eax,%eax                                          
-0x0000000000423992 <gteRTPS+1090>:      mov    %eax,%edx                                          
-0x0000000000423994 <gteRTPS+1092>:      movzwl %ax,%ecx                                           
-0x0000000000423997 <gteRTPS+1095>:      jns    0x42376a <gteRTPS+538>                             
-0x000000000042399d <gteRTPS+1101>:      orl    $0x80040000,0x3309dd(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x00000000004239a7 <gteRTPS+1111>:      xor    %ecx,%ecx                                          
-0x00000000004239a9 <gteRTPS+1113>:      xor    %edx,%edx                                          
-0x00000000004239ab <gteRTPS+1115>:      jmpq   0x42376a <gteRTPS+538>                             
-0x00000000004239b0 <gteRTPS+1120>:      cmp    $0xffff8000,%eax                                   
-0x00000000004239b5 <gteRTPS+1125>:      jge    0x42371b <gteRTPS+459>                             
-0x00000000004239bb <gteRTPS+1131>:      orl    $0x400000,0x3309bf(%rip)        # 0x754384 <psxRegs+516>                                                                                             
-0x00000000004239c5 <gteRTPS+1141>:      mov    $0xffff8000,%edx                                   
-0x00000000004239ca <gteRTPS+1146>:      jmpq   0x42371b <gteRTPS+459>                             
-0x00000000004239cf <gteRTPS+1151>:      nop                                                       
-0x00000000004239d0 <gteRTPS+1152>:      cmp    $0xffff8000,%eax                                   
-0x00000000004239d5 <gteRTPS+1157>:      jge    0x4236f3 <gteRTPS+419>                             
-0x00000000004239db <gteRTPS+1163>:      orl    $0x80800000,0x33099f(%rip)        # 0x754384 <psxRegs+516>                                                                                           
-0x00000000004239e5 <gteRTPS+1173>:      mov    $0xffff8000,%eax                                   
-0x00000000004239ea <gteRTPS+1178>:      jmpq   0x4236f3 <gteRTPS+419>                             
+0x000000000042393f <gteRTPS+1007>:      jmpq   0x423844 <gteRTPS+756>
+0x0000000000423944 <gteRTPS+1012>:      nopl   0x0(%rax)
+0x0000000000423948 <gteRTPS+1016>:      cmp    $0xfffffc00,%edx
+0x000000000042394e <gteRTPS+1022>:      mov    %edx,%ecx
+0x0000000000423950 <gteRTPS+1024>:      jge    0x423811 <gteRTPS+705>
+0x0000000000423956 <gteRTPS+1030>:      orl    $0x80004000,0x330a24(%rip)        # 0x754384 <psxRegs+516>
+0x0000000000423960 <gteRTPS+1040>:      mov    $0xfffffc00,%ecx
+0x0000000000423965 <gteRTPS+1045>:      jmpq   0x423811 <gteRTPS+705>
+0x000000000042396a <gteRTPS+1050>:      nopw   0x0(%rax,%rax,1)
+0x0000000000423970 <gteRTPS+1056>:      cmp    $0xffffffff80000000,%rdx
+0x0000000000423977 <gteRTPS+1063>:      jge    0x4237f2 <gteRTPS+674>
+0x000000000042397d <gteRTPS+1069>:      orl    $0x80008000,0x3309fd(%rip)        # 0x754384 <psxRegs+516>
+0x0000000000423987 <gteRTPS+1079>:      jmpq   0x4237f2 <gteRTPS+674>
+0x000000000042398c <gteRTPS+1084>:      nopl   0x0(%rax)
+0x0000000000423990 <gteRTPS+1088>:      test   %eax,%eax
+0x0000000000423992 <gteRTPS+1090>:      mov    %eax,%edx
+0x0000000000423994 <gteRTPS+1092>:      movzwl %ax,%ecx
+0x0000000000423997 <gteRTPS+1095>:      jns    0x42376a <gteRTPS+538>
+0x000000000042399d <gteRTPS+1101>:      orl    $0x80040000,0x3309dd(%rip)        # 0x754384 <psxRegs+516>
+0x00000000004239a7 <gteRTPS+1111>:      xor    %ecx,%ecx
+0x00000000004239a9 <gteRTPS+1113>:      xor    %edx,%edx
+0x00000000004239ab <gteRTPS+1115>:      jmpq   0x42376a <gteRTPS+538>
+0x00000000004239b0 <gteRTPS+1120>:      cmp    $0xffff8000,%eax
+0x00000000004239b5 <gteRTPS+1125>:      jge    0x42371b <gteRTPS+459>
+0x00000000004239bb <gteRTPS+1131>:      orl    $0x400000,0x3309bf(%rip)        # 0x754384 <psxRegs+516>
+0x00000000004239c5 <gteRTPS+1141>:      mov    $0xffff8000,%edx
+0x00000000004239ca <gteRTPS+1146>:      jmpq   0x42371b <gteRTPS+459>
+0x00000000004239cf <gteRTPS+1151>:      nop
+0x00000000004239d0 <gteRTPS+1152>:      cmp    $0xffff8000,%eax
+0x00000000004239d5 <gteRTPS+1157>:      jge    0x4236f3 <gteRTPS+419>
+0x00000000004239db <gteRTPS+1163>:      orl    $0x80800000,0x33099f(%rip)        # 0x754384 <psxRegs+516>
+0x00000000004239e5 <gteRTPS+1173>:      mov    $0xffff8000,%eax
+0x00000000004239ea <gteRTPS+1178>:      jmpq   0x4236f3 <gteRTPS+419>
 0x00000000004239ef <gteRTPS+1183>:      nop
 0x00000000004239f0 <gteRTPS+1184>:      cmp    $0xffff8000,%eax
 0x00000000004239f5 <gteRTPS+1189>:      jge    0x4236cd <gteRTPS+381>
@@ -660,28 +656,28 @@ void recRTPS() {
 	A1(RSI);
 	MOV32RtoM((uptr)&gteMAC1, EAX);
 CALLFunc( (uptr) print_mac );
-	/*  * MAC1 = -1207                                                                                   
- * MAC1 = 2249978                                                                                 
- * MAC1 = 2522827                                                                                 
- * MAC1 = 2189735                                                                                 
- * MAC1 = 1620546                                                                                 
- * MAC1 = 1803601                                                                                 
- * MAC1 = 1158610                                                                                 
- * MAC1 = 410453                                                                                  
- * MAC1 = 890                                                                                     
- * MAC1 = 1586666                                                                                 
- * MAC1 = 2776329                                                                                 
- * MAC1 = 1177447                                                                                 
- * MAC1 = 1010324                                                                                 
- * MAC1 = 654861                                                                                  
- * MAC1 = 590284                                                                                  
- * MAC1 = -1197                                                                                   
- * MAC1 = 2267077                                                                                 
- * MAC1 = 2634011                                                                                 
- * MAC1 = 2348694                                                                                 
- * MAC1 = 1626756                                                                                 
- * MAC1 = 1672397                                                                                 
- * MAC1 = 1457560                                                                                 
+	/*  * MAC1 = -1207
+ * MAC1 = 2249978
+ * MAC1 = 2522827
+ * MAC1 = 2189735
+ * MAC1 = 1620546
+ * MAC1 = 1803601
+ * MAC1 = 1158610
+ * MAC1 = 410453
+ * MAC1 = 890
+ * MAC1 = 1586666
+ * MAC1 = 2776329
+ * MAC1 = 1177447
+ * MAC1 = 1010324
+ * MAC1 = 654861
+ * MAC1 = 590284
+ * MAC1 = -1197
+ * MAC1 = 2267077
+ * MAC1 = 2634011
+ * MAC1 = 2348694
+ * MAC1 = 1626756
+ * MAC1 = 1672397
+ * MAC1 = 1457560
  * MAC1 = 401094          */
 	// MAC2
 	MOV32MtoR(EAX, (uptr)&gteR21);
@@ -700,7 +696,7 @@ CALLFunc( (uptr) print_mac );
 	SHR32ItoR(EAX, 12);
 	A2(EAX);
 	MOV32RtoM((uptr)&gteMAC2, EAX);
-	
+
 	// MAC3
 	MOV32MtoR(EAX, (uptr)&gteR31);
 	MUL32M((uptr)&gteVX2);
@@ -717,23 +713,23 @@ CALLFunc( (uptr) print_mac );
 	SHR32ItoR(ECX, 12);
 	A3(ECX);
 	MOV32RtoM((uptr)&gteMAC3, ECX);
-	
+
 	MOV32MtoR(EAX, (uptr)&gteMAC1);
 	Lm_B1(EAX, gteIR1, 0);
-	
+
 	MOV32MtoR(EAX, (uptr)&gteMAC2);
 	Lm_B2(EAX, gteIR2, 0);
-	
+
 	MOV32MtoR(EAX, (uptr)&gteMAC3);
 	Lm_B3(EAX, gteIR3, 0);
-	
+
 	MOV32MtoR(EAX, (uptr)&gteSZ1);
 	MOV32RtoM((uptr)&gteSZ0, EAX);
 	MOV32MtoR(EAX, (uptr)&gteSZ2);
 	MOV32RtoM((uptr)&gteSZ1, EAX);
 	MOV32MtoR(EAX, (uptr)&gteSZ3);
 	MOV32RtoM((uptr)&gteSZ2, EAX);
-	
+
 	MOV32MtoR(EAX, (uptr)&gteSXY1);
 	MOV32RtoM((uptr)&gteSXY0, EAX);
 	MOV32MtoR(EAX, (uptr)&gteSXY2);
@@ -748,9 +744,9 @@ CALLFunc( (uptr) print_mac );
 	ADD32ItoR(ECX, 0.5);
 	DIV32R(ECX);
 	Lm_E(EAX);
-	
+
 	MOV32RtoR(ECX, EAX);
-	
+
 	MOV32MtoR(EBX, (uptr)&gteIR1);
 	MUL32R(EBX);
 	MOV32MtoR(EBX, (uptr)&gteOFX);
@@ -758,7 +754,7 @@ CALLFunc( (uptr) print_mac );
 	SHR32ItoR(EAX, 16);
 	F(EAX);
 	Lm_G1(EAX, gteSX2);
-	
+
 	MOV32RtoR(EAX, ECX);
 
 	MOV32MtoR(EBX, (uptr)&gteIR2);
@@ -768,7 +764,7 @@ CALLFunc( (uptr) print_mac );
 	SHR32ItoR(EAX, 16);
 	F(EAX);
 	Lm_G2(EAX, gteSY2);
-	
+
 	MOV32RtoR(EAX, ECX);
 	MOV32MtoR(EBX, (uptr)&gteDQA);
 	SHL32ItoR(EBX, 8);
@@ -916,8 +912,8 @@ CP2_FUNCNC(NCLIP);
 /*	j8Ptr[4] = JO8(0);*/ \
 }
 
-/*	SSX = (_v0) * mx##11 + (_v1) * mx##12 + (_v2) * mx##13; 
-    SSY = (_v0) * mx##21 + (_v1) * mx##22 + (_v2) * mx##23; 
+/*	SSX = (_v0) * mx##11 + (_v1) * mx##12 + (_v2) * mx##13;
+    SSY = (_v0) * mx##21 + (_v1) * mx##22 + (_v2) * mx##23;
     SSZ = (_v0) * mx##31 + (_v1) * mx##32 + (_v2) * mx##33; */
 
 #define _MVMVA_ADD(_vx, jn) { \

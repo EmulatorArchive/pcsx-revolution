@@ -2,16 +2,16 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -21,7 +21,7 @@
 */
 
 #include "psxcommon.h"
-#include "r3000a.h"
+#include "R3000A/r3000a.h"
 #include "psxmem.h"
 #include "psxcounters.h"
 #include "misc.h"
@@ -215,15 +215,15 @@ typedef struct {
 	u32 func;
 } TCB;
 
-typedef struct {                   
-	u32 _pc0;      
-	u32 gp0;      
-	u32 t_addr;   
-	u32 t_size;   
-	u32 d_addr;   
-	u32 d_size;   
-	u32 b_addr;   
-	u32 b_size;   
+typedef struct {
+	u32 _pc0;
+	u32 gp0;
+	u32 t_addr;
+	u32 t_size;
+	u32 d_addr;
+	u32 d_size;
+	u32 b_addr;
+	u32 b_size;
 	u32 S_addr;
 	u32 s_size;
 	u32 _sp,_fp,_gp,ret,base;
@@ -388,57 +388,57 @@ void psxBios_strncmp() { // 0x18
 /*0x1b*/void psxBios_strlen()  { v0 = strlen(Ra0); pc0 = ra;}
 
 void psxBios_index() { // 0x1c
-	char *pcA0 = (char *)Ra0; 
-	char *pcRet = strchr(pcA0, a1); 
-	if(pcRet) 
-		v0 = a0 + pcRet - pcA0; 
-	else 
+	char *pcA0 = (char *)Ra0;
+	char *pcRet = strchr(pcA0, a1);
+	if(pcRet)
+		v0 = a0 + pcRet - pcA0;
+	else
 		v0 = 0;
     pc0 = ra;
 }
 
 void psxBios_rindex() { // 0x1d
-	char *pcA0 = (char *)Ra0; 
-	char *pcRet = strrchr(pcA0, a1); 
-	if(pcRet) 
-		v0 = a0 + pcRet - pcA0; 
-	else 
+	char *pcA0 = (char *)Ra0;
+	char *pcRet = strrchr(pcA0, a1);
+	if(pcRet)
+		v0 = a0 + pcRet - pcA0;
+	else
 		v0 = 0;
-    pc0 = ra;  
+    pc0 = ra;
 }
 
 void psxBios_strchr() { // 0x1e
-	char *pcA0 = (char *)Ra0; 
-	char *pcRet = strchr(pcA0, a1); 
-	if(pcRet) 
-		v0 = a0 + pcRet - pcA0; 
-	else 
+	char *pcA0 = (char *)Ra0;
+	char *pcRet = strchr(pcA0, a1);
+	if(pcRet)
+		v0 = a0 + pcRet - pcA0;
+	else
 		v0 = 0;
     pc0 = ra;
 }
 
 void psxBios_strrchr() { // 0x1f
-	char *pcA0 = (char *)Ra0; 
-	char *pcRet = strrchr(pcA0, a1); 
-	if(pcRet) 
-		v0 = a0 + pcRet - pcA0; 
-	else 
+	char *pcA0 = (char *)Ra0;
+	char *pcRet = strrchr(pcA0, a1);
+	if(pcRet)
+		v0 = a0 + pcRet - pcA0;
+	else
 		v0 = 0;
     pc0 = ra;
 }
 
 void psxBios_strpbrk() { // 0x20
-	char *pcA0 = (char *)Ra0; 
-	char *pcRet = strpbrk(pcA0, (char *)Ra1); 
-	if(pcRet) 
-		v0 = a0 + pcRet - pcA0; 
-	else 
+	char *pcA0 = (char *)Ra0;
+	char *pcRet = strpbrk(pcA0, (char *)Ra1);
+	if(pcRet)
+		v0 = a0 + pcRet - pcA0;
+	else
 		v0 = 0;
     pc0 = ra;
 }
 
-void psxBios_strspn()  { v0 = strspn ((char *)Ra0, (char *)Ra1); pc0 = ra;}/*21*/ 
-void psxBios_strcspn() { v0 = strcspn((char *)Ra0, (char *)Ra1); pc0 = ra;}/*22*/ 
+void psxBios_strspn()  { v0 = strspn ((char *)Ra0, (char *)Ra1); pc0 = ra;}/*21*/
+void psxBios_strcspn() { v0 = strcspn((char *)Ra0, (char *)Ra1); pc0 = ra;}/*22*/
 
 void psxBios_strtok() { // 0x23
 	char *pcA0 = (char *)Ra0;
@@ -468,7 +468,7 @@ void psxBios_strstr() { // 0x24
 /*0x2a*/void psxBios_memcpy()  {memcpy(Ra0, Ra1, a2); v0 = a0; pc0 = ra;}
 /*0x2b*/void psxBios_memset()  {memset(Ra0, a1, a2); v0 = a0; pc0 = ra;}
 /*0x2c*/void psxBios_memmove() {memmove(Ra0, Ra1, a2); v0 = a0; pc0 = ra;}
-/*0x2d*/void psxBios_memcmp()  {v0 = memcmp(Ra0, Ra1, a2); pc0 = ra;}  
+/*0x2d*/void psxBios_memcmp()  {v0 = memcmp(Ra0, Ra1, a2); pc0 = ra;}
 
 void psxBios_memchr() { // 2e
 	void *ret = memchr(Ra0, a1, a2);
@@ -494,7 +494,7 @@ void psxBios_malloc() { // 33
 #ifdef PSXBIOS_LOG
 	PSXBIOS_LOG("psxBios_%s\n", biosA0n[0x33]);
 #endif
-	
+
 	// scan through heap and combine free chunks of space
 	chunk = heap_addr;
 	colflag = 0;
@@ -549,7 +549,7 @@ void psxBios_malloc() { // 33
 
 	// catch out of memory
 	if(chunk >= heap_end) { SysPrintf("malloc %lx,%lx: Out of memory error!\n", v0, a0); v0 = 0; pc0 = ra; return; }
-	
+
 	// allocate memory
 	if(dsize == csize) {
 		// chunk has same size
@@ -779,7 +779,7 @@ void psxBios_GPU_dw() { // 0x46
 	} while(--size);
 
 	pc0 = ra;
-}  
+}
 
 void psxBios_mem2vram() { // 0x47
 	int size;
@@ -818,8 +818,8 @@ void psxBios_GPU_cwb() { // 0x4a
 
 	pc0 = ra;
 }
-   
-void psxBios_GPU_SendPackets() { //4b:	
+
+void psxBios_GPU_SendPackets() { //4b:
 	GPU_writeStatus(0x04000002);
 	psxHwWrite32(0x1f8010f4,0);
 	psxHwWrite32(0x1f8010f0,psxHwRead32(0x1f8010f0)|0x800);
@@ -854,7 +854,7 @@ void psxBios_LoadExec() { // 51
 #endif
 	s_addr = a1; s_size = a2;
 
-	a1 = 0xf000;	
+	a1 = 0xf000;
 	psxBios_Load();
 
 	header->S_addr = s_addr;
@@ -909,7 +909,7 @@ void psxBios_SetMem() { // 9f
 			psxHu32ref(0x1060) = SWAP32(cnew | 0x300);
 			psxMu32ref(0x060) = a0;
 			SysPrintf("Change effective memory : %d MBytes\n",a0);
-	
+
 		default:
 			SysPrintf("Effective memory must be 2/8 MBytes\n");
 		break;
@@ -1433,7 +1433,7 @@ void psxBios_read() { // 0x34
 		case 2: buread(1); break;
 		case 3: buread(2); break;
 	}
-  		
+
 	pc0 = ra;
 }
 
@@ -1475,7 +1475,7 @@ void psxBios_write() { // 0x35/0x03
 		case 2: buwrite(1); break;
 		case 3: buwrite(2); break;
 	}
-  		
+
 	pc0 = ra;
 }
 
@@ -1536,7 +1536,7 @@ int nfile;
 /*
  *	struct DIRENTRY* firstfile(char *name,struct DIRENTRY *dir);
  */
- 
+
 void psxBios_firstfile() { // 42
 	struct DIRENTRY *dir = (struct DIRENTRY *)Ra1;
 	u32 _dir = a1;
@@ -1774,7 +1774,7 @@ void psxBios_GetB0Table() { // 57
 void psxBios_ChangeClearPad() { // 5b
 #ifdef PSXBIOS_LOG
 	PSXBIOS_LOG("psxBios_%s: %x\n", biosB0n[0x5b], a0);
-#endif	
+#endif
 
 	pc0 = ra;
 }
@@ -1824,11 +1824,11 @@ void psxBios_ChangeClearRCnt() { // 0a
 	pc0 = ra;
 }
 
-void psxBios_dummy() { 
+void psxBios_dummy() {
 #ifdef PSXBIOS_LOG
 	PSXBIOS_LOG("unk %lx call: %lx\n", pc0 & 0x1fffff, t1);
 #endif
-	pc0 = ra; 
+	pc0 = ra;
 }
 
 void (*biosA0[256])();
@@ -1837,7 +1837,7 @@ void (*biosC0[256])();
 
 void psxBiosInit() {
 	u32 base, size;
-	u32 *ptr; 
+	u32 *ptr;
 	int i;
 
 	for(i = 0; i < 256; i++) {
@@ -1919,7 +1919,7 @@ void psxBiosInit() {
 	biosA0[0x39] = psxBios_InitHeap;
     //biosA0[0x3a] = psxBios__exit;
 	biosA0[0x3b] = psxBios_getchar;
-	biosA0[0x3c] = psxBios_putchar;	
+	biosA0[0x3c] = psxBios_putchar;
 	//biosA0[0x3d] = psxBios_gets;
 	//biosA0[0x40] = psxBios_sys_a0_40;
 	//biosA0[0x41] = psxBios_LoadTest;
@@ -1935,7 +1935,7 @@ void psxBiosInit() {
 	biosA0[0x4b] = psxBios_GPU_SendPackets;
     biosA0[0x4c] = psxBios_sys_a0_4c;
 	biosA0[0x4d] = psxBios_GPU_GetGPUStatus;
-	//biosA0[0x4e] = psxBios_GPU_sync;	
+	//biosA0[0x4e] = psxBios_GPU_sync;
 	//biosA0[0x4f] = psxBios_sys_a0_4f;
 	//biosA0[0x50] = psxBios_sys_a0_50;
 	biosA0[0x51] = psxBios_LoadExec;
@@ -1987,10 +1987,10 @@ void psxBiosInit() {
 	//biosA0[0x7f] = psxBios_sys_a0_7f;
 	//biosA0[0x80] = psxBios_sys_a0_80;
 	//biosA0[0x81] = psxBios_sys_a0_81;
-	//biosA0[0x82] = psxBios_sys_a0_82;		
+	//biosA0[0x82] = psxBios_sys_a0_82;
 	//biosA0[0x83] = psxBios_sys_a0_83;
 	//biosA0[0x84] = psxBios_sys_a0_84;
-	//biosA0[0x85] = psxBios__96_CdStop;	
+	//biosA0[0x85] = psxBios__96_CdStop;
 	//biosA0[0x86] = psxBios_sys_a0_86;
 	//biosA0[0x87] = psxBios_sys_a0_87;
 	//biosA0[0x88] = psxBios_sys_a0_88;
@@ -2142,7 +2142,7 @@ void psxBiosInit() {
 	//biosC0[0x07] = psxBios_InstallExeptionHandler;
 	//biosC0[0x08] = psxBios_SysInitMemory;
 	//biosC0[0x09] = psxBios_SysInitKMem;
-	biosC0[0x0a] = psxBios_ChangeClearRCnt;	
+	biosC0[0x0a] = psxBios_ChangeClearRCnt;
 	//biosC0[0x0b] = psxBios_SystemError;
 	//biosC0[0x0c] = psxBios_InitDefInt;
     //biosC0[0x0d] = psxBios_sys_c0_0d;
@@ -2392,12 +2392,12 @@ void psxBiosException() {
 #endif
 			switch (a0) {
 				case 1: // EnterCritical - disable irq's
-					psxRegs.CP0.n.Status&=~0x404; 
+					psxRegs.CP0.n.Status&=~0x404;
 v0=1;	// HDHOSHY experimental patch: Spongebob, Coldblood, fearEffect, Medievil2, Martian Gothic
 					break;
 
 				case 2: // ExitCritical - enable irq's
-					psxRegs.CP0.n.Status|= 0x404; 
+					psxRegs.CP0.n.Status|= 0x404;
 					break;
 			}
 			pc0 = psxRegs.CP0.n.EPC + 4;

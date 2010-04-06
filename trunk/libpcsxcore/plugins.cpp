@@ -2,16 +2,16 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -20,19 +20,18 @@
 * Plugin library callback/access functions.
 */
 
-#include "r3000a.h"
+#include "R3000A/r3000a.h"
 #include "psxmem.h"
 #include "spu.h"
 #include "plugins.h"
 #include "cdriso.h"
-#include "r3000a.h"
-#include "psxmem.h"
 #include <time.h>
 
 using namespace R3000A;
 
 char cdrfilename[MAXPATHLEN] = "";
 int cdOpenCase = 0;
+int NetOpened = 0;
 
 #define CheckErr(func) \
     err = SysLibError(); \
@@ -52,7 +51,7 @@ int cdOpenCase = 0;
 
 GPUupdateLace    GPU_updateLace;
 GPUinit          GPU_init;
-GPUshutdown      GPU_shutdown; 
+GPUshutdown      GPU_shutdown;
 GPUconfigure     GPU_configure;
 GPUtest          GPU_test;
 GPUabout         GPU_about;
@@ -61,7 +60,7 @@ GPUclose         GPU_close;
 GPUreadStatus    GPU_readStatus;
 GPUreadData      GPU_readData;
 GPUreadDataMem   GPU_readDataMem;
-GPUwriteStatus   GPU_writeStatus; 
+GPUwriteStatus   GPU_writeStatus;
 GPUwriteData     GPU_writeData;
 GPUwriteDataMem  GPU_writeDataMem;
 GPUdmaChain      GPU_dmaChain;
@@ -83,7 +82,7 @@ void CALLBACK GPU__readDataMem(uint32_t *pMem, int iSize) {
 		PUTLE32(pMem, GPU_readData());
 		iSize--;
 		pMem++;
-	}		
+	}
 }
 
 void CALLBACK GPU__writeDataMem(uint32_t *pMem, int iSize) {
@@ -186,9 +185,9 @@ int LoadGPUplugin(const char *GPUdll) {
 	void *drv;
 
 	hGPUDriver = SysLoadLibrary(GPUdll);
-	if (hGPUDriver == NULL) { 
+	if (hGPUDriver == NULL) {
 		GPU_configure = NULL;
-		SysMessage (_("Could not load GPU plugin %s!"), GPUdll); return -1; 
+		SysMessage (_("Could not load GPU plugin %s!"), GPUdll); return -1;
 	}
 	drv = hGPUDriver;
 	LoadGpuSym1(init, "GPUinit");
@@ -220,7 +219,7 @@ int LoadGPUplugin(const char *GPUdll) {
 CDRinit               CDR_init;
 CDRshutdown           CDR_shutdown;
 CDRopen               CDR_open;
-CDRclose              CDR_close; 
+CDRclose              CDR_close;
 CDRtest               CDR_test;
 CDRgetTN              CDR_getTN;
 CDRgetTD              CDR_getTD;
@@ -373,7 +372,7 @@ void CALLBACK SPU__writeRegister(uint32_t add,unsigned short value) { // Old Int
 //       			return;
 //     			case 12:
 //       			return;
-//     			case 14:                                    
+//     			case 14:
 //       			s_chan[ch].pRepeat=spuMemC+((unsigned long) val<<3);
 //       			return;
 		}
@@ -412,7 +411,7 @@ void CALLBACK SPU__writeRegister(uint32_t add,unsigned short value) { // Old Int
     			return;
 		case H_SPUoff2://stop sound play channels 16-24
     			SPU_stopChannels2(value);
-    			return;		
+    			return;
 	}
 }
 
@@ -457,7 +456,7 @@ void CALLBACK SPU__writeDMAMem(unsigned short *pMem, int iSize) {
 		SPU_writeDMA(*pMem);
 		iSize--;
 		pMem++;
-	}		
+	}
 }
 
 void CALLBACK SPU__readDMAMem(unsigned short *pMem, int iSize) {
@@ -563,7 +562,7 @@ int LoadSPUplugin(const char *SPUdll) {
 	LoadSpuSym2(setVolumeL, "SPUsetVolumeL");
 	LoadSpuSym2(setVolumeR, "SPUsetVolumeR");
 	LoadSpuSymE(writeRegister, "SPUwriteRegister");
-	LoadSpuSymE(readRegister, "SPUreadRegister");		
+	LoadSpuSymE(readRegister, "SPUreadRegister");
 	LoadSpuSymE(writeDMA, "SPUwriteDMA");
 	LoadSpuSymE(readDMA, "SPUreadDMA");
 	LoadSpuSym0(writeDMAMem, "SPUwriteDMAMem");
@@ -741,7 +740,7 @@ unsigned char CALLBACK PAD2__startPoll(int pad) {
 	PadDataS padd;
 
 	PAD2_readPort2(&padd);
-	
+
 	return _PADstartPoll(&padd);
 }
 
@@ -794,7 +793,7 @@ int LoadPAD2plugin(const char *PAD2dll) {
 NETinit               NET_init;
 NETshutdown           NET_shutdown;
 NETopen               NET_open;
-NETclose              NET_close; 
+NETclose              NET_close;
 NETtest               NET_test;
 NETconfigure          NET_configure;
 NETabout              NET_about;
@@ -874,7 +873,7 @@ int LoadPlugins() {
 	if (cdrfilename[0] != '\0') {
 		imageReaderInit();
 	}
-	else 
+	else
 	{
 		sprintf(Plugin, "%s/%s", Config.PluginsDir, Config.Cdr);
 		if (LoadCDRplugin(Plugin) == -1) return -1;
@@ -937,7 +936,7 @@ void ReleasePlugins() {
 	if (hPAD1Driver != NULL) PAD1_shutdown();
 	if (hPAD2Driver != NULL) PAD2_shutdown();
 
-	if (Config.UseNet && hNETDriver != NULL) NET_shutdown(); 
+	if (Config.UseNet && hNETDriver != NULL) NET_shutdown();
 
 	if (hCDRDriver != NULL) SysCloseLibrary(hCDRDriver); hCDRDriver = NULL;
 	if (hGPUDriver != NULL) SysCloseLibrary(hGPUDriver); hGPUDriver = NULL;

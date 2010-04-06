@@ -2,16 +2,16 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -58,7 +58,7 @@ typedef unsigned long (CALLBACK* PSEgetLibType)(void);
 typedef unsigned long (CALLBACK* PSEgetLibVersion)(void);
 typedef char *(CALLBACK* PSEgetLibName)(void);
 
-///GPU PLUGIN STUFF 
+///GPU PLUGIN STUFF
 typedef long (CALLBACK* GPUinit)(void);
 typedef long (CALLBACK* GPUshutdown)(void);
 typedef long (CALLBACK* GPUclose)(void);
@@ -92,7 +92,7 @@ typedef void (CALLBACK* GPUclearDynarec)(void (CALLBACK *callback)(void));
 //Gpu function pointers
 extern GPUupdateLace    GPU_updateLace;
 extern GPUinit          GPU_init;
-extern GPUshutdown      GPU_shutdown; 
+extern GPUshutdown      GPU_shutdown;
 extern GPUconfigure     GPU_configure;
 extern GPUtest          GPU_test;
 extern GPUabout         GPU_about;
@@ -101,7 +101,7 @@ extern GPUclose         GPU_close;
 extern GPUreadStatus    GPU_readStatus;
 extern GPUreadData      GPU_readData;
 extern GPUreadDataMem   GPU_readDataMem;
-extern GPUwriteStatus   GPU_writeStatus; 
+extern GPUwriteStatus   GPU_writeStatus;
 extern GPUwriteData     GPU_writeData;
 extern GPUwriteDataMem  GPU_writeDataMem;
 extern GPUdmaChain      GPU_dmaChain;
@@ -147,11 +147,11 @@ struct SubQ {
 };
 typedef unsigned char* (CALLBACK* CDRgetBufferSub)(void);
 
-//cd rom function pointers 
+//cd rom function pointers
 extern CDRinit               CDR_init;
 extern CDRshutdown           CDR_shutdown;
 extern CDRopen               CDR_open;
-extern CDRclose              CDR_close; 
+extern CDRclose              CDR_close;
 extern CDRtest               CDR_test;
 extern CDRgetTN              CDR_getTN;
 extern CDRgetTD              CDR_getTD;
@@ -167,15 +167,15 @@ extern CDRabout              CDR_about;
 extern CDRsetfilename        CDR_setfilename;
 
 // spu plugin
-typedef long (CALLBACK* SPUinit)(void);				
-typedef long (CALLBACK* SPUshutdown)(void);	
-typedef long (CALLBACK* SPUclose)(void);			
-typedef void (CALLBACK* SPUplaySample)(unsigned char);		
-typedef void (CALLBACK* SPUstartChannels1)(unsigned short);	
+typedef long (CALLBACK* SPUinit)(void);
+typedef long (CALLBACK* SPUshutdown)(void);
+typedef long (CALLBACK* SPUclose)(void);
+typedef void (CALLBACK* SPUplaySample)(unsigned char);
+typedef void (CALLBACK* SPUstartChannels1)(unsigned short);
 typedef void (CALLBACK* SPUstartChannels2)(unsigned short);
-typedef void (CALLBACK* SPUstopChannels1)(unsigned short);	
-typedef void (CALLBACK* SPUstopChannels2)(unsigned short);	
-typedef void (CALLBACK* SPUputOne)(uint32_t,unsigned short);			
+typedef void (CALLBACK* SPUstopChannels1)(unsigned short);
+typedef void (CALLBACK* SPUstopChannels2)(unsigned short);
+typedef void (CALLBACK* SPUputOne)(uint32_t,unsigned short);
 typedef unsigned short (CALLBACK* SPUgetOne)(uint32_t);
 typedef void (CALLBACK* SPUsetAddr)(unsigned char, unsigned short);
 typedef void (CALLBACK* SPUsetPitch)(unsigned char, unsigned short);
@@ -242,8 +242,8 @@ extern SPUplayCDDAchannel  SPU_playCDDAchannel;
 typedef long (CALLBACK* PADconfigure)(void);
 typedef void (CALLBACK* PADabout)(void);
 typedef long (CALLBACK* PADinit)(long);
-typedef long (CALLBACK* PADshutdown)(void);	
-typedef long (CALLBACK* PADtest)(void);		
+typedef long (CALLBACK* PADshutdown)(void);
+typedef long (CALLBACK* PADtest)(void);
 typedef long (CALLBACK* PADclose)(void);
 typedef long (CALLBACK* PADquery)(void);
 typedef long (CALLBACK*	PADreadPort1)(PadDataS*);
@@ -319,11 +319,11 @@ typedef long (CALLBACK* NETsetInfo)(netInfo *);
 typedef long (CALLBACK* NETkeypressed)(int);
 
 
-// NET function pointers 
+// NET function pointers
 extern NETinit               NET_init;
 extern NETshutdown           NET_shutdown;
 extern NETopen               NET_open;
-extern NETclose              NET_close; 
+extern NETclose              NET_close;
 extern NETtest               NET_test;
 extern NETconfigure          NET_configure;
 extern NETabout              NET_about;
@@ -337,19 +337,19 @@ extern NETrecvPadData        NET_recvPadData;
 extern NETsetInfo            NET_setInfo;
 extern NETkeypressed         NET_keypressed;
 
-int LoadCDRplugin(char *CDRdll);
-int LoadGPUplugin(char *GPUdll);
-int LoadSPUplugin(char *SPUdll);
-int LoadPAD1plugin(char *PAD1dll);
-int LoadPAD2plugin(char *PAD2dll);
-int LoadNETplugin(char *NETdll);
+int LoadCDRplugin(const char *CDRdll);
+int LoadGPUplugin(const char *GPUdll);
+int LoadSPUplugin(const char *SPUdll);
+int LoadPAD1plugin(const char *PAD1dll);
+int LoadPAD2plugin(const char *PAD2dll);
+int LoadNETplugin(const char *NETdll);
 
 void CALLBACK clearDynarec(void);
 
 extern char cdrfilename[MAXPATHLEN];
 
 #ifdef __cplusplus
-} // extern "C" 
+} // extern "C"
 #endif
 
 #endif /* __PLUGINS_H__ */

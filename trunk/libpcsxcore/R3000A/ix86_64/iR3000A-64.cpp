@@ -24,12 +24,14 @@
 
 #include "ix86-64.h"
 #include "../r3000a.h"
-#include "../psxhle.h"
-#include "../psxhw.h"
-#include "../psxcounters.h"
-#include "../plugins.h"
-
+#include "psxhle.h"
+#include "psxhw.h"
+#include "psxcounters.h"
+#include "plugins.h"
+#include "psxcommon.h"
 #include <sys/mman.h>
+
+using namespace R3000A;
 
 #ifndef MAP_ANONYMOUS
 #define MAP_ANONYMOUS MAP_ANON
@@ -200,10 +202,10 @@ void iLogM32(u32 mem) {
 static void iDumpRegs() {
 	int i, j;
 
-	printf("%lx %lx\n", psxRegs.pc, psxRegs.cycle);
+	printf("%u %u\n", psxRegs.pc, psxRegs.cycle);
 	for (i=0; i<4; i++) {
 		for (j=0; j<8; j++)
-			printf("%lx ", psxRegs.GPR.r[j*i]);
+			printf("%u ", psxRegs.GPR.r[j*i].d);
 		printf("\n");
 	}
 }
@@ -214,8 +216,8 @@ void iDumpBlock(char *ptr) {
 
 	SysPrintf("dump1 %x:%x, %x\n", psxRegs.pc, pc, psxRegs.cycle);
 
-	for (i = psxRegs.pc; i < pc; i+=4)
-		SysPrintf("%s\n", disR3000AF(PSXMu32(i), i));
+//	for (i = psxRegs.pc; i < pc; i+=4)
+//		SysPrintf("%s\n", disR3000AF(PSXMu32(i), i));
 
 	fflush(stdout);
 	f = fopen("dump1", "w");
@@ -413,7 +415,7 @@ static void recADDIU()  {
 			iRegs[_Rt_].state = ST_UNK;
 
 			MOV32MtoR(EAX, (uptr)&psxRegs.GPR.r[_Rs_]);
-			if (_Imm_ == 1) { 
+			if (_Imm_ == 1) {
 				INC32R(EAX);
 			} else if (_Imm_ == -1) {
 				DEC32R(EAX);
@@ -543,7 +545,7 @@ static void recXORI() {
 	}
 }
 #endif
-//end of * Arithmetic with immediate operand  
+//end of * Arithmetic with immediate operand
 
 /*********************************************************
 * Load higher 16 bits of the first word in GPR with imm  *
@@ -582,7 +584,7 @@ REC_FUNC(SLTU);
 
 #if 1
 static void recADDU() {
-// Rd = Rs + Rt 
+// Rd = Rs + Rt
 	if (!_Rd_) return;
 
 //	iFlushRegs();
@@ -595,14 +597,14 @@ static void recADDU() {
 		if (_Rt_ == _Rd_) {
 			if (iRegs[_Rs_].k == 1) {
 				INC32M((uptr)&psxRegs.GPR.r[_Rd_]);
-			} else if (iRegs[_Rs_].k == -1) {
+			} else if (iRegs[_Rs_].k == 0xffffffff) {
 				DEC32M((uptr)&psxRegs.GPR.r[_Rd_]);
 			} else if (iRegs[_Rs_].k) {
 				ADD32ItoM((uptr)&psxRegs.GPR.r[_Rd_], iRegs[_Rs_].k);
 			}
 		} else {
 			MOV32MtoR(EAX, (uptr)&psxRegs.GPR.r[_Rt_]);
-			if (iRegs[_Rs_].k == 1) { 
+			if (iRegs[_Rs_].k == 1) {
 				INC32R(EAX);
 			} else if (iRegs[_Rs_].k == 0xffffffff) {
 				DEC32R(EAX);
@@ -617,14 +619,14 @@ static void recADDU() {
 		if (_Rs_ == _Rd_) {
 			if (iRegs[_Rt_].k == 1) {
 				INC32M((uptr)&psxRegs.GPR.r[_Rd_]);
-			} else if (iRegs[_Rt_].k == -1) {
+			} else if (iRegs[_Rt_].k == 0xffffffff) {
 				DEC32M((uptr)&psxRegs.GPR.r[_Rd_]);
 			} else if (iRegs[_Rt_].k) {
 				ADD32ItoM((uptr)&psxRegs.GPR.r[_Rd_], iRegs[_Rt_].k);
 			}
 		} else {
 			MOV32MtoR(EAX, (uptr)&psxRegs.GPR.r[_Rs_]);
-			if (iRegs[_Rt_].k == 1) { 
+			if (iRegs[_Rt_].k == 1) {
 				INC32R(EAX);
 			} else if (iRegs[_Rt_].k == 0xffffffff) {
 				DEC32R(EAX);
@@ -682,12 +684,12 @@ static void recSUBU() {
 		SUB32MtoR(EAX, (uptr)&psxRegs.GPR.r[_Rt_]);
 		MOV32RtoM((uptr)&psxRegs.GPR.r[_Rd_], EAX);
 	}
-}   
+}
 
 static void recSUB() {
 // Rd = Rs - Rt
 	recSUBU();
-}   
+}
 
 static void recAND() {
 // Rd = Rs And Rt
@@ -732,7 +734,7 @@ static void recAND() {
 			MOV32RtoM((uptr)&psxRegs.GPR.r[_Rd_], EAX);
 		}
 	}
-}   
+}
 
 static void recOR() {
 // Rd = Rs Or Rt
@@ -761,7 +763,7 @@ static void recOR() {
 		OR32MtoR (EAX, (uptr)&psxRegs.GPR.r[_Rt_]);
 		MOV32RtoM((uptr)&psxRegs.GPR.r[_Rd_], EAX);
 	}
-}   
+}
 
 static void recXOR() {
 // Rd = Rs Xor Rt
@@ -857,9 +859,9 @@ static void recSLT() {
 		AND32ItoR(EAX, 0xff);
 		MOV32RtoM((uptr)&psxRegs.GPR.r[_Rd_], EAX);
 	}
-}  
+}
 
-static void recSLTU() { 
+static void recSLTU() {
 // Rd = Rs < Rt (unsigned)
 	if (!_Rd_) return;
 
@@ -1019,7 +1021,7 @@ static void recDIVU() {
 	}
 }
 #endif
-//End of * Register mult/div & Register trap logic  
+//End of * Register mult/div & Register trap logic
 
 #if 0
 REC_FUNC(LB);
@@ -1327,13 +1329,13 @@ static void recLW() {
 		}
 		if (t == 0x1f80) {
 			switch (addr) {
-				case 0x1f801080: case 0x1f801084: case 0x1f801088: 
-				case 0x1f801090: case 0x1f801094: case 0x1f801098: 
-				case 0x1f8010a0: case 0x1f8010a4: case 0x1f8010a8: 
-				case 0x1f8010b0: case 0x1f8010b4: case 0x1f8010b8: 
-				case 0x1f8010c0: case 0x1f8010c4: case 0x1f8010c8: 
-				case 0x1f8010d0: case 0x1f8010d4: case 0x1f8010d8: 
-				case 0x1f8010e0: case 0x1f8010e4: case 0x1f8010e8: 
+				case 0x1f801080: case 0x1f801084: case 0x1f801088:
+				case 0x1f801090: case 0x1f801094: case 0x1f801098:
+				case 0x1f8010a0: case 0x1f8010a4: case 0x1f8010a8:
+				case 0x1f8010b0: case 0x1f8010b4: case 0x1f8010b8:
+				case 0x1f8010c0: case 0x1f8010c4: case 0x1f8010c8:
+				case 0x1f8010d0: case 0x1f8010d4: case 0x1f8010d8:
+				case 0x1f8010e0: case 0x1f8010e4: case 0x1f8010e8:
 				case 0x1f801070: case 0x1f801074:
 				case 0x1f8010f0: case 0x1f8010f4:
 					if (!_Rt_) return;
@@ -1511,7 +1513,7 @@ static void recLWBlock(int count) {
 	for (i=0; i<count; i++, code++) {
 		if (_fRt_(*code)) {
 			iRegs[_fRt_(*code)].state = ST_UNK;
-			
+
 			MOV64RmStoR(EDX, EAX, ECX, 2);
 			MOV32RtoM((uptr)&psxRegs.GPR.r[_fRt_(*code)], EDX);
 		}
@@ -1731,13 +1733,13 @@ static void recSW() {
 		}
 		if (t == 0x1f80) {
 			switch (addr) {
-				case 0x1f801080: case 0x1f801084: 
-				case 0x1f801090: case 0x1f801094: 
-				case 0x1f8010a0: case 0x1f8010a4: 
-				case 0x1f8010b0: case 0x1f8010b4: 
-				case 0x1f8010c0: case 0x1f8010c4: 
-				case 0x1f8010d0: case 0x1f8010d4: 
-				case 0x1f8010e0: case 0x1f8010e4: 
+				case 0x1f801080: case 0x1f801084:
+				case 0x1f801090: case 0x1f801094:
+				case 0x1f8010a0: case 0x1f8010a4:
+				case 0x1f8010b0: case 0x1f8010b4:
+				case 0x1f8010c0: case 0x1f8010c4:
+				case 0x1f8010d0: case 0x1f8010d4:
+				case 0x1f8010e0: case 0x1f8010e4:
 				case 0x1f801074:
 				case 0x1f8010f0:
 					if (IsConst(_Rt_)) {
@@ -1972,7 +1974,7 @@ void recSWR() {
 		if (_Imm_) ADD32ItoR(EAX, _Imm_);
 	}
 	PUSHR  (EAX);
-	
+
 	AND32ItoR(EAX, ~3);
 	MOV32RtoR(X86ARG1, EAX);
 
@@ -2426,7 +2428,7 @@ static void recJALR() {
 	if (_Rd_) {
 		MapConst(_Rd_, pc + 4);
 	}
-	
+
 	SetBranch();
 }
 
@@ -2703,7 +2705,7 @@ static void (*recCP2[64])() = {
 	recDPCS , recINTPL, recMVMVA, recNCDS, recCDP , recNULL , recNCDT , recNULL, // 10
 	recNULL , recNULL , recNULL , recNCCS, recCC  , recNULL , recNCS  , recNULL, // 18
 	recNCT  , recNULL , recNULL , recNULL, recNULL, recNULL , recNULL , recNULL, // 20
-	recSQR  , recDCPL , recDPCT , recNULL, recNULL, recAVSZ3, recAVSZ4, recNULL, // 28 
+	recSQR  , recDCPL , recDPCT , recNULL, recNULL, recAVSZ3, recAVSZ4, recNULL, // 28
 	recRTPT , recNULL , recNULL , recNULL, recNULL, recNULL , recNULL , recNULL, // 30
 	recNULL , recNULL , recNULL , recNULL, recNULL, recGPF  , recGPL  , recNCCT  // 38
 };
@@ -2864,7 +2866,7 @@ static void iBranch(u32 branchPC, int savectx) {
 	/* store cycle */
 	count = (pc - pcold)/4;
 	UpdateCycle(count);
-	
+
 	StackRes();
 
 	// maybe just happened an interruption, check so
@@ -2936,7 +2938,7 @@ static void recRecompile() {
 }
 
 
-R3000Acpu psxRec = {
+R3000Acpu R3000A::psxRec = {
 	recInit,
 	recReset,
 	recExecute,

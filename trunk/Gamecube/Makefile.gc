@@ -19,7 +19,7 @@ TARGET		:=	pcsx
 BUILD		:=	build
 SOURCES		:=	source . ./ui ./storage ./GPU/ ./SPU/ ./PAD/ ../libpcsxcore/ ../libpcsxcore/R3000A/ ../libpcsxcore/R3000A/ppc/
 DATA		:=	data  
-INCLUDES	:=	./ ../libpcsxcore/ ./SPU/ ./PAD/ ../libpcsxcore/R3000A/ ../libpcsxcore/R3000A/ppc/
+INCLUDES	:=	./ ../libpcsxcore/ ./SPU/ ./PAD/
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -49,7 +49,7 @@ LIBS	:=	-lm -lfat -logc -lz
 # list of directories containing libraries, this must be the top level containing
 # include and lib
 #---------------------------------------------------------------------------------
-LIBDIRS	:= 
+LIBDIRS	:= $(PORTLIBS)
 
 #---------------------------------------------------------------------------------
 # no real need to edit anything past this point unless you need to add additional

@@ -29,7 +29,7 @@
 #include "psxmem.h"
 #include "psxcounters.h"
 #include "ppc.h"
-#include "r3000a.h"
+#include "../r3000a.h"
 #include "psxhle.h"
 #include "mdec.h"
 #include "plugins.h"

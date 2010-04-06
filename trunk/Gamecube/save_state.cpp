@@ -19,7 +19,7 @@
 #include "save_state.h"
 #include "plugins.h"
 #include "ui/textmenu.h"
-#include "r3000a.h"
+#include "R3000A/r3000a.h"
 #include "misc.h"
 #include "storage/mount.h"
 #include "Config.h"

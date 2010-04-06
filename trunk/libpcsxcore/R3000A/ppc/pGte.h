@@ -24,7 +24,7 @@
 #	include <ogc/machine/asm.h>
 #endif
 
-#include "gte.h"
+#include "../gte.h"
 #include "ppc.h"
 
 int psxCP2time[64] = {

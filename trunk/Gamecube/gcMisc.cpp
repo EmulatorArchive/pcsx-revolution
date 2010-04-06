@@ -44,7 +44,7 @@ void ShutdownCB()
 
 void ResetCB()
 {
-	wii_reset		= 1;
+	wii_reset	= 1;
 }
 
 void ShutdownWii()

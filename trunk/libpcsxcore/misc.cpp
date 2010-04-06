@@ -2,16 +2,16 @@
  *  Copyright (C) 2009-2010  PCSX-Revolution Dev Team
  *
  *  PCSX-Revolution is free software: you can redistribute it and/or
- *  modify it under the terms of the GNU Lesser General Public 
- *  License as published by the Free Software Foundation, either 
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation, either
  *  version 2 of the License, or (at your option) any later version.
  *
  *  PCSX-Revolution is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of 
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *  See the GNU General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License 
+ *  You should have received a copy of the GNU General Public License
  *  along with PCSX-Revolution.
  *  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -23,7 +23,7 @@
 #include "sio.h"
 #include "coff.h"
 #include "plugins.h"
-#include "r3000a.h"
+#include "R3000A/r3000a.h"
 #include "psxmem.h"
 #include "misc.h"
 #include "cdrom.h"
@@ -71,17 +71,17 @@ void mmssdd( char *b, char *p )
 #else
 	int block = *((int*)b);
 #endif
-	
+
 	block += 150;
 	m = block / 4500;			// minuten
 	block = block - m * 4500;	// minuten rest
 	s = block / 75;				// sekunden
 	d = block - s * 75;			// sekunden rest
-	
+
 	m = ( ( m / 10 ) << 4 ) | m % 10;
 	s = ( ( s / 10 ) << 4 ) | s % 10;
-	d = ( ( d / 10 ) << 4 ) | d % 10;	
-	
+	d = ( ( d / 10 ) << 4 ) | d % 10;
+
 	p[0] = m;
 	p[1] = s;
 	p[2] = d;
@@ -120,7 +120,7 @@ int GetCdromFile(unsigned char *mdir, u8 *time, const char *filename) {
 
 	// only try to scan if a filename is given
 	if(!strlen(filename)) return -1;
-	
+
 	i = 0;
 	while (i < 4096) {
 		dir = (struct iso_directory_record*) &mdir[i];
@@ -132,7 +132,7 @@ int GetCdromFile(unsigned char *mdir, u8 *time, const char *filename) {
 		if (dir->flags[0] & 0x2) { // it's a dir
 			if (!strnicmp((char*)&dir->name[0], filename, dir->name_len[0])) {
 				if (filename[dir->name_len[0]] != '\\') continue;
-				
+
 				filename+= dir->name_len[0] + 1;
 
 				mmssdd(dir->extent, (char*)time);
@@ -168,7 +168,7 @@ int LoadCdrom() {
 	READTRACK();
 
 	// skip head and sub, and go to the root directory record
-	dir = (struct iso_directory_record*) &buf[12+156]; 
+	dir = (struct iso_directory_record*) &buf[12+156];
 
 	mmssdd(dir->extent, (char*)time);
 
@@ -213,7 +213,7 @@ int LoadCdrom() {
 
 	psxRegs.pc = SWAP32(tmpHead.pc0);
 	psxRegs.GPR.n.gp = SWAP32(tmpHead.gp0);
-	psxRegs.GPR.n.sp = SWAP32(tmpHead.s_addr); 
+	psxRegs.GPR.n.sp = SWAP32(tmpHead.s_addr);
 	if (psxRegs.GPR.n.sp == 0) psxRegs.GPR.n.sp = 0x801fff00;
 
 	tmpHead.t_size = SWAP32(tmpHead.t_size);
@@ -249,7 +249,7 @@ int LoadCdromFile(char *filename, EXE_HEADER *head) {
 	READTRACK();
 
 	// skip head and sub, and go to the root directory record
-	dir = (struct iso_directory_record *)&buf[12 + 156]; 
+	dir = (struct iso_directory_record *)&buf[12 + 156];
 
 	mmssdd(dir->extent, (char*)time);
 
@@ -296,7 +296,7 @@ int CheckCdrom() {
 	strncpy(CdromLabel, (char *)buf + 52, 32);
 
 	// skip head and sub, and go to the root directory record
-	dir = (struct iso_directory_record *)&buf[12 + 156]; 
+	dir = (struct iso_directory_record *)&buf[12 + 156];
 
 	mmssdd(dir->extent, (char *)time);
 
@@ -404,12 +404,12 @@ int Load(char *ExePath) {
 		switch (type) {
 			case PSX_EXE:
 				fread(&tmpHead,sizeof(EXE_HEADER),1,tmpFile);
-				fseek(tmpFile, 0x800, SEEK_SET);		
+				fseek(tmpFile, 0x800, SEEK_SET);
 				fread((void *)PSXM(SWAP32(tmpHead.t_addr)), SWAP32(tmpHead.t_size),1,tmpFile);
 				fclose(tmpFile);
 				psxRegs.pc = SWAP32(tmpHead.pc0);
 				psxRegs.GPR.n.gp = SWAP32(tmpHead.gp0);
-				psxRegs.GPR.n.sp = SWAP32(tmpHead.s_addr); 
+				psxRegs.GPR.n.sp = SWAP32(tmpHead.s_addr);
 				if (psxRegs.GPR.n.sp == 0)
 					psxRegs.GPR.n.sp = 0x801fff00;
 				retval = 0;
@@ -463,7 +463,7 @@ int Load(char *ExePath) {
 }
 
 // STATES
-const char PcsxHeader[32] = "STv4 PCSX v" PACKAGE_VERSION;
+const char PcsxHeader[32] = "STv4 PCSX v";
 
 int SaveState(char *file) {
 	gzFile f;
@@ -632,7 +632,7 @@ int RecvPcsxInfo() {
 	if (tmp != Config.Cpu) {
 		psxCpu->Shutdown();
 #ifdef PSXREC
-		if (Config.Cpu)	
+		if (Config.Cpu)
 			psxCpu = &psxInt;
 		else psxCpu = &psxRec;
 #else
