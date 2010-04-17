@@ -43,3 +43,15 @@ File organisation:
   * All config files stored in sd:/pcsx-r.
 
   * Don't forget to configure PAD before launch a game.
+
+= SMB =
+
+SMB config (smb.ini) should be placed in pcsx-r directory.
+
+smb.ini should contain (without "%"):
+{{{
+ip = %ip of your share%
+user = %username of the share%
+pwd = %password%
+share = %share name%
+}}}
