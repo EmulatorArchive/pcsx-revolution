@@ -33,12 +33,12 @@
 //
 //*************************************************************************//
 
-#include "stdafx.h"
-
 #define _IN_REVERB
 
 // will be included from spu.c
 #ifdef _IN_SPU
+
+#define INLINE inline
 
 ////////////////////////////////////////////////////////////////////////
 // globals

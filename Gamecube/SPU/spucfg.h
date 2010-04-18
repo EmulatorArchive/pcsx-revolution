@@ -24,6 +24,8 @@
 //
 //*************************************************************************//
 
+#ifndef __SPU_CFG_H__
+#define __SPU_CFG_H__
 
 void SPU_ReadConfig(void);
 
@@ -33,4 +35,6 @@ BOOL CALLBACK AboutDlgProc(HWND hW, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK DSoundDlgProc(HWND hW, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #else
 void StartCfgTool(char * pCmdLine);
+#endif
+
 #endif

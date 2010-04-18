@@ -24,7 +24,7 @@
 
 #include "../libpcsxcore/psxcommon.h"
 #include "Config.h"
-#include "pad.h"
+#include "PAD/pad.h"
 
 /////////////////////////////////////////////////////////
 

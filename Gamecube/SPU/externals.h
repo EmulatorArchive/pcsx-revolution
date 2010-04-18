@@ -32,6 +32,11 @@
 // generic defines
 /////////////////////////////////////////////////////////
 
+#define CALLBACK
+
+#define LOWORD(l)           ((unsigned short)(l)) 
+#define HIWORD(l)           ((unsigned short)(((unsigned long)(l) >> 16) & 0xFFFF))
+
 #define PSE_LT_SPU                  4
 #define PSE_SPU_ERR_SUCCESS         0
 #define PSE_SPU_ERR                 -60
@@ -312,6 +317,8 @@ extern int iDoRecord;
 ///////////////////////////////////////////////////////////
 
 #ifndef _IN_XA
+
+#include "psemuxa.h"
 
 extern xa_decode_t   * xapGlobal;
 

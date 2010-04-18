@@ -33,10 +33,9 @@
 //
 //*************************************************************************//
 
-#include "stdafx.h"
-
 #define _IN_FREEZE
 
+#include <string.h>
 #include "externals.h"
 #include "registers.h"
 #include "spu.h"

@@ -31,13 +31,11 @@
 #include "Config.h"
 #include "gcMisc.h"
 
-#include "pad.h"
-
 #include "storage/wiifat.h"
 
-u32 *xfb[2] = { NULL, NULL };			/*** Framebuffers ***/
-int whichfb = 0;						/*** Frame buffer toggle ***/
-GXRModeObj *vmode;				/*** Graphics Mode Object ***/
+u32 *xfb[2] = { NULL, NULL };
+int whichfb = 0;
+GXRModeObj *vmode;
 #define DEFAULT_FIFO_SIZE ( 256 * 1024 )
 //static u8 gp_fifo[DEFAULT_FIFO_SIZE] ATTRIBUTE_ALIGN(32); /*** 3D GX FIFO ***/
 
@@ -46,7 +44,7 @@ GXRModeObj *vmode;				/*** Graphics Mode Object ***/
 static inline void VideoInit()
 {
 	VIDEO_Init();
-	whichfb = 0;				/*** Frame buffer toggle ***/
+	whichfb = 0;
 	vmode = VIDEO_GetPreferredMode(NULL);
 
 	int videowidth = VI_MAX_WIDTH_NTSC;
@@ -185,11 +183,10 @@ int main(int argc, char *argv[]) {
 		strcpy(Config.Mcd1, "carda:/pcsx-r/memcards/Mcd001.mcr");
 		strcpy(Config.Mcd2, "carda:/pcsx-r/memcards/Mcd002.mcr");
 #endif
-		Config.Cpu 		= 1;	//interpreter = 1, dynarec = 0
-
+		Config.Cpu 	= 1;	//interpreter = 1, dynarec = 0
 		Config.PsxOut 	= 0;
-		Config.HLE 		= 0;
-		Config.Xa 		= 0;	//XA enabled
+		Config.HLE 	= 0;
+		Config.Xa 	= 0;	//XA enabled
 		Config.Cdda 	= 0;
 		Config.PsxAuto 	= 1;	//Autodetect
 		init_default_pads();

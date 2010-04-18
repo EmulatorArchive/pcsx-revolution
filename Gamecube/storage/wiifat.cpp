@@ -21,6 +21,7 @@
 #include "mount.h"
 #include <stdio.h>
 #include <fat.h>
+#include <unistd.h>
 
 #ifdef HW_RVL
 #include <sdcard/wiisd_io.h>
@@ -67,7 +68,16 @@ mount_state MountFAT(int device)
 
 	if(isMounted[device] == NOT_MOUNTED)
 	{
-		if(!fat_interface[device]->startup() || !fatMountSimple( fat_name[device], fat_interface[device] ))
+		int mount_attempts = 10;
+		while((!fat_interface[device]->startup() 
+			|| !fatMountSimple( fat_name[device], fat_interface[device] )) 
+			&& mount_attempts) 
+		{
+			--mount_attempts;
+			usleep(10);
+		}
+
+		if(!mount_attempts) 
 			mounted = NOT_MOUNTED;
 	}
 

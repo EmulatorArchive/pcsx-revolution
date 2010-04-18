@@ -26,7 +26,7 @@
 #include <unistd.h>
 
 #include "psxcommon.h"
-#include "pad.h"
+#include "PAD/pad.h"
 
 void clrscr();
 

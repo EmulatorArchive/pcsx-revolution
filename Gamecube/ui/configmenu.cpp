@@ -19,7 +19,7 @@
 #include "textmenu.h"
 #include "Config.h"
 #include "gcMisc.h"
-#include "pad.h"
+#include "PAD/pad.h"
 
 static void ConfigurePAD(pad_t *pad);
 static void ConfigureSPU();
