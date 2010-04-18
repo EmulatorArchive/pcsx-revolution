@@ -19,7 +19,7 @@ TARGET		:=	pcsx
 BUILD		:=	build
 SOURCES		:=	source . ./ui ./storage ./GPU/ ./SPU/ ./PAD/ ../libpcsxcore/ ../libpcsxcore/R3000A/ ../libpcsxcore/R3000A/ppc/
 DATA		:=	data  
-INCLUDES	:=	./ ../libpcsxcore/ ./SPU/ ./PAD/
+INCLUDES	:=	./ ../libpcsxcore/
 
 #---------------------------------------------------------------------------------
 # options for code generation
@@ -29,7 +29,7 @@ CFLAGS	= -g $(MACHDEP) $(INCLUDE) -D__ppc__ \
 		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -D'PACKAGE_VERSION="0.1a"'
 
 ifneq ($(BUILD),debug)
-CFLAGS	+= -O2 -pipe -fno-strict-aliasing
+CFLAGS	+= -O2 -pipe
 else
 CFLAGS	+= -DSHOW_DEBUG
 endif

@@ -155,8 +155,6 @@ void SignalExit(int sig) {
 	OnFile_Exit();
 }
 
-void SPUirq(void);
-
 #define PARSEPATH(dst, src) \
 	ptr = src + strlen(src); \
 	while (*ptr != '\\' && ptr != src) ptr--; \

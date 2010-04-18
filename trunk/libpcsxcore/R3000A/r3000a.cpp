@@ -95,7 +95,7 @@ void psxShutdown() {
 #endif
 }
 
-void psxException(u32 code, u32 bd) {
+void psxException(u32 code, bool bd) {
 	// Set the Cause
 	psxRegs.CP0.n.Cause = code;
 

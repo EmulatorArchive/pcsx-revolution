@@ -37,8 +37,6 @@
 //
 //*************************************************************************//
 
-#include "stdafx.h"
-
 #define _IN_REGISTERS
 
 #include "externals.h"

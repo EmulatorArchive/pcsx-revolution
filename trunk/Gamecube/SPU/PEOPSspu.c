@@ -92,22 +92,22 @@
 //
 //*************************************************************************//
 
-#include "stdafx.h"
+#include <string.h>
+#include <malloc.h>
+#include <stdio.h>
 
 #define _IN_SPU
                                
 #include "externals.h"
 #include "spucfg.h"
-#include "dsoundoss.h"
 #include "regs.h"
-#include "debug.h"
-#include "record.h"
 #include "resource.h"
 
 #ifdef GEKKO
-#include <gccore.h>
-#include <ogc/lwp.h>
-#include "DEBUG.h"
+# include <gccore.h>
+// # include <ogc/lwp.h>
+# include "DEBUG.h"
+# include "cube_audio.h"
 #endif
 ////////////////////////////////////////////////////////////////////////
 // spu version infos/name
@@ -177,7 +177,7 @@ HWND    hWDebug=0;
 HWND    hWRecord=0;
 static HANDLE   hMainThread;                           
 #elif defined(GEKKO)
-static lwp_t thread = LWP_THREAD_NULL;					// thread id (Wii)
+// static lwp_t thread = LWP_THREAD_NULL;					// thread id (Wii)
 #else
 // 2003/06/07 - Pete
 #ifndef NOTHREADLIB
@@ -533,12 +533,11 @@ INLINE int iGetInterpolationVal(SPUCHAN * pChannel)
 int iSpuAsyncWait=0;
 
 #ifdef _WINDOWS
-static VOID CALLBACK MAINProc(UINT nTimerId,UINT msg,DWORD dwUser,DWORD dwParam1, DWORD dwParam2)
+static VOID CALLBACK MAINProc(UINT nTimerId,UINT msg,unsigned long dwUser,unsigned long dwParam1, unsigned long dwParam2)
 #else
 static void *MAINThread(void *arg)
 #endif
 {
-  
  int s_1,s_2,fa,ns,voldiv=iVolume;
  unsigned char * start;unsigned int nSample;
  int ch,predict_nr,shift_factor,flags,d,s;
@@ -717,7 +716,7 @@ static void *MAINThread(void *arg)
                bIRQReturn=0;
                if(iUseTimer!=2)
                 { 
-                 DWORD dwWatchTime=timeGetTime()+2500;
+                 unsigned long dwWatchTime=timeGetTime()+2500;
 
                  while(iSpuAsyncWait && !bEndThread && 
                        timeGetTime()<dwWatchTime)
@@ -924,7 +923,7 @@ ENDX:   ;
 
 #ifdef _WINDOWS
 
-DWORD WINAPI MAINThreadEx(LPVOID lpParameter)
+unsigned long WINAPI MAINThreadEx(LPVOID lpParameter)
 {
  MAINProc(0,0,0,0,0);
  return 0;
@@ -974,27 +973,6 @@ void CALLBACK PEOPS_SPUasync(unsigned long cycle)
 #endif
 	}
 }
-
-////////////////////////////////////////////////////////////////////////
-// SPU UPDATE... new epsxe func
-//  1 time every 32 hsync lines
-//  (312/32)x50 in pal
-//  (262/32)x60 in ntsc
-////////////////////////////////////////////////////////////////////////
-
-#ifndef _WINDOWS
-
-// since epsxe 1.5.2 (linux) uses SPUupdate, not SPUasync, I will
-// leave that func in the linux port, until epsxe linux is using
-// the async function as well
-
-void CALLBACK PEOPS_SPUupdate(void)
-{
-  DEBUG_print("PEOPS_SPUupdate called",11);
- PEOPS_SPUasync(0);
-}
-
-#endif
 
 ////////////////////////////////////////////////////////////////////////
 // XA AUDIO
@@ -1055,17 +1033,17 @@ void SetupTimer(void)
  if(iUseTimer==0)                                      // windows: use thread
   {
    //_beginthread(MAINThread,0,NULL);
-   DWORD dw;
+   unsigned long dw;
    hMainThread=CreateThread(NULL,0,MAINThreadEx,0,0,&dw);
    SetThreadPriority(hMainThread,
                      //THREAD_PRIORITY_TIME_CRITICAL);
                      THREAD_PRIORITY_HIGHEST);
   }
 #elif defined(GEKKO)
-	if(!iUseTimer)                                        // Wii: use thread
+	/*if(!iUseTimer)                                        // Wii: use thread
 	{
 		LWP_CreateThread(&thread, MAINThread, NULL, NULL, 0, LWP_PRIO_HIGHEST);
-	}
+	}*/
 #else
 
 #ifndef NOTHREADLIB
@@ -1097,7 +1075,7 @@ void RemoveTimer(void)
 
 #elif defined(GEKKO)
 
-	if(!iUseTimer)                                        // Wii tread?
+	/*if(!iUseTimer)                                        // Wii tread?
 	{
 		int i = 0;
 		while(!bThreadEnded && i < 2000) {	 			// -> wait until thread has ended
@@ -1108,7 +1086,7 @@ void RemoveTimer(void)
 			LWP_SuspendThread(thread);
 			thread = LWP_THREAD_NULL;
 		}
-	}
+	}*/
 
 #else
 
@@ -1354,8 +1332,8 @@ void CALLBACK PEOPS_SPUabout(void)
 
 void CALLBACK PEOPS_SPUregisterCallback(void (CALLBACK *callback)(void))
 {
-  DEBUG_print("PEOPS_SPUregisterCallback called",10);
- irqCallback = callback;
+	printf("PEOPS_SPUregisterCallback called\n");
+	irqCallback = callback;
 }
 
 void CALLBACK PEOPS_SPUregisterCDDAVolume(void (CALLBACK *CDDAVcallback)(unsigned short,unsigned short))

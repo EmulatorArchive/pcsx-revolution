@@ -23,14 +23,14 @@
 
 namespace R3000A {
 
-typedef struct {
+struct R3000Acpu {
 	int  (*Init)();
 	void (*Reset)();
 	void (*Execute)();		/* executes up to a break */
 	void (*ExecuteBlock)();	/* executes up to a jump */
 	void (*Clear)(u32 Addr, u32 Size);
 	void (*Shutdown)();
-} R3000Acpu;
+};
 
 extern R3000Acpu *psxCpu;
 
@@ -90,10 +90,10 @@ class psxRegisters {
 	psxCP0Regs CP0;		/* Coprocessor0 Registers */
 	PAIR cp2d[32];	 	/* Cop2 data registers */
 	PAIR cp2c[32]; 		/* Cop2 ctrl registers */
-    u32 pc;				/* Program counter */
-    u32 code;			/* The instruction */
+	u32 pc;			/* Program counter */
+	u32 code;		/* The instruction */
 
-	u32 IsDelaySlot:1;
+	bool IsDelaySlot;
 
 	// marks the original duration of time for the current pending event.  This is
 	// typically used to determine the amount of time passed since the last update
@@ -128,14 +128,14 @@ extern psxRegisters psxRegs;
 /**** R3000A Instruction Macros ****/
 #define _PC_       psxRegs.pc       // The next PC to be executed
 
-#define _fOp_(code)		((code >> 26)       )  // The opcode part of the instruction register 
+#define _fOp_(code)	((code >> 26)       )  // The opcode part of the instruction register 
 #define _fFunct_(code)	((code      ) & 0x3F)  // The funct part of the instruction register 
-#define _fRd_(code)		((code >> 11) & 0x1F)  // The rd part of the instruction register 
-#define _fRt_(code)		((code >> 16) & 0x1F)  // The rt part of the instruction register 
-#define _fRs_(code)		((code >> 21) & 0x1F)  // The rs part of the instruction register 
-#define _fSa_(code)		((code >>  6) & 0x1F)  // The sa part of the instruction register
-#define _fIm_(code)		((u16)code)            // The immediate part of the instruction register
-#define _fTarget_(code)	(code & 0x3ffffff)    // The target part of the instruction register
+#define _fRd_(code)	((code >> 11) & 0x1F)  // The rd part of the instruction register 
+#define _fRt_(code)	((code >> 16) & 0x1F)  // The rt part of the instruction register 
+#define _fRs_(code)	((code >> 21) & 0x1F)  // The rs part of the instruction register 
+#define _fSa_(code)	((code >>  6) & 0x1F)  // The sa part of the instruction register
+#define _fIm_(code)	((u16)code)            // The immediate part of the instruction register
+#define _fTarget_(code)	(code & 0x3ffffff)     // The target part of the instruction register
 
 #define _fImm_(code)	((s16)code)            // sign-extended immediate
 #define _fImmU_(code)	(code&0xffff)          // zero-extended immediate
@@ -175,7 +175,7 @@ int  psxInit();
 void psxReset();
 void psxShutdown();
 
-void psxException(u32 code, u32 bd);
+void psxException(u32 code, bool bd);
 void psxExecuteBios();
 int  psxTestLoadDelay(int reg, u32 tmp);
 void psxDelayTest(int reg, u32 bpc);

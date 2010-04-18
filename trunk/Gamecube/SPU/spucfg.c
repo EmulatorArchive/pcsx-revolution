@@ -39,13 +39,13 @@
 //
 //*************************************************************************//
 
-#include "stdafx.h"
+#include <stdio.h>
+#include <string.h>
+#include <malloc.h>
 
 #define _IN_CFG
 
 #include "externals.h"
-
-extern int iZincEmu;
 
 ////////////////////////////////////////////////////////////////////////
 // WINDOWS CONFIG/ABOUT HANDLING
@@ -143,14 +143,6 @@ void SPU_ReadConfig(void)
     iUseDBufIrq=(int)temp;
 
    RegCloseKey(myKey);
-  }
-
- if(iZincEmu) 
-  {
-   iVolume=1;    // with ZINC, max volume is needed (or qsound will be too loud)
-   iUseTimer=1;  // with ZINC, only timer mode is possible
-   iSPUDebugMode=0; // with ZINC, no debug mode possible (we don't get SPUasyncs)
-   iDisStereo=0; // with ZINC, no mono possible (or qsound mixing troubles)
   }
 
  if(iUseTimer>MAXMODE) iUseTimer=MAXMODE;              // some checks
@@ -345,6 +337,7 @@ static char * pConfigFile=NULL;
 
 void StartCfgTool(char * pCmdLine)
 {
+#if 0
  FILE * cf;char filename[255],t[255];
 
  strcpy(filename,"cfg/cfgPeopsOSS");
@@ -384,6 +377,7 @@ void StartCfgTool(char * pCmdLine)
      else printf("cfgPeopsOSS not found!\n");
     }
   }
+#endif
 }
 
 /////////////////////////////////////////////////////////
@@ -505,13 +499,6 @@ void SPU_ReadConfig(void)
  iUseDBufIrq=0;
 
  ReadConfigFile();
-
- if(iZincEmu) 
-  {
-   iVolume=1;    // with ZINC, max volume is needed (or qsound will be too loud)
-   iDisStereo=0; // with ZINC, no mono possible (or qsound mixing troubles)
-  }
-
 }
 
 #endif

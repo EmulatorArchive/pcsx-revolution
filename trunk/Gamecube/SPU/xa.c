@@ -27,7 +27,8 @@
 //
 //*************************************************************************//
 
-#include "stdafx.h"
+#include <string.h>
+#include "xa.h"
 
 #define _IN_XA
 
@@ -109,12 +110,12 @@ INLINE void FeedXA(xa_decode_t *xap)
  //----------------------------------------------------//
  if(iXAPitch)                                          // pitch change option?
   {
-   static DWORD dwLT=0;
-   static DWORD dwFPS=0;
+   static unsigned long dwLT=0;
+   static unsigned long dwFPS=0;
    static int   iFPSCnt=0;
    static int   iLastSize=0;
-   static DWORD dwL1=0;
-   DWORD dw=timeGetTime(),dw1,dw2;
+   static unsigned long dwL1=0;
+   unsigned long dw=timeGetTime(),dw1,dw2;
 
    iPlace=iSize;
 

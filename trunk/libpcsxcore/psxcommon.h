@@ -92,7 +92,7 @@ void __Log(char *fmt, ...);
 typedef struct
 {
 	char Filename[256];
-	u32 Enabled:1;
+	bool Enabled;
 } McdConfig;
 
 typedef struct {

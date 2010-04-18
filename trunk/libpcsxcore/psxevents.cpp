@@ -50,7 +50,6 @@ static void _evthandler_SPU() {
 		Interrupt.Schedule(PsxEvt_SPU, SpuRate);
 	}
 }
-static void _evthandler_Idle();
 
 static void _evthandler_Idle()
 {
@@ -71,7 +70,7 @@ void ResetEvents()
 void PsxEvents::Reset() {
 	this->List[PsxEvt_Exception].Execute	= _evthandler_Exception;
 	this->List[PsxEvt_SIO].Execute		= sioInterrupt;
-	this->List[PsxEvt_Cdrom].Execute		= cdrInterrupt;
+	this->List[PsxEvt_Cdrom].Execute	= cdrInterrupt;
 	this->List[PsxEvt_CdromRead].Execute	= cdrReadInterrupt;
 	this->List[PsxEvt_GPU].Execute 		= gpuInterrupt;
 	this->List[PsxEvt_OTC].Execute 		= otcInterrupt;
@@ -79,14 +78,15 @@ void PsxEvents::Reset() {
 	this->List[PsxEvt_Counter0].Execute	= psxRcntUpdate0;
 	this->List[PsxEvt_Counter1].Execute	= psxRcntUpdate1;
 	this->List[PsxEvt_Counter2].Execute	= psxRcntUpdate2;
-	this->List[PsxEvt_vSync].Execute 		= psxRcntVSync;
+	this->List[PsxEvt_vSync].Execute 	= psxRcntVSync;
 	this->List[PsxEvt_vBlank].Execute 	= psxRcntVBlank;
 
-	this->List[PsxEvt_Idle].Execute 		= _evthandler_Idle;
-	this->List[PsxEvt_Idle].RelativeDelta 			= 0x4000;
-	this->List[PsxEvt_Idle].OrigDelta 		= 0x4000;
+	this->List[PsxEvt_Idle].Execute 	= _evthandler_Idle;
+	this->List[PsxEvt_Idle].RelativeDelta 	= 0x4000;
+	this->List[PsxEvt_Idle].OrigDelta 	= 0x4000;
 
 	this->Next = &this->List[PsxEvt_Idle];
+	Interrupt.Schedule(PsxEvt_SPU, 0);
 }
 
 void PsxEvents::Schedule( PsxEventType n, s32 time ) {
@@ -144,7 +144,7 @@ void PsxEvents::Cancel( PsxEventType n ) {
 	if( this->Next == &this->List[n] )
 	{
 		this->Next = this->List[n].next;
-		int psxPending 				= psxRegs.GetPendingCycles();
+		int psxPending 			= psxRegs.GetPendingCycles();
 		psxRegs.evtCycleDuration	= this->Next->RelativeDelta;
 		psxRegs.evtCycleCountdown	= this->Next->RelativeDelta - psxPending;
 	}
@@ -177,7 +177,7 @@ void PsxEvents::ExecutePendingEvents() {
 		s32 oldtime = psxRegs.evtCycleCountdown;
 
 		psxRegs.evtCycleCountdown	= 0;
-		psxRegs.cycle 				+= psxRegs.evtCycleDuration;
+		psxRegs.cycle 			+= psxRegs.evtCycleDuration;
 		psxRegs.evtCycleDuration	= 0;
 		
 		events_t* exeEvt = this->Next;

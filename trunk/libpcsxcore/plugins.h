@@ -30,7 +30,7 @@ extern "C" {
 typedef void* HWND;
 #define CALLBACK
 
-typedef long (* GPUopen)(unsigned long *, char *, char *);
+typedef long (* GPUopen)(unsigned long *, const char *, const char *);
 typedef long (* SPUopen)(void);
 typedef long (* PADopen)(unsigned long *);
 typedef long (* NETopen)(unsigned long *);

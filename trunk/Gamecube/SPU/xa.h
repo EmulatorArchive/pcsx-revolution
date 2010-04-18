@@ -24,6 +24,12 @@
 //
 //*************************************************************************//
 
+#ifndef __SPU_XA_H__
+#define __SPU_XA_H__
 
-INLINE void MixXA(void);
-INLINE void FeedXA(xa_decode_t *xap);
+#include "psemuxa.h"
+
+void MixXA(void);
+void FeedXA(xa_decode_t *xap);
+
+#endif

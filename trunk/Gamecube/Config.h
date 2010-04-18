@@ -40,22 +40,22 @@ void SPUReadConfig();
 int SMBReadConfig();
 
 typedef struct {
-	int ShowFPS;			// 0-1
-	int FrameSkip;			// 0-1
-	int LimitFPS;			// 0-1
+	bool ShowFPS;			// 0-1
+	bool FrameSkip;			// 0-1
+	bool LimitFPS;			// 0-1
 	int Dithering;			// 0-2
 } GPU_t;
 
 typedef struct {
-	int Volume;				// 1-4
-	int Reverb;				// 0-2
+	int Volume;			// 1-4
+	int Reverb;			// 0-2
 	int Interpolation;		// 0-3
-	int EnableXA;			// 0-1
-	int XAPitch;			// 0-1
+	bool EnableXA;			// 0-1
+	bool XAPitch;			// 0-1
 	int CompatMode;			// 0, 2
-	int SPU_IRQ_Wait;		// 0-1
-	int SingleChMode;		// 0-1
-	int Disable;			// 0-1
+	bool SPU_IRQ_Wait;		// 0-1
+	bool SingleChMode;		// 0-1
+	bool Disable;			// 0-1
 } SPU_t;
 
 typedef struct {

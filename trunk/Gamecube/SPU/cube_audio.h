@@ -13,4 +13,18 @@
 #ifndef _CUBE_AUDIO_H
 #define _CUBE_AUDIO_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void SetupSound(void);
+void RemoveSound(void);
+unsigned long SoundGetBytesBuffered(void);
+void SoundFeedStreamData(unsigned char* pSound,long lBytes);
+void PEOPS_SPUplayCDDAchannel(short* pcm, int nbytes);
+
+#ifdef __cplusplus
+} // extern "C" 
+#endif
+
 #endif // _CUBE_AUDIO_H

@@ -34,14 +34,22 @@ namespace R3000A {
 static const u32 PsxFixedBits = 12;
 
 // I just love bit fields =)
-typedef union {
+union width_t {
 	u32 value;
 	struct {
-		u32 unused: 16;
-		u32 width1: 1;
-		u32 width0: 2;
+#if defined(GEKKO) || defined(__BIGENDIAN__)
+		u32 :13;
+		u32 width0:2;
+		u32 width1:1;
+		u32 :16;
+#else
+		u32 :16;
+		u32 width1:1;
+		u32 width0:2;
+		u32 :13;
+#endif
 	} width;
-} width_t;
+};
 
 struct vSyncRate_t {
 	u32 Render;
@@ -55,22 +63,22 @@ static vSyncRate_t vSyncRate;
 
 struct psxcnt_mode {
 #if defined(GEKKO) || defined(__BIGENDIAN__)
-	u32 garbage:22;
+	u32 :22;
 	u32 Div:1;
 	u32 ClockSource:1;
-	u32 unused2:1;
+	u32 :1;
 	u32 Repeat:1;
 	u32 IRQOVF:1;
 	u32 IRQTARGET:1;
 	u32 Tar:1;
 	u32 Reset:1;
-	u32 unused:1;
+	u32 :1;
 	u32 Stop:1;
 #else
 	// General count enable/status.  If 0, no counting happens.
 	// This flag is set/unset by the gates.
 	u32 Stop:1;
-	u32 unused:1;
+	u32 :1;
 	u32 Reset:1;
 	// 0 Count to $ffff
 	// 1 Count to value in target register
@@ -79,7 +87,7 @@ struct psxcnt_mode {
 	u32 IRQTARGET:1;
 	u32 IRQOVF:1;
 	u32 Repeat:1;
-	u32 unused2:1;
+	u32 :1;
 
 	// 0 - System clock (it seems)
 	// 1 - Pixel clock (counter 0)
@@ -95,6 +103,7 @@ struct psxcnt_mode {
 		speed of root counter 2, which is specified as 1/8 the system
 		clock.
 */
+	u32 :22;
 #endif
 };
 
@@ -230,7 +239,7 @@ void psxCounter::WriteMode(u32 newmode) {
 	else if(mode_b.ClockSource != 0) {
 		if(index == 0) {
 			// based on resolution. See http://members.at.infoseek.co.jp/DrHell/ps1/
-			// something like (vSyncRate.frame / (width * ((vSyncRate.scans / 3) * 2)))
+			// something like (vSyncRate.frame / (width * (vSyncRate.scans * 0.667)))
 			width_t screen;
 			u32 width;
 			screen.value = psxHu32(0x1814);
@@ -392,4 +401,4 @@ int psxRcntFreeze(gzFile f, int Mode) {
 	return 0;
 }
 
-}
+} // namespace

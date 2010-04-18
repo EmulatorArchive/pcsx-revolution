@@ -61,7 +61,7 @@
 #define MDEC_BUSY	( 1L << 29 )
 
 struct mdec {
-	u32 flag:1;
+	bool flag;
 	u32 size;
 #ifndef MAME_MDEC
 	u32 command;
@@ -575,7 +575,7 @@ void mdecInit(void) {
 	mdec.rl = (u16*)&psxM[0x100000];
 	mdec.command = 0;
 	mdec.status = 0;
-	mdec.flag = 0;
+	mdec.flag = false;
 #else
 	int n;
 	for( n = 0; n < 256; n++ )
@@ -630,7 +630,7 @@ void mdecWrite1(u32 data) {
 	if (data & 0x80000000) { // mdec reset
 		mdec.command = 0;
 		mdec.status = 0;
-		mdec.flag = 0;
+		mdec.flag = false;
 	}
 #else
 	mdec.command1 = data;
@@ -657,7 +657,7 @@ u32 mdecRead1(void) {
 #else
 		mdec.status &= ~MDEC_BUSY;
 #endif
-	mdec.flag = 1;
+	mdec.flag = true;
 #ifdef MAME_MDEC
 	return mdec.status1;
 #else
@@ -675,7 +675,7 @@ void psxDma0(u32 adr, u32 bcr, u32 chcr) {
 		return;
 	}
 
- 	mdec.flag = 0;
+ 	mdec.flag = false;
 	//int size = (bcr >> 16) * (bcr & 0xffff);
 	u32 size = bcr >> 16;
 	if( size == 0 )
@@ -774,7 +774,7 @@ void psxDma1(u32 adr, u32 bcr, u32 chcr) {
 	if (chcr != 0x01000200){
 		return;
 	}
- 	mdec.flag = 0;
+ 	mdec.flag = false;
 	u32 size = bcr >> 16;
 	if( size == 0 )
 	{

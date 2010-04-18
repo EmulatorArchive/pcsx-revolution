@@ -146,7 +146,7 @@ static void delayRead(int reg, u32 bpc) {
 	psxRegs.GPR.r[reg].d = rold;
 	execI(); // first branch opcode
 	psxRegs.GPR.r[reg].d = rnew;
-	psxRegs.IsDelaySlot = 0;
+	psxRegs.IsDelaySlot = false;
 }
 
 static void delayWrite(int reg, u32 bpc) {
@@ -160,7 +160,7 @@ static void delayWrite(int reg, u32 bpc) {
 
 	psxBSC[_Op_]();
 
-	psxRegs.IsDelaySlot = 0;
+	psxRegs.IsDelaySlot = false;
 
 	psxRegs.pc = bpc;
 
@@ -173,7 +173,7 @@ static void delayReadWrite(int reg, u32 bpc) {
 
 	// the branch delay load is skipped
 
-	psxRegs.IsDelaySlot = 0;
+	psxRegs.IsDelaySlot = false;
 
 	psxRegs.pc = bpc;
 
@@ -338,7 +338,7 @@ void R3000A::psxDelayTest(int reg, u32 bpc) {
 
 	code = (u32 *)PSXM(bpc);
 	tmp = ((code == NULL) ? 0 : GETLE32(code));
-	psxRegs.IsDelaySlot = 1;
+	psxRegs.IsDelaySlot = true;
 
 	switch (psxTestLoadDelay(reg, tmp)) {
 		case 1:
@@ -350,7 +350,7 @@ void R3000A::psxDelayTest(int reg, u32 bpc) {
 	}
 	psxBSC[_Op_]();
 
-	psxRegs.IsDelaySlot = 0;
+	psxRegs.IsDelaySlot = false;
 
 	psxRegs.pc = bpc;
 
@@ -361,7 +361,7 @@ __inline void doBranch(u32 tar) {
 	u32 *code;
 	u32 tmp;
 
-	branch2 = psxRegs.IsDelaySlot = 1;
+	branch2 = psxRegs.IsDelaySlot = true;
 
 	branchPC = tar;
 
@@ -409,7 +409,7 @@ __inline void doBranch(u32 tar) {
 
 	psxBSC[_Op_]();
 
-	psxRegs.IsDelaySlot = 0;
+	psxRegs.IsDelaySlot = false;
 
 	psxRegs.pc = branchPC;
 
