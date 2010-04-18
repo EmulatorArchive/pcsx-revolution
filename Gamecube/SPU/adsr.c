@@ -48,23 +48,18 @@ static unsigned long int RateTable[160];
 
 void InitADSR(void)                                    // INIT ADSR
 {
- unsigned long r,rs,rd;int i;
+	int i = 0;
+	for (; i < 160; i++)
+	{
+		int shift=(i-32)>>2;
+		s64 rate=(i&3)+4;
+		if (shift<0)
+			rate >>= -shift;
+		else
+			rate <<= shift;
 
- memset(RateTable,0,sizeof(unsigned long)*160);        // build the rate table according to Neill's rules (see at bottom of file)
-
- r=3;rs=1;rd=0;
-
- for(i=32;i<160;i++)                                   // we start at pos 32 with the real values... everything before is 0
-  {
-   if(r<0x3FFFFFFF)
-    {
-     r+=rs;
-     rd++;if(rd==5) {rd=1;rs*=2;}
-    }
-   if(r>0x3FFFFFFF) r=0x3FFFFFFF;
-
-   RateTable[i]=r;
-  }
+		RateTable[i] = (int) (rate > 0x3fffffffLL ? 0x3fffffffLL : rate);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////
