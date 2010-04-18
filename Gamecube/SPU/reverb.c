@@ -253,7 +253,7 @@ INLINE int MixREVERBLeft(int ns)
 				const s32 acc_fb_mix_b = ACC1 + ( (FB_A1 - (ACC1>>16)) * rvb.FB_ALPHA );
        
 				s_buffer(rvb.MIX_DEST_B0, ( acc_fb_mix_a - (FB_B0 * rvb.FB_X) ) >> 16);
-				s_buffer(rvb.MIX_DEST_B1, ( acc_fb_mix_b - (FB_B0 * rvb.FB_X) ) >> 16);
+				s_buffer(rvb.MIX_DEST_B1, ( acc_fb_mix_b - (FB_B1 * rvb.FB_X) ) >> 16);
 
 				rvb.iLastRVBLeft  = rvb.iRVBLeft;
 				rvb.iLastRVBRight = rvb.iRVBRight;
