@@ -17,7 +17,7 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	pcsx
 BUILD		:=	build
-SOURCES		:=	source . ./ui ./storage ./GPU/ ./SPU/ ./PAD/ ../libpcsxcore/ ../libpcsxcore/R3000A/ ../libpcsxcore/R3000A/ppc/
+SOURCES		:=	source . ./ui ./storage ./GPU/ ./SPU/ ./PAD/ ../libpcsxcore/ ../libpcsxcore/R3000A/ ../libpcsxcore/R3000A/ppc/ ./utils
 DATA		:=	data  
 INCLUDES	:=	./ ../libpcsxcore/
 
@@ -83,7 +83,8 @@ endif
 
 export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
 					$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) \
-					$(sFILES:.s=.o) $(SFILES:.S=.o)
+					$(sFILES:.s=.o) $(SFILES:.S=.o) \
+					$(CURDIR)/utils/ehcmodule.elf.o
 
 #---------------------------------------------------------------------------------
 # build a list of include paths
