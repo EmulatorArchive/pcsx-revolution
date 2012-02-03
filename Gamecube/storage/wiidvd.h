@@ -23,7 +23,7 @@
 
 // #define DVD_FIXED
 
-mount_state MountDVD();
+mount_state MountDVD(int);
 void UnMountDVD();
 void InitDVD();
 

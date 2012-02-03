@@ -28,7 +28,7 @@
 #include <gccore.h>
 // #include "Config.h"
 #else
-//#include "config.h"
+#include "config.h"
 #endif
 
 /* System includes */
@@ -62,7 +62,7 @@ typedef uintptr_t uptr;
 #include "system.h"
 #include "debug.h"
 
-#if defined (__LINUX__) || defined (__MACOSX__)
+#ifndef strnicmp
 #define strnicmp strncasecmp
 #endif
 #define __inline inline

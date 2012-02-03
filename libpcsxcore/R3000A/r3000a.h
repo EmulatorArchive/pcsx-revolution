@@ -42,6 +42,30 @@ extern R3000Acpu psxRec;
 
 //#define GTE_TIMING
 
+typedef struct {
+	short x, y;
+} SVector2D;
+
+typedef struct {
+	short z, pad;
+} SVector2Dz;
+
+typedef struct {
+	short x, y, z, pad;
+} SVector3D;
+
+typedef struct {
+	short x, y, z, pad;
+} LVector3D;
+
+typedef struct {
+	unsigned char r, g, b, c;
+} CBGR;
+
+typedef struct {
+	short m11, m12, m13, m21, m22, m23, m31, m32, m33, pad;
+} SMatrix3D;
+
 typedef union
 {
 #if defined(__BIGENDIAN__) || defined(GEKKO)
@@ -61,37 +85,70 @@ typedef union
 
 typedef union {
 	struct {
-		u32   r0, at, v0, v1, a0, a1, a2, a3,
-						t0, t1, t2, t3, t4, t5, t6, t7,
-						s0, s1, s2, s3, s4, s5, s6, s7,
-						t8, t9, k0, k1, gp, sp, s8, ra, lo, hi;
+		SVector3D	v0, v1, v2;
+		CBGR		rgb;
+		s32			otz;
+		s32			ir0, ir1, ir2, ir3;
+		SVector2D	sxy0, sxy1, sxy2, sxyp;
+		SVector2Dz	sz0, sz1, sz2, sz3;
+		CBGR		rgb0, rgb1, rgb2;
+		s32			reserved;
+		s32			mac0, mac1, mac2, mac3;
+		u32			irgb, orgb;
+		s32			lzcs, lzcr;
+	} n;
+	PAIR r[32];
+} psxCP2Data;
+
+typedef union {
+	struct {
+		SMatrix3D rMatrix;
+		s32      trX, trY, trZ;
+		SMatrix3D lMatrix;
+		s32      rbk, gbk, bbk;
+		SMatrix3D cMatrix;
+		s32      rfc, gfc, bfc;
+		s32      ofx, ofy;
+		s32      h;
+		s32      dqa, dqb;
+		s32      zsf3, zsf4;
+		s32      flag;
+	} n;
+	PAIR r[32];
+} psxCP2Ctrl;
+
+typedef union {
+	struct {
+		u32 	r0, at, v0, v1, a0, a1, a2, a3,
+				t0, t1, t2, t3, t4, t5, t6, t7,
+				s0, s1, s2, s3, s4, s5, s6, s7,
+				t8, t9, k0, k1, gp, sp, s8, ra, lo, hi;
 	} n;
 	PAIR r[34]; /* Lo, Hi in r[32] and r[33] */
 } psxGPRRegs;
 
 typedef union {
 	struct {
-		u32	Index,     Random,    EntryLo0,  EntryLo1,
-						Context,   PageMask,  Wired,     Reserved0,
-						BadVAddr,  Count,     EntryHi,   Compare,
-						Status,    Cause,     EPC,       PRid,
-						Config,    LLAddr,    WatchLO,   WatchHI,
-						XContext,  Reserved1, Reserved2, Reserved3,
-						Reserved4, Reserved5, ECC,       CacheErr,
-						TagLo,     TagHi,     ErrorEPC,  Reserved6;
+		u32		Index,     Random,    EntryLo0,  EntryLo1,
+				Context,   PageMask,  Wired,     Reserved0,
+				BadVAddr,  Count,     EntryHi,   Compare,
+				Status,    Cause,     EPC,       PRid,
+				Config,    LLAddr,    WatchLO,   WatchHI,
+				XContext,  Reserved1, Reserved2, Reserved3,
+				Reserved4, Reserved5, ECC,       CacheErr,
+				TagLo,     TagHi,     ErrorEPC,  Reserved6;
 	} n;
 	PAIR r[32];
 } psxCP0Regs;
 
-class psxRegisters {
-	public:
-	u32 cycle;
+struct psxRegisters {
 	psxGPRRegs GPR;		/* General Purpose Registers */
 	psxCP0Regs CP0;		/* Coprocessor0 Registers */
-	PAIR cp2d[32];	 	/* Cop2 data registers */
-	PAIR cp2c[32]; 		/* Cop2 ctrl registers */
-	u32 pc;			/* Program counter */
-	u32 code;		/* The instruction */
+	psxCP2Data CP2D;	/* Cop2 data registers */
+	psxCP2Ctrl CP2C; 	/* Cop2 ctrl registers */
+	u32 cycle;
+	u32 pc;				/* Program counter */
+	u32 code;			/* The instruction */
 
 	bool IsDelaySlot;
 
@@ -181,6 +238,8 @@ int  psxTestLoadDelay(int reg, u32 tmp);
 void psxDelayTest(int reg, u32 bpc);
 void psxTestSWInts();
 void psxTestHWInts();
+
+void psxJumpTest();
 
 void advance_pc(s32 offset);
 

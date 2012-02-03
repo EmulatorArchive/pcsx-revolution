@@ -124,6 +124,10 @@ void psxException(u32 code, bool bd) {
 		PSXMu32ref(psxRegs.CP0.n.EPC)&= SWAPu32(~0x02000000);
 	}
 	
+	if (Config.HLE) psxBiosException();
+}
+
+void psxJumpTest() {
 	if (!Config.HLE && Config.PsxOut) {
 		u32 call = psxRegs.GPR.n.t1 & 0xff;
 		switch (psxRegs.pc & 0x1fffff) {
@@ -152,8 +156,6 @@ void psxException(u32 code, bool bd) {
 				break;
 		}
 	}
-
-	if (Config.HLE) psxBiosException();
 }
 
 void psxExecuteBios() {

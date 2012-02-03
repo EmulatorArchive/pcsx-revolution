@@ -40,21 +40,21 @@ int psxCP2time[64] = {
 
 #define CP2_FUNC(f) \
 static void rec##f() { \
-	/*if (pc < cop2readypc) idlecyclecount += (cop2readypc - pc)>>2; */\
+	/*if (pc < cop2readypc) idlecyclecount += (cop2readypc - pc)>>2;*/ \
+	LIW(r4, (u32)psxRegs.code); \
 	iFlushRegs(); \
-	LIW(r9, (u32)psxRegs.code); \
-	STWRtoPR(&psxRegs.code, r9); \
+	STWRtoPR(&psxRegs.code, r4); \
 	CALLFunc ((u32)gte##f); \
 	/*cop2readypc = pc + (psxCP2time[_fFunct_(psxRegs.code)]<<2);*/ \
 }
 
 #define CP2_FUNCNC(f) \
 static void rec##f() { \
-/*	if (pc < cop2readypc) idlecyclecount += ((cop2readypc - pc)>>2); */\
+	/*if (pc < cop2readypc) idlecyclecount += ((cop2readypc - pc)>>2);*/ \
 	iFlushRegs(); \
 	CALLFunc ((u32)gte##f); \
 /*	branch = 2; */\
-/*	cop2readypc = pc + psxCP2time[_fFunct_(psxRegs.code)]; */\
+	/*cop2readypc = pc + psxCP2time[_fFunct_(psxRegs.code)]; */\
 }
 
 #if 1
@@ -62,7 +62,7 @@ CP2_FUNC(LWC2);
 #else
 static void recLWC2() {
 // Cop2D->Rt = mem[Rs + Im] (unsigned)
-
+#if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
@@ -101,48 +101,48 @@ static void recLWC2() {
 		}
 #endif
 	}
-
+#endif
 	SetArg_OfB(PPCARG1);
 	CALLFunc((uptr)psxMemRead32);
-
+#if 0
 	if(IsConst(_Rs_)) {
 		B_DST(b32Ptr[0]);
 	}
-
+#endif
 	switch (_Rt_) {
-		case 7: case 29: case 31:	// Readonly regs
+		/*case 7: case 29:*/ case 31:	// Readonly regs
 			return;
 
 		case 15:
 			LWPRtoR(r9, &gteSXY1);
 			LWPRtoR(r11, &gteSXY2);
+			STWRtoPR(&gteSXY2, r3);
 			STWRtoPR(&gteSXY0, r9);
 			STWRtoPR(&gteSXY1, r11);
-			STWRtoPR(&gteSXY2, r3);
 			STWRtoPR(&gteSXYP, r3);
 			break;
 
 		case 28:
-			STWRtoPR(&gteIRGB, r3);
 			RLWINM(r9, r3, 7, 20, 24);	// IR1
-			STHRtoPR(&gteIR1, r9);
+			STWRtoPR(&gteIRGB, r3);
 			RLWINM(r11, r3, 2, 20, 24);	// IR2
-			STHRtoPR(&gteIR2, r11);
+			STHRtoPR(&gteIR1, r9);
 			RLWINM(r12, r3, 29, 20, 24);	// IR3
+			STHRtoPR(&gteIR2, r11);
 			STHRtoPR(&gteIR3, r12);
 			break;
 
 		case 30:
+			MR(r4, r3);
 			STWRtoPR(&gteLZCS, r3);
-			CNTLZW(r3, r3);
-			STWRtoPR(&gteLZCR, r3);
+			CNTLZW(r4, r4);
+			STWRtoPR(&gteLZCR, r4);
 			break;
-			
+
 		default:
-			STWRtoPR(&psxRegs.cp2d[_Rt_].d, r3);
+			STWRtoPR(&psxRegs.CP2D.r[_Rt_].d, r3);
 			break;
 	}
-	resp += 16;
 }
 #endif
 
@@ -154,7 +154,7 @@ static void recCFC2() {
 	if (!_Rt_) return;
 
 	iRegs[_Rt_].state = ST_UNK;
-	LWPRtoR(r3, &psxRegs.cp2c[_Rd_].d);
+	LWPRtoR(r3, &psxRegs.CP2C.r[_Rd_].d);
 	STWRtoPR(&psxRegs.GPR.r[_Rt_], r3);
 }
 #endif
@@ -165,11 +165,50 @@ CP2_FUNC(CTC2);
 static void recCTC2() {
 // Cop2C->Rd = Rt
 	if (IsConst(_Rt_)) {
-		LIW(r3, iRegs[_Rt_].k);
+		u32 value = iRegs[_Rt_].k;
+		switch (_Rt_) {
+			case 4:
+			case 12:
+			case 20:
+			case 26:
+			case 27:
+			case 29:
+			case 30:
+				value = (s32)(s16)value;
+				break;
+
+			case 31:
+				value = value & 0x7ffff000;
+				if (value & 0x7f87e000) value |= 0x80000000;
+				break;
+		}
+		LIW(r3, value);
 	} else {
 		LWPRtoR(r3, &psxRegs.GPR.r[_Rt_]);
+		switch (_Rt_) {
+			case 4:
+			case 12:
+			case 20:
+			case 26:
+			case 27:
+			case 29:
+			case 30:
+				EXTSH(r3, r3);
+				break;
+
+			case 31:
+				RLWINM(r3, r3, 0, 1, 19);	// & 0x7ffff000;
+
+				LIS(r4, 32647);
+				ORI(r4, r4, 57344);
+				AND_(r4, r3, r4);			// value & 0x7f87e000
+				BranchTarget eq(BT_EQ);
+				ORIS(r3, r3, 32768);
+				eq.setTarget();
+				break;
+		}
 	}
-	STWRtoPR(&psxRegs.cp2c[_Rd_].d, r3);
+	STWRtoPR(&psxRegs.CP2C.r[_Rd_].d, r3);
 }
 #endif
 
@@ -186,39 +225,37 @@ static void recMFC2() {
 		case 1: case 3: case 5:
 		case 8: case 9: case 10:
 		case 11:
-			LHPRtoR(r3, &psxRegs.cp2d[_Rd_].sw.l);
+			LHPRtoR(r3, &psxRegs.CP2D.r[_Rd_].sw.l);
 			EXTSH(r3, r3);
-			STWRtoPR(&psxRegs.cp2d[_Rd_].d, r3);
-			STWRtoPR(&psxRegs.GPR.r[_Rt_], r3);
+			STWRtoPR(&psxRegs.CP2D.r[_Rd_].d, r3);
 			break;
 
 
 		case 7: case 16: case 17:
 		case 18: case 19:
-			LHPRtoR(r3, &psxRegs.cp2d[_Rd_].w.l);
-			STWRtoPR(&psxRegs.cp2d[_Rd_].d, r3);
-			STWRtoPR(&psxRegs.GPR.r[_Rt_], r3);
+			LHPRtoR(r3, &psxRegs.CP2D.r[_Rd_].w.l);
+			STWRtoPR(&psxRegs.CP2D.r[_Rd_].d, r3);
 			break;
 			
 		case 15:
 			LWPRtoR(r3, (uptr)&gteSXY2);
-			STWRtoPR(&psxRegs.cp2d[_Rd_].d, r3);
-			STWRtoPR(&psxRegs.GPR.r[_Rt_], r3);
+			STWRtoPR(&psxRegs.CP2D.r[_Rd_].d, r3);
 			break;
 
-		case 29: 
+		case 28:
+		case 29:
 			iFlushRegs();
 			LIW(r3, (u32)psxRegs.code);
 			STWRtoPR(&psxRegs.code, r3);
 			CALLFunc ((uptr)gteMFC2);
+			return;
 			break;
 
 		default:
-			LWPRtoR(r3, &psxRegs.cp2d[_Rd_].d);
-			STWRtoPR(&psxRegs.GPR.r[_Rt_], r3);
+			LWPRtoR(r3, &psxRegs.CP2D.r[_Rd_].d);
 			break;
 	}
-	resp += 16;
+	STWRtoPR(&psxRegs.GPR.r[_Rt_], r3);
 }
 #endif
 #if 1
@@ -231,7 +268,7 @@ static void recMTC2() {
 //	iFlushRegs();
 
 	switch (_Rd_) {
-		case 7: case 29: case 31:	// Readonly regs
+		/*case 7: case 29:*/ case 31:	// Readonly regs
 			return;
 
 		case 15:
@@ -276,7 +313,7 @@ static void recMTC2() {
 			CNTLZW(r3, r3);
 			STWRtoPR(&gteLZCR, r3);
 			break;
-			
+
 		default:
 			if (IsConst(_Rt_)) {
 				LIW(r3, iRegs[_Rt_].k);
@@ -284,7 +321,7 @@ static void recMTC2() {
 			else {
 				LWPRtoR(r3, &psxRegs.GPR.r[_Rt_]);
 			}
-			STWRtoPR(&psxRegs.cp2d[_Rd_].d, r3);
+			STWRtoPR(&psxRegs.CP2D.r[_Rd_].d, r3);
 			break;
 	}
 }
@@ -300,22 +337,23 @@ static void recSWC2() {
 		case 1: case 3: case 5:
 		case 8: case 9: case 10:
 		case 11:
-			LHPRtoR(r3, &psxRegs.cp2d[_Rt_].sw.l);
+			LHPRtoR(r3, &psxRegs.CP2D.r[_Rt_].sw.l);
 			EXTSH(r3, r3);
-			STWRtoPR(&psxRegs.cp2d[_Rt_].d, r3);
+			STWRtoPR(&psxRegs.CP2D.r[_Rt_].sd, r3);
 			break;
 
 		case 7: case 16: case 17:
 		case 18: case 19:
-			LHPRtoR(r3, &psxRegs.cp2d[_Rt_].w.l);
-			STWRtoPR(&psxRegs.cp2d[_Rt_].d, r3);
+			LHPRtoR(r3, &psxRegs.CP2D.r[_Rt_].w.l);
+			STWRtoPR(&psxRegs.CP2D.r[_Rt_].d, r3);
 			break;
 			
 		case 15:
 			LWPRtoR(r3, (uptr)&gteSXY2);
-			STWRtoPR(&psxRegs.cp2d[_Rt_].d, r3);
+			STWRtoPR(&psxRegs.CP2D.r[_Rt_].d, r3);
 			break;
 
+		case 28: 
 		case 29: 
 			iFlushRegs();
 			LIW(r3, (u32)psxRegs.code);
@@ -323,19 +361,18 @@ static void recSWC2() {
 			CALLFunc ((uptr)gteSWC2);
 			return;
 	}
-
-
+#if 0
 	if (IsConst(_Rs_)) {
 		u32 addr = iRegs[_Rs_].k + _Imm_;
 		int t = addr >> 16;
 
 		if ((t & 0x1fe0) == 0 && (t & 0x1fff) != 0) {
-			LWPRtoR(r3, &psxRegs.cp2d[_Rt_].d);
+			LWPRtoR(r3, &psxRegs.CP2D.r[_Rt_].d);
 			STWRtoM((uptr)&psxM[addr & 0x1fffff], r3);
 			return;
 		}
 		if (t == 0x1f80 && addr < 0x1f801000) {
-			LWPRtoR(r3, &psxRegs.cp2d[_Rt_].d);
+			LWPRtoR(r3, &psxRegs.CP2D.r[_Rt_].d);
 			STWRtoM((uptr)&psxH[addr & 0xfff], r3);
 			return;
 		}
@@ -350,35 +387,35 @@ static void recSWC2() {
 				case 0x1f8010e0: case 0x1f8010e4: 
 				case 0x1f801074:
 				case 0x1f8010f0:
-					LWPRtoR(r3, &psxRegs.cp2d[_Rt_].d);
+					LWPRtoR(r3, &psxRegs.CP2D.r[_Rt_].d);
 					STWRtoM((uptr)&psxH[addr & 0xffff], r3);
 					return;
 
 				case 0x1f801810:
-					LWPRtoR(r3, &psxRegs.cp2d[_Rt_].d);
+					LWPRtoR(r3, &psxRegs.CP2D.r[_Rt_].d);
 					CALLFunc((uptr)&GPU_writeData);
 					return;
 
 				case 0x1f801814:
-					LWPRtoR(r3, &psxRegs.cp2d[_Rt_].d);
+					LWPRtoR(r3, &psxRegs.CP2D.r[_Rt_].d);
 					CALLFunc((uptr)&GPU_writeStatus);
 					return;
 					
 				case 0x1f801820:
-					LWPRtoR(r3, &psxRegs.cp2d[_Rt_].d);
+					LWPRtoR(r3, &psxRegs.CP2D.r[_Rt_].d);
 					CALLFunc((uptr)&mdecWrite0);
 					return;
 
 				case 0x1f801824:
-					LWPRtoR(r3, &psxRegs.cp2d[_Rt_].d);
+					LWPRtoR(r3, &psxRegs.CP2D.r[_Rt_].d);
 					CALLFunc((uptr)&mdecWrite1);
 					return;
 			}
 		}
 	}
-
+#endif
 	SetArg_OfB(PPCARG1);
-	LWPRtoR(PPCARG2, &psxRegs.cp2d[_Rt_].d);
+	LWPRtoR(PPCARG2, &psxRegs.CP2D.r[_Rt_].d);
 	CALLFunc((uptr)psxMemWrite32);
 }
 #endif

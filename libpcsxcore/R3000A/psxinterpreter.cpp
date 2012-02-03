@@ -141,12 +141,12 @@ static void delayRead(int reg, u32 bpc) {
 
 	psxRegs.pc = bpc;
 
-	TEST_BRANCH();
+	psxRegs.IsDelaySlot = false;
 
 	psxRegs.GPR.r[reg].d = rold;
 	execI(); // first branch opcode
 	psxRegs.GPR.r[reg].d = rnew;
-	psxRegs.IsDelaySlot = false;
+	TEST_BRANCH();
 }
 
 static void delayWrite(int reg, u32 bpc) {
@@ -190,7 +190,7 @@ static void delayReadWrite(int reg, u32 bpc) {
 
 int R3000A::psxTestLoadDelay(int reg, u32 tmp) {
 	if (tmp == 0) return 0; // NOP
-	switch (_fOp_(tmp)) {
+	switch (tmp >> 26) {
 		case 0x00: // SPECIAL
 			switch (_tFunct_) {
 				case 0x00: // SLL
@@ -236,8 +236,12 @@ int R3000A::psxTestLoadDelay(int reg, u32 tmp) {
 
 		case 0x01: // REGIMM
 			switch (_tRt_) {
-				case 0x00: case 0x02:
-				case 0x10: case 0x12: // BLTZ/BGEZ...
+				case 0x00: case 0x01:
+				case 0x10: case 0x11: // BLTZ/BGEZ...
+					// Xenogears - lbu v0 / beq v0
+					// - no load delay (fixes battle loading)
+					break;
+
 					if (_tRs_ == reg) return 2;
 					break;
 			}
@@ -249,10 +253,18 @@ int R3000A::psxTestLoadDelay(int reg, u32 tmp) {
 			break;
 
 		case 0x04: case 0x05: // BEQ/BNE
+			// Xenogears - lbu v0 / beq v0
+			// - no load delay (fixes battle loading)
+			break;
+
 			if (_tRs_ == reg || _tRt_ == reg) return 2;
 			break;
 
 		case 0x06: case 0x07: // BLEZ/BGTZ
+			// Xenogears - lbu v0 / beq v0
+			// - no load delay (fixes battle loading)
+			break;
+
 			if (_tRs_ == reg) return 2;
 			break;
 
@@ -268,7 +280,7 @@ int R3000A::psxTestLoadDelay(int reg, u32 tmp) {
 			break;
 
 		case 0x10: // COP0
-			switch (_tRs_) {
+			switch (_tFunct_) {
 				case 0x00: // MFC0
 					if (_tRt_ == reg) return 3;
 					break;
@@ -664,6 +676,7 @@ void psxJAL() {	_SetLink(31); doBranch(_JumpTarget_); }
 *********************************************************/
 void psxJR()   {
 	doBranch(_rRsU_);
+	psxJumpTest();
 }
 
 void psxJALR() {
@@ -867,6 +880,9 @@ void psxCOP0() {
 }
 
 void psxCOP2() {
+	if ((psxRegs.CP0.n.Status & 0x40000000) == 0 )
+		return;
+
 	psxCP2[_Funct_]();
 }
 

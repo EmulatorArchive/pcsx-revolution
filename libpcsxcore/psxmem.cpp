@@ -27,7 +27,7 @@
 using namespace R3000A;
 
 #ifdef HW_RVL
-#include "../Gamecube/MEM2.h"
+#include "../Gamecube/mem2.h"
 #endif
 
 s8 *psxM;
@@ -66,7 +66,8 @@ int psxMemInit() {
 	psxP = &psxM[0x200000];
 	psxH = &psxM[0x210000];
 #ifdef HW_RVL
-	psxR = (s8*)BIOS_LO;
+// 	psxR = (s8*)BIOS_LO;
+	psxR = (s8*)mem2_malloc(0x00080000);
 #else
 	psxR = (s8*)malloc(0x00080000);
 #endif

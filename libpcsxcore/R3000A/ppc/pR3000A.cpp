@@ -41,18 +41,15 @@ using namespace R3000A;
 #	include <ogc/machine/asm.h>
 #endif
 
-//#define NO_CONSTANT
+#define REG_LO 32
+#define REG_HI 33
 
-u32 *psxRecLUT;
+// #define NO_CONSTANT
 
 #undef PC_REC
-#undef PC_REC8
-#undef PC_REC16
 #undef PC_REC32
-#define PC_REC(x)	(psxRecLUT[x >> 16] + (x & 0xffff))
-#define PC_REC8(x)	(*(u8 *)PC_REC(x))
-#define PC_REC16(x) (*(u16*)PC_REC(x))
-#define PC_REC32(x) (*(u32*)PC_REC(x))
+#define PC_REC(x)	(psxRecLUT[(x) >> 16] + ((x) & 0xffff))
+#define PC_REC32(x) (*(uptr*)PC_REC(x))
 
 #if defined(HW_DOL)
 #define RECMEM_SIZE		(7*1024*1024)
@@ -60,17 +57,30 @@ u32 *psxRecLUT;
 #define RECMEM_SIZE		(8*1024*1024)
 #endif
 
-#define REC_TEST_BRANCH() { \
-	LWPRtoR(r4, (uptr)&psxRegs.evtCycleCountdown); \
-	CMPWI(r4, 0); \
-	BGT_L(b32Ptr[6]); \
-	CALLFunc((uptr)psxBranchTest); \
-	B_DST(b32Ptr[6]); \
+static void RecTestBranch(u32 amount) {
+	LWPRtoR(r4, &psxRegs.evtCycleCountdown);
+	SUBI(r4, r4, amount);
+	STWRtoPR(&psxRegs.evtCycleCountdown, r4);
+	CMPWI(r4, 0);
+	BranchTarget branchtest(BT_GT);
+	CALLFunc((uptr)psxBranchTest);
+	branchtest.setTarget();
 }
 
+#define REC_MEM2
+
+#ifdef REC_MEM2
+/* variable declarations */
+static uptr psxRecLUT[0x010000 * sizeof(uptr)] __attribute__((aligned(32)));
+static char recMem[RECMEM_SIZE + 0x1000]  __attribute__((aligned(32), section(".text#")));        /* the recompiled blocks will be here */
+static char recRAM[0x200000] __attribute__((aligned(32)));       /* and the ptr to the blocks here */
+static char recROM[0x080000] __attribute__((aligned(32)));       /* and here */
+#else
 static char *recMem;	/* the recompiled blocks will be here */
 static char *recRAM;	/* and the ptr to the blocks here */
 static char *recROM;	/* and here */
+uptr *psxRecLUT;
+#endif
 
 static u32 pc;			/* recompiler pc */
 static u32 pcold;		/* recompiler oldpc */
@@ -87,15 +97,9 @@ typedef struct {
 	int reg;
 } iRegisters;
 
-static iRegisters iRegs[32];
+#define NUM_REGISTERS 34
 
-typedef struct {
-	u32 *func;
-	u32 sp_size;
-	u32 regs_to_alloc[32];
-} blocks_t;
-
-static blocks_t block;
+static iRegisters iRegs[NUM_REGISTERS];
 
 #define ST_UNK      0x00
 #define ST_CONST    0x01
@@ -108,12 +112,26 @@ static blocks_t block;
 #endif
 #define IsMapped(reg) (iRegs[reg].state == ST_MAPPED)
 
+#define NEW_REGS
+
+#ifdef NEW_REGS
+
+#include "regAlloc.h"
+
+using namespace JIT;
+
+RegAlloc HWRegs;
+
+#endif
+
+#define DYNAREC_BLOCK 50
+
 void SetArg_OfB( int arg ) {
 	if(IsConst(_Rs_)) {
 		LIW((arg), iRegs[_Rs_].k + _Imm_);
 	}
 	else {
-		LWPRtoR((arg), &psxRegs.GPR.r[_Rs_].d);
+		MR((arg), HWRegs.Get(_Rs_));
 		if(_Imm_) ADDI((arg), (arg), _Imm_);
 	}
 }
@@ -122,64 +140,74 @@ static void recRecompile();
 static void recError();
 
 static void MapConst(int reg, u32 _const) {
+#ifdef NEW_REGS
+	HWRegs.Dispose(reg);
+#endif
 	iRegs[reg].k = _const;
 	iRegs[reg].state = ST_CONST;
 }
 
 static void iFlushReg(int reg) {
 	if (IsConst(reg)) {
-		LIW(r9, iRegs[reg].k);
-		STWRtoPR(&psxRegs.GPR.r[reg].d, r9);
+		LIW(r3, iRegs[reg].k);
+		STWRtoPR(&psxRegs.GPR.r[reg].d, r3);
 	}
 	iRegs[reg].state = ST_UNK;
 }
 
 static void iFlushRegs() {
+#ifdef NEW_REGS
+	HWRegs.FlushRegs();
+#endif
 	int i;
 
-	for (i = 1; i < 32; i++) {
+	for (i = 1; i < NUM_REGISTERS; i++) {
 		iFlushReg( i );
 	}
 }
 
 static void Return()
 {
-// 	if (((u32)returnPC & 0x1fffffc) == (u32)returnPC) {
-// 		BA((u32)returnPC);
-// 	}
-// 	else {
-// 		LIW(r0, (u32)returnPC);
-// 		MTLR(r0);
-// 		BLR();
-// 	}
-
-	LWZ(r0, r1, block.sp_size+8+4);
-	ADDI(r1, r1, block.sp_size+8);
+	iFlushRegs();
+#if 1
+	if (((u32)returnPC & 0x1fffffc) == (u32)returnPC) {
+		BA((u32)returnPC);
+	}
+	else {
+		LIW(r0, (u32)returnPC);
+		MTLR(r0);
+		BLR();
+	}
+#else
+	LWZ(r0, ((1*4)+8)+4, r1);
+	ADDI(r1, r1, ((1*4)+8));
 	MTLR(r0);
+	LMW(r31, -(1*4), r1);
 	BLR();
+#endif
 }
 
 static void UpdateCycle(u32 amount) {
-	LWPRtoR(r9, &psxRegs.evtCycleCountdown);
-	SUBI(r9, r9, amount);
-	STWRtoPR(&psxRegs.evtCycleCountdown, r9);
+	LWPRtoR(r4, &psxRegs.evtCycleCountdown);
+	SUBI(r4, r4, amount);
+	STWRtoPR(&psxRegs.evtCycleCountdown, r4);
 }
 
 static void iRet() {
     /* store cycle */
-	count = idlecyclecount + (pc - pcold) / 4;
+	count = (idlecyclecount + (pc - pcold)) / 4;
 	UpdateCycle(count);
 	Return();
 }
 
-static void move_to_mem(u32 from) {
-	while(from < (u32)(u8*)ppcPtr) {
+static void invalidateCache(u32 from, u32 to) {
+	while(from < to) {
 		__asm__ __volatile__("dcbst 0,%0" : : "r" (from));
 		__asm__ __volatile__("icbi 0,%0" : : "r" (from));
-		__asm__ __volatile__("sync");
-		__asm__ __volatile__("isync");
 		from += 4;
 	}
+	__asm__ __volatile__("sync");
+	__asm__ __volatile__("isync");
 }
 
 static void SetBranch();
@@ -312,14 +340,17 @@ static void SetBranch() {
 
 	if (iLoadTest() == 1) {
 		iFlushRegs();
-		LIW(r3, psxRegs.code);
-		STWRtoPR(&psxRegs.code, r3);
+		LIW(r4, psxRegs.code);
+		LIW(r3, pc);
+		STWRtoPR(&psxRegs.code, r4);
+		STWRtoPR(&psxRegs.pc, r3);
+
 		// store cycle 
-		count = idlecyclecount + (pc - pcold) / 4;
+		count = (idlecyclecount + (pc - pcold)) / 4;
 		UpdateCycle(count);
 
+		LI(PPCARG1, _Rt_);
 		LWMtoR(PPCARG2, (uptr)&target);
-		LIW(PPCARG1, _Rt_);
 
 		CALLFunc((u32)psxDelayTest);
 		
@@ -330,24 +361,27 @@ static void SetBranch() {
 	recBSC[_Op_]();
 
 	iFlushRegs();
-	LWMtoR(r3, (uptr)&target);
-	STWRtoPR(&psxRegs.pc, r3);
+	LWMtoR(r4, (uptr)&target);
+	STWRtoPR(&psxRegs.pc, r4);
 	
-	REC_TEST_BRANCH();
+	count = (idlecyclecount + (pc - pcold)) / 4;
+// 	UpdateCycle(count);
+	
+	RecTestBranch(count);
 	
 	// TODO: don't return if target is compiled
 
 #if 1
-	iRet();
+	Return();
 #else
 	// maybe just happened an interruption, check so
 	LWMtoR(r0, (uptr)&target);
-	LWPRtoR(r9, &psxRegs.pc);
-	CMPLW(r9, r0);
+	LWPRtoR(r3, &psxRegs.pc);
+	CMPLW(r3, r0);
 	BNE_L(b32Ptr[0]);
 
 	LIW(r3, PC_REC(SWAPu32(target)));
-	LWZ(r3, r3, r0);
+	LWZ(r3, 0, r3);
 	MTCTR(r3);
 	CMPLWI(r3, 0);
 	BNE_L(b32Ptr[1]);
@@ -369,14 +403,16 @@ static void iJump(u32 branchPC) {
 
 	if (iLoadTest() == 1) {
 		iFlushRegs();
-		LIW(r3, psxRegs.code);
-		STWRtoPR(&psxRegs.code, r3);
+		LIW(r0, psxRegs.code);
+		LIW(r3, pc);
+		STWRtoPR(&psxRegs.code, r0);
+		STWRtoPR(&psxRegs.pc, r3);
 
-		count = idlecyclecount + (pc - pcold) / 4;
+		count = (idlecyclecount + (pc - pcold)) / 4;
 		UpdateCycle(count);
 
+		LI(PPCARG1, _Rt_);
 		LIW(PPCARG2, branchPC);
-		LIW(PPCARG1, _Rt_);
 
 		CALLFunc((u32)psxDelayTest);
 
@@ -387,42 +423,56 @@ static void iJump(u32 branchPC) {
 	recBSC[_Op_]();
 
 	iFlushRegs();
-	LIW(r9, branchPC);
-	STWRtoPR(&psxRegs.pc, r9);
+	LIW(r4, branchPC);
+	STWRtoPR(&psxRegs.pc, r4);
+	
+	count = (idlecyclecount + (pc - pcold)) / 4;
+// 	UpdateCycle(count);
 
-	REC_TEST_BRANCH();
- 
-	count = idlecyclecount + (pc - pcold) / 4;
-	UpdateCycle(count);
+	RecTestBranch(count);
 
+	/*if (!Config.HLE && Config.PsxOut &&
+	    ((branchPC & 0x1fffff) == 0xa0 ||
+	     (branchPC & 0x1fffff) == 0xb0 ||
+	     (branchPC & 0x1fffff) == 0xc0))
+	  CALLFunc((u32)psxJumpTest);*/
 #if 1
 	// always return for now...
 	Return();
 #else
 	LIW(r0, branchPC);
-	LWPRtoR(r9, &psxRegs.pc);
-	CMPLW(r9, r0);
-	BNE_L(b32Ptr[1]);
+	LWPRtoR(r3, &psxRegs.pc);
+	CMPLW(r3, r0);
+
+	BranchTarget ne(BT_NE);
 
 	LIW(r3, PC_REC(branchPC));
-	LWZ(r3, r3, r0);
-	MTCTR(r3);
+	LWZ(r3, 0, r3);
 	CMPLWI(r3, 0);
-	BEQ_L(b32Ptr[2]);
+	BranchTarget ne2(BT_NE);
 
-	BCTR();
-
-	B_DST(b32Ptr[1]);
-	B_DST(b32Ptr[2]);
+	ne.setTarget();
 	Return();
+	
+	ne2.setTarget();
+
+	MTCTR(r3);
+	BCTRL();
 #endif
 }
 
 static void iBranch(u32 branchPC, int savectx) {
-	iRegisters iRegsS[32];
+	iRegisters iRegsS[NUM_REGISTERS];
+#ifdef NEW_REGS
+	RegAlloc HWRegsS;
+#endif
 
 	if (savectx) {
 		memcpy(iRegsS, iRegs, sizeof(iRegs));
+#ifdef NEW_REGS
+// 		memcpy(&HWRegsS, &HWRegs, sizeof(HWRegs));
+		HWRegsS = HWRegs;
+#endif
 	}
 
 	branch = 1;
@@ -432,14 +482,16 @@ static void iBranch(u32 branchPC, int savectx) {
 	// savectx == 0 will mean that :)
 	if (savectx == 0 && iLoadTest() == 1) {
 		iFlushRegs();
-		LIW(r3, psxRegs.code);
-		STWRtoPR(&psxRegs.code, r3);
+		LIW(r4, psxRegs.code);
+		LIW(r0, pc);
+		STWRtoPR(&psxRegs.code, r4);
+		STWRtoPR(&psxRegs.pc, r0);
 
-		count = idlecyclecount + (pc + 4 - pcold) / 4;
+		count = (idlecyclecount + ((pc + 4) - pcold)) / 4;
 		UpdateCycle(count);
 
+		LI(PPCARG1, _Rt_);
 		LIW(PPCARG2, branchPC);
-		LIW(PPCARG1, _Rt_);
 
 		CALLFunc((u32)psxDelayTest);
 
@@ -447,42 +499,50 @@ static void iBranch(u32 branchPC, int savectx) {
 		return;
 	}
 
-	if(branchPC == pc) branchPC+=4;
 	pc += 4;
 	recBSC[_Op_]();
-	
+
 	iFlushRegs();
+	LIW(r4, branchPC);
+	STWRtoPR(&psxRegs.pc, r4);
 
-	LIW(r9, branchPC);
-	STWRtoPR(&psxRegs.pc, r9);
-	REC_TEST_BRANCH();
+	count = (idlecyclecount + (pc - pcold)) / 4;
+// 	UpdateCycle(count);
 
-	count = idlecyclecount + (pc - pcold) / 4;
-	UpdateCycle(count);
+	RecTestBranch(count);
 
 #if 1
 	Return();
 #else
-	LIW(r0, branchPC);
-	LWPRtoR(r9, &psxRegs.pc);
-	CMPLW(r9, r0);
-	BNE_L(b32Ptr[1]);
+	LIW(r4, branchPC);
+	LWPRtoR(r3, &psxRegs.pc);
+	CMPLW(r3, r4);
 
-	LIW(r3, PC_REC(branchPC));
-	LWZ(r3, r3, r0);
-	MTCTR(r3);
-	CMPLWI(r3, 0);
-	BEQ_L(b32Ptr[2]);
+	BranchTarget eq(BT_EQ);
 
-	BCTR();
-
-	B_DST(b32Ptr[1]);
-	B_DST(b32Ptr[2]);
 	Return();
+
+	eq.setTarget();
+	LIW(r3, PC_REC(branchPC));
+	LWZ(r3, 0, r3);
+
+	CMPLWI(r3, 0);
+	BranchTarget ne(BT_NE);
+
+	Return();
+
+	ne.setTarget();
+
+	MTCTR(r3);
+	BCTRL();
 #endif
 	pc -= 4;
 	if (savectx) {
 		memcpy(iRegs, iRegsS, sizeof(iRegs));
+#ifdef NEW_REGS
+// 		memcpy(&HWRegs, &HWRegsS, sizeof(HWRegsS));
+		HWRegs = HWRegsS;
+#endif
 	}
 }
 
@@ -514,9 +574,9 @@ void iDumpBlock(char *ptr) {
 	system("ndisasmw -u dump1");
 	fflush(stdout);*/
 }
-
 static void freeMem(int all)
 {
+#ifndef REC_MEM2
     if (recMem) free(recMem);
     if (recRAM) free(recRAM);
     if (recROM) free(recROM);
@@ -526,30 +586,34 @@ static void freeMem(int all)
         free(psxRecLUT); 
 		psxRecLUT = NULL;
     }
+#endif
 }
 
 static int allocMem() {
 	int i;
-
+#ifndef REC_MEM2
 	freeMem(0);
         
 	if (psxRecLUT==NULL)
-		psxRecLUT = (u32*) memalign(32,0x010000 * 4);
+		psxRecLUT = (uptr*) memalign(32,0x010000 * sizeof(uptr));
 
-	recMem = (char*) memalign(32,RECMEM_SIZE);
-  //recMem = (char*) 0x90080000;
+	recMem = (char*) memalign(32,RECMEM_SIZE + 0x1000);
 	recRAM = (char*) memalign(32,0x200000);
 	recROM = (char*) memalign(32,0x080000);
 	if (recRAM == NULL || recROM == NULL || recMem == NULL/*(void *)-1*/ || psxRecLUT == NULL) {
 		freeMem(1);
 		SysMessage("Error allocating memory"); return -1;
 	}
+#endif
+	memset(recMem, 0, RECMEM_SIZE);
+	memset(recRAM, 0, 0x200000);
+	memset(recROM, 0, 0x080000);
 
-	for (i=0; i<0x80; i++) psxRecLUT[i + 0x0000] = (u32)&recRAM[(i & 0x1f) << 16];
-	memcpy(psxRecLUT + 0x8000, psxRecLUT, 0x80 * 4);
-	memcpy(psxRecLUT + 0xa000, psxRecLUT, 0x80 * 4);
+	for (i=0; i<0x80; i++) psxRecLUT[i + 0x0000] = (uptr)&recRAM[(i & 0x1f) << 16];
+	memcpy(psxRecLUT + 0x8000, psxRecLUT, 0x80 * sizeof(uptr));
+	memcpy(psxRecLUT + 0xa000, psxRecLUT, 0x80 * sizeof(uptr));
 
-	for (i=0; i<0x08; i++) psxRecLUT[i + 0xbfc0] = (u32)&recROM[i << 16];
+	for (i=0; i<0x08; i++) psxRecLUT[i + 0xbfc0] = (uptr)&recROM[i << 16];
 
 	return 0;
 }
@@ -559,6 +623,7 @@ static int recInit() {
 }
 
 static void recReset() {
+	SysPrintf("reset");
 	memset(recRAM, 0, 0x200000);
 	memset(recROM, 0, 0x080000);
 
@@ -569,6 +634,9 @@ static void recReset() {
 	memset(iRegs, 0, sizeof(iRegs));
 	iRegs[0].state = ST_CONST;
 	iRegs[0].k     = 0;
+#ifdef NEW_REGS
+	HWRegs.Reset();
+#endif
 }
 
 static void recShutdown() {
@@ -583,7 +651,7 @@ static void recError() {
 	SysRunGui();
 }
 
-/*__inline*/ static void execute() {
+__inline static void execute() {
 	void (**recFunc)();
 	char *p;
 
@@ -596,9 +664,11 @@ static void recError() {
 	}
 
 	recFunc = (void (**)()) (u32)p;
-
-// 	recRun(*recFunc);
+#if 1
+	recRun(*recFunc, (u32)&psxRegs, (u32)&psxM);
+#else
 	(*recFunc)();
+#endif
 }
 
 static void recExecute() {
@@ -610,22 +680,79 @@ static void recExecuteBlock() {
 }
 
 static void recClear(u32 Addr, u32 Size) {
+	u32 start = (u32)(u8 *)PC_REC(Addr);
+	
+	u32 bank,offset;
+
+	bank = Addr >> 24;
+	offset = Addr & 0xffffff;
+
+
+	// Pitfall 3D - clear dynarec slots that contain 'stale' ram data
+	// - fixes stage 1 loading crash
+	if( bank == 0x80 || bank == 0xa0 || bank == 0x00 ) {
+		offset &= 0x1fffff;
+
+		if( offset >= DYNAREC_BLOCK * 4 )
+			memset((void*)PC_REC(Addr - DYNAREC_BLOCK * 4), 0, DYNAREC_BLOCK * 4);
+		else
+			memset((void*)PC_REC(Addr - offset), 0, offset);
+	}
+
 	memset((void*)PC_REC(Addr), 0, Size * 4);
+	invalidateCache(start, start + (Size * 4));
 }
 
-static u8 pass0_branch;
+#ifdef NEW_REC_TEST
 
-#include "pass0_table.h"
+void psxRecompileNextInstruction(int delayslot)
+{
+	p = (char *)PSXM(pc);
+	if (p == NULL) recError();
+	psxRegs.code = GETLE32((u32 *)p);
 
+	pc+=4;
+	count++;
 
+	recBSC[_Op_]();
+}
+
+void psxSetBranchImm( u32 imm )
+{
+	branch = 1;
+
+	// end the current block
+	LIW(r3, imm);
+	iFlushRegs();
+	STWRtoPR(&psxRegs.pc, r3);
+
+	count = (idlecyclecount + (pc - pcold)) / 4;
+	
+	RecTestBranch(count);
+	
+	// return for now
+	Return();
+
+	//recBlocks.Link(HWADDR(imm), xJcc32());
+}
+
+#endif
 
 static void recRecompile() {
 	//static int recCount = 0;
 	char *p;
 	u32 *ptr;
+	int i;
 	cop2readypc = 0;
 	idlecyclecount = 0;
-
+	
+	for (i=0; i<NUM_REGISTERS; i++) {
+		iRegs[i].state = ST_UNK;
+		iRegs[i].reg = -1;
+	}
+	iRegs[0].k = 0;
+	iRegs[0].state = ST_CONST;
+	
 	/* if ppcPtr reached the mem limit reset whole mem */
 	if (((u32)ppcPtr - (u32)recMem) >= (RECMEM_SIZE - 0x10000))
 		recReset();
@@ -637,43 +764,28 @@ static void recRecompile() {
 	PC_REC32(psxRegs.pc) = (u32)ppcPtr;
 
 	pcold = pc = psxRegs.pc;
-	
-	// pass0
-	u32 code;
-	memset(&block, 0, sizeof(block));
-	for (count = 0; count < 500;) {
-		p = (char *)PSXM(pc);
-		if (p == NULL) recError();
-		code = GETLE32((u32 *)p);
-
-		pc += 4; count++;
-
-// 		recBSC[_Op_]();
-		pass0(code);
-
-		if (pass0_branch) {
-			pass0_branch = 0;
-			break;
-		}
-	}
-// 	SysPrintf("block_size: %d\n", block.sp_size);
-// 	while(true);
-	
-	pc = pcold;
-	
+#if 0
 	MFLR(r0);
-	MTCTR(r3);
-	STW(r0, r1, 4);
-	STWU(r1, r1, -(block.sp_size+8));
+	STMW(r31, -(1*4), r1)
+	STW(r0, 4, r1);
+	STWU(r1, -((1*4)+8), r1);
 
-	for (count = 0; count < 500;) {
+	LIW(r31, &psxRegs);
+#endif
+
+	for (count = 0; count < DYNAREC_BLOCK;) {
+#ifdef NEW_REC_TEST
+		psxRecompileNextInstruction(0);
+#else
 		p = (char *)PSXM(pc);
 		if (p == NULL) recError();
 		psxRegs.code = GETLE32((u32 *)p);
 
-		pc+=4; count++;
+		pc+=4;
+		count++;
 
 		recBSC[_Op_]();
+#endif
 
 		if (branch) {
 			branch = 0;
@@ -682,15 +794,18 @@ static void recRecompile() {
 	}
 
 	iFlushRegs();
-	
-	LIW(r9, pc);
-	STWRtoPR(&psxRegs.pc, r9);
+	LIW(r0, pc);
+
+	STWRtoPR(&psxRegs.pc, r0);
 
 	iRet();
 
 done:;
 
-	move_to_mem((u32)(u8*)ptr);
+	invalidateCache((u32)(u8*)ptr, (u32)(u8*)ppcPtr);
+
+	sprintf((char *)ppcPtr, "PC=%08x", pcold);
+	ppcPtr += strlen((char *)ppcPtr);
 }
 
 R3000Acpu R3000A::psxRec = {

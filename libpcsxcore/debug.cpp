@@ -519,11 +519,11 @@ static void ProcessCommands() {
             if (!arguments) {
                 reply[0] = 0;
                 for (i = 0; i < 32; i++) {
-                    sprintf(reply, "%s214 %02X=%08X\r\n", reply, i, psxRegs.cp2c[i].d);
+                    sprintf(reply, "%s214 %02X=%08X\r\n", reply, i, psxRegs.CP2C.r[i].d);
                 }
             } else {
                 if ((code >= 0) && (code < 32)) {
-                    sprintf(reply, "214 %02X=%08X\r\n", code, psxRegs.cp2c[code].d);
+                    sprintf(reply, "214 %02X=%08X\r\n", code, psxRegs.CP2C.r[code].d);
                 } else {
                     sprintf(reply, "511 Invalid COP2C register: %X\r\n", code);
                 }
@@ -539,11 +539,11 @@ static void ProcessCommands() {
             if (!arguments) {
                 reply[0] = 0;
                 for (i = 0; i < 32; i++) {
-                    sprintf(reply, "%s215 %02X=%08X\r\n", reply, i, psxRegs.cp2d[i].d);
+                    sprintf(reply, "%s215 %02X=%08X\r\n", reply, i, psxRegs.CP2D.r[i].d);
                 }
             } else {
                 if ((code >= 0) && (code < 32)) {
-                    sprintf(reply, "215 %02X=%08X\r\n", code, psxRegs.cp2d[code].d);
+                    sprintf(reply, "215 %02X=%08X\r\n", code, psxRegs.CP2D.r[code].d);
                 } else {
                     sprintf(reply, "511 Invalid COP2D register: %X\r\n", code);
                 }
@@ -612,7 +612,7 @@ static void ProcessCommands() {
             }
 
             if (reg < 32) {
-                psxRegs.cp2c[reg].d = value;
+                psxRegs.CP2C.r[reg].d = value;
                 sprintf(reply, "224 %02X=%08X\r\n", reg, value);
             } else {
                 sprintf(reply, "512 Invalid COP2C register: %02X\r\n", reg);
@@ -625,7 +625,7 @@ static void ProcessCommands() {
             }
 
             if (reg < 32) {
-                psxRegs.cp2d[reg].d = value;
+                psxRegs.CP2D.r[reg].d = value;
                 sprintf(reply, "225 %02X=%08X\r\n", reg, value);
             } else {
                 sprintf(reply, "512 Invalid COP2D register: %02X\r\n", reg);

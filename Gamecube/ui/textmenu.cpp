@@ -266,16 +266,14 @@ void Main_menu()
 			usleep(150000);
 			action = UPDATE_MENU;
 		}
-
-		if(GetHeld(DOWN, DOWN, DOWN))
+		else if(GetHeld(DOWN, DOWN, DOWN))
 		{
 			if(index < TEXT_MENU_OPTIONS-1) 
 				index++;
 			usleep(150000);
 			action = UPDATE_MENU;
 		}
-
-		if(GetInput(RIGHT, RIGHT, RIGHT))
+		else if(GetInput(RIGHT, RIGHT, RIGHT))
 		{
 			switch(index)
 			{
@@ -287,8 +285,7 @@ void Main_menu()
 					break;
 			}
 		}
-
-		if(GetInput(LEFT, LEFT, LEFT))
+		else if(GetInput(LEFT, LEFT, LEFT))
 		{
 			switch(index)
 			{

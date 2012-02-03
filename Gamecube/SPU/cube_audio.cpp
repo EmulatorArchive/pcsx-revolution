@@ -10,114 +10,168 @@
  *                                                                         *
  ***************************************************************************/
 
-// #include "stdafx.h"
+#include "stdafx.h"
 #include "externals.h"
 #include "cube_audio.h"
+#include "psxcommon.h"
 
-#include "Config.h"
-#include "DEBUG.h"
-#include <gctypes.h>
+////////////////////////////////////////////////////////////////////////
+// cube audio globals
+////////////////////////////////////////////////////////////////////////
+#include "../Gamecube/DEBUG.h"
 #include <ogc/audio.h>
 #include <ogc/cache.h>
-
-#include <string.h>
+#ifdef THREADED_AUDIO
+#include <ogc/lwp.h>
+#include <ogc/semaphore.h>
+#endif
 #include <malloc.h>
 #include <math.h>
-#include <unistd.h>
 
-// cube audio globals
+// #define TEST_SPU
 
-#define NUM_BUFFERS 4
-#define BUFFER_SIZE 3240
+#define NUM_BUFFERS 8
+#define BUFFER_SIZE 3840
 static char buffer[NUM_BUFFERS][BUFFER_SIZE] __attribute__((aligned(32)));
 static int which_buffer = 0;
 static unsigned int buffer_offset = 0;
 #define NEXT(x) (x=(x+1)%NUM_BUFFERS)
 static const float freq_ratio = 44100.0f / 32000.0f;
 static const float inv_freq_ratio = 32000.0f / 44100.0f;
-//static enum { BUFFER_SIZE_32_60 = 2112, BUFFER_SIZE_32_50 = 2560 } buffer_size;
 
-static s32 buffer_size;
+#ifdef TEST_SPU
+static u32 buffer_size;
+#else
+static enum { BUFFER_SIZE_32_60 = 2112, BUFFER_SIZE_32_50 = 2560 } buffer_size;
+#endif
+
+#ifdef THREADED_AUDIO
+static lwp_t audio_thread;
+static sem_t buffer_full;
+static sem_t buffer_empty;
+static sem_t audio_free;
+static int   thread_running;
+#define AUDIO_STACK_SIZE 1024 // MEM: I could get away with a smaller stack
+static char  audio_stack[AUDIO_STACK_SIZE];
+#define AUDIO_PRIORITY 120
+static int   thread_buffer = 0;
+#else // !THREADED_AUDIO
 #define thread_buffer which_buffer
+#endif
 
-static void inline play_buffer(void);
-static void done_playing(void);
+static void inline play_buffer();
+static void done_playing();
 static void copy_to_buffer_mono(void* out, void* in, unsigned int samples);
 static void copy_to_buffer_stereo(void* out, void* in, unsigned int samples);
 static void (*copy_to_buffer)(void* out, void* in, unsigned int samples);
 
+////////////////////////////////////////////////////////////////////////
+// SETUP SOUND
+////////////////////////////////////////////////////////////////////////
+
 void SetupSound(void)
 {
-	AUDIO_Init(NULL);
-	int n;
-	for(n = 0; n < NUM_BUFFERS; n++)
-	{
-		memset(buffer[n], 0, BUFFER_SIZE);
-		DCFlushRange(buffer[n], BUFFER_SIZE);
-	}
-	//buffer_size = Config.PsxType ? BUFFER_SIZE_32_50 : BUFFER_SIZE_32_60;
-	AUDIO_SetDSPSampleRate(AI_SAMPLERATE_48KHZ);
+  AUDIO_Init(NULL);
+
+#ifdef THREADED_AUDIO
+	// Create our semaphores and start/resume the audio thread; reset the buffer index
+	LWP_SemInit(&buffer_full, 0, NUM_BUFFERS);
+	LWP_SemInit(&buffer_empty, NUM_BUFFERS, NUM_BUFFERS);
+	LWP_SemInit(&audio_free, 1, 1);
+	thread_running = 1;
+	LWP_CreateThread(&audio_thread, play_buffer, NULL, audio_stack, AUDIO_STACK_SIZE, AUDIO_PRIORITY);
+	AUDIO_RegisterDMACallback(done_playing);
+	thread_buffer = which_buffer = 0;
+#endif
+
+#ifndef TEST_SPU
+	buffer_size = Config.PsxType ? BUFFER_SIZE_32_50 : BUFFER_SIZE_32_60;
+#endif
+	AUDIO_SetDSPSampleRate(AI_SAMPLERATE_32KHZ);
 	copy_to_buffer = iDisStereo ? copy_to_buffer_mono : copy_to_buffer_stereo;
-	which_buffer = 0;
-	buffer_offset = 0;
-	buffer_size = 0;
 	//printf("SetupSound\n");
 }
 
+////////////////////////////////////////////////////////////////////////
+// REMOVE SOUND
+////////////////////////////////////////////////////////////////////////
+
 void RemoveSound(void)
 {
-	AUDIO_StopDMA();
+ AUDIO_StopDMA();
 
-	int n;
-	for(n = 0; n < NUM_BUFFERS; n++)
-	{
-		memset(buffer[n], 0, BUFFER_SIZE);
-		DCFlushRange(buffer[n], BUFFER_SIZE);
-	}
+#ifdef THREADED_AUDIO
+	// Destroy semaphores and suspend the thread so audio can't play
+	thread_running = 0;
+	LWP_SemDestroy(buffer_full);
+	LWP_SemDestroy(buffer_empty);
+	LWP_SemDestroy(audio_free);
+	LWP_JoinThread(audio_thread, NULL);
+#endif
 
-	AUDIO_RegisterDMACallback(NULL);
-	AUDIO_InitDMA((u32)buffer[0], 32);
-	AUDIO_StartDMA();
-	
-	usleep(100);
-	
-	while (AUDIO_GetDMABytesLeft() > 0)
-		usleep(100);
-	
-	AUDIO_StopDMA();
-	
-	which_buffer = 0;
-	copy_to_buffer = NULL;
-	buffer_offset = 0;
-	buffer_size = 0;
-	//DEBUG_print("RemoveSound called",12);
+ //DEBUG_print("RemoveSound called",12);
 }
+
+////////////////////////////////////////////////////////////////////////
+// GET BYTES BUFFERED
+////////////////////////////////////////////////////////////////////////
 
 unsigned long SoundGetBytesBuffered(void)
 {
-	/*sprintf(txtbuffer,"SoundGetBytesBuffered returns approx: %d bytes",
-	buffer_size - AUDIO_GetDMABytesLeft());
-	DEBUG_print(txtbuffer,12);*/
-	if(!AUDIO_GetDMABytesLeft())
-		return 0;
-	return buffer_size - AUDIO_GetDMABytesLeft();
+ 	/*sprintf(txtbuffer,"SoundGetBytesBuffered returns approx: %d bytes",
+ 	        buffer_size - AUDIO_GetDMABytesLeft());
+ 	DEBUG_print(txtbuffer,12);*/
+ 	if(!AUDIO_GetDMABytesLeft())
+ 	  return 0;
+  return buffer_size - AUDIO_GetDMABytesLeft();
 }
 
-static void inline play_buffer(void){
+#ifdef THREADED_AUDIO
+static void done_playing(void){
+	// We're done playing, so we're releasing a buffer and the audio
+	LWP_SemPost(buffer_empty);
+	LWP_SemPost(audio_free);
+}
+#endif
+
+static void inline play_buffer() {
+#ifndef THREADED_AUDIO
+	// We should wait for the other buffer to finish its DMA transfer first
+	while( AUDIO_GetDMABytesLeft() );
+	AUDIO_StopDMA();
+
+#else // THREADED_AUDIO
+	// This thread will keep giving buffers to the audio as they come
+	while(thread_running){
+
+	// Wait for a buffer to be processed
+	LWP_SemWait(buffer_full);
+#endif
+
 	// Make sure the buffer is in RAM, not the cache
 	DCFlushRange(buffer[thread_buffer], buffer_size);
 
 	// Actually send the buffer out to be played next
 	AUDIO_InitDMA((unsigned int)&buffer[thread_buffer], buffer_size);
 
+#ifdef THREADED_AUDIO
+	// Wait for the audio interface to be free before playing
+	LWP_SemWait(audio_free);
+#endif
+
 	// Start playing the buffer
 	AUDIO_StartDMA();
+
+#ifdef THREADED_AUDIO
+	// Move the index to the next buffer
+	NEXT(thread_buffer);
+	}
+#endif
 }
 
 static void copy_to_buffer_mono(void* b, void* s, unsigned int length){
 	// NOTE: length is in resampled samples (mono (1) short)
-	short* buffer = (short *)b;
-	short* stream = (short *)s;
+	short* buffer = (short *)b, * stream = (short *)s;
 	int di;
 	float si;
 	for(di = 0, si = 0.0f; di < length; ++di, si += freq_ratio){
@@ -129,8 +183,7 @@ static void copy_to_buffer_mono(void* b, void* s, unsigned int length){
 
 static void copy_to_buffer_stereo(void* b, void* s, unsigned int length){
 	// NOTE: length is in resampled samples (stereo (2) shorts)
-	int *buffer = (int *)b;
-	int *stream = (int *)s;
+	int* buffer = (int*)b, * stream = (int*)s;
 	int di;
 	float si;
 	for(di = 0, si = 0.0f; di < length; ++di, si += freq_ratio){
@@ -150,7 +203,7 @@ static void copy_to_buffer_stereo(void* b, void* s, unsigned int length){
 	}
 }
 
-static void inline add_to_buffer(void* stream, unsigned int length){
+static void inline add_to_buffer(unsigned char* stream, unsigned int length){
 	// This shouldn't lose any data and works for any size
 	unsigned int stream_offset = 0;
 	// Length calculations are in samples
@@ -162,14 +215,25 @@ static void inline add_to_buffer(void* stream, unsigned int length){
 
 	while(rlengthLeft > 0){
 		rlengthi = (buffer_offset + (rlengthLeft << shift) <= buffer_size) ?
-				rlengthLeft : ((buffer_size - buffer_offset) >> shift);
+		            rlengthLeft : ((buffer_size - buffer_offset) >> shift);
 		lengthi  = rlengthi * freq_ratio;
 
+#ifdef THREADED_AUDIO
+		// Wait for a buffer we can copy into
+		LWP_SemWait(buffer_empty);
+#endif
 		copy_to_buffer(buffer[which_buffer] + buffer_offset,
-				stream + stream_offset, rlengthi);
+		               stream + stream_offset, rlengthi);
 
 		if(buffer_offset + (rlengthLeft << shift) < buffer_size){
 			buffer_offset += rlengthi << shift;
+#ifdef THREADED_AUDIO
+			// This is a little weird, but we didn't fill this buffer.
+			//   So it is still considered 'empty', but since we 'decremented'
+			//   buffer_empty coming in here, we want to set it back how
+			//   it was, so we don't cause a deadlock
+			LWP_SemPost(buffer_empty);
+#endif
 			return;
 		}
 
@@ -177,22 +241,27 @@ static void inline add_to_buffer(void* stream, unsigned int length){
 		stream_offset += lengthi << shift;
 		rlengthLeft   -= rlengthi;
 
+#ifdef THREADED_AUDIO
+		// Let the audio thread know that we've filled a new buffer
+		LWP_SemPost(buffer_full);
+#else
 		play_buffer();
+#endif
 
 		NEXT(which_buffer);
 		buffer_offset = 0;
 	}
-
 }
 
+////////////////////////////////////////////////////////////////////////
 // FEED SOUND DATA
-
+////////////////////////////////////////////////////////////////////////
 void SoundFeedStreamData(unsigned char* pSound,long lBytes)
 {
-	buffer_size = lBytes;
-	if( !Settings.SPU.Disable ) {
-		add_to_buffer(pSound, lBytes);
-	}
+#ifdef TEST_SPU
+	buffer_size = lBytes >> 2;
+#endif
+	add_to_buffer(pSound, lBytes);
 }
 
 void PEOPS_SPUplayCDDAchannel(short* pcm, int nbytes) {
