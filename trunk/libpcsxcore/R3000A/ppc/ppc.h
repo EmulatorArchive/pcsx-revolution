@@ -27,13 +27,11 @@
 #define PPCARG2 4
 
 void Write32(u32 val);
-void Write64(u64 val);
 void ReleaseArgs();
 
 void CALLFunc(u32 func);
 
 extern u32 *ppcPtr;
-extern u32 *b32Ptr[32];
 
 void ppcInit();
 void ppcSetPtr(u32 *ptr);
@@ -41,17 +39,68 @@ void ppcShutdown();
 
 void ppcAlign(int bytes);
 
-#ifdef __cplusplus
+#define B_TRUE 12
+#define B_FALSE 4
+
+// Less than
+#define LT 0
+// Greater than
+#define GT 1
+// Equal
+#define EQ 2
+// Summary overflow
+#define SO 3
+
+// Greater than or equal
+#define GE 0
+// Less than or equal
+#define LE 1
+// Not equal
+#define NE 2
+// Not summary overflow
+#define NS 3
+
+enum branch_type {
+	BT_UN = 0,		// unconditional
+
+	BT_LT = ((B_TRUE << 5) | LT),
+	BT_GT,
+	BT_EQ,
+	BT_SO,
+	
+	BT_GE = ((B_FALSE << 5) | GE),
+	BT_LE,
+	BT_NE,
+	BT_NS
+};
+
+class BranchTarget {
+	branch_type Type;
+	u32 *Ptr;
+public:
+	BranchTarget(branch_type type) : Type(type) {
+		Ptr = ppcPtr;
+		if(Type == BT_UN) {
+			B(0);
+		}
+		else {
+			BC(Type >> 5, (Type & 0x1f), 0);
+		}
+	}
+
+	void setTarget() {
+		u32 addr = (u32)ppcPtr - (u32)Ptr;
+		u32 mask = Type == BT_UN ? 0xffffff : 0x3fff;
+		*Ptr = *Ptr | (addr & mask);
+	}
+};
+
 extern "C" {
-#endif
 
-
+void recRun(void (*func)(), u32 hw1, u32 hw2);
 void returnPC();
-void recRun(void (*func)());
 
-#ifdef __cplusplus
-} // extern "C" 
-#endif
+};
 
 u8 dynMemRead8(u32 mem);
 u16 dynMemRead16(u32 mem);

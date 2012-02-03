@@ -84,6 +84,7 @@ void SysCloseLibrary(void *lib) {
 
 int framesdone = 0;
 void SysUpdate() {
+	SYS_GetArena1Size();
 #ifdef SHOW_DEBUG
 
 #endif

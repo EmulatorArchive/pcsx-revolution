@@ -32,19 +32,24 @@ void clrscr()
 void to_loader()
 {
 	if(Running) SysClose();
+#ifdef HW_RVL
 	exit(0);
+#else
+	#define SOFTRESET_ADR ((volatile u32*)0xCC003024)
+	*SOFTRESET_ADR = 0x00000000;
+#endif
 }
 
 #ifdef HW_RVL
 
 void ShutdownCB()
 {
-	wii_shutdown	= 1;
+	wii_shutdown = 1;
 }
 
 void ResetCB()
 {
-	wii_reset	= 1;
+	wii_reset = 1;
 }
 
 void ShutdownWii()

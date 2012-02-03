@@ -58,11 +58,11 @@ void Config_menu()
 		{
 			if(index) index--;
 		}
-		if(GetInput(DOWN, DOWN, DOWN))
+		else if(GetInput(DOWN, DOWN, DOWN))
 		{
 			if(index < CONFIG_OPTIONS-1) index++;
 		}
-			
+
 		if(GetInput(A, A, A)) 
 		{
 			switch(index)
@@ -93,8 +93,7 @@ void Config_menu()
 			}
 			clrscr();
 		}
-		
-		if(GetInput(B, B, B)) 
+		else if(GetInput(B, B, B)) 
 		{
 			return;
 		}
@@ -152,11 +151,11 @@ static void ConfigurePAD(pad_t *pad)
 		{
 			if(index) index--;
 		}
-		if(GetInput(DOWN, DOWN, DOWN))
+		else if(GetInput(DOWN, DOWN, DOWN))
 		{
 			if(index < 3) index++;
 		}
-		if(GetInput(RIGHT, RIGHT, RIGHT))
+		else if(GetInput(RIGHT, RIGHT, RIGHT))
 		{
 			clrscr();
 			switch(index)
@@ -177,8 +176,7 @@ static void ConfigurePAD(pad_t *pad)
 					if(pad->analog != PAD_ANALOG) pad->analog = PAD_ANALOG;
 			}
 		}
-		
-		if(GetInput(LEFT, LEFT, LEFT))
+		else if(GetInput(LEFT, LEFT, LEFT))
 		{
 			clrscr();
 			switch(index)
@@ -192,7 +190,7 @@ static void ConfigurePAD(pad_t *pad)
 					if(pad->analog != PAD_STANDARD) pad->analog = PAD_STANDARD;
 			}
 		}
-			
+
 		if(GetInput(A, A, A)) 
 		{
 			clrscr();
@@ -242,8 +240,7 @@ static void ConfigurePAD(pad_t *pad)
 					return;
 			}
 		}
-		
-		if(GetInput(B, B, B)) 
+		else if(GetInput(B, B, B)) 
 		{
 			return;
 		}
@@ -296,7 +293,7 @@ static void ConfigurePAD(pad_t *pad)
 
 static void ConfigureGPU()
 {
-	int index 	= 0;
+	int index = 0;
 	GPUReadConfig();
 	clrscr();
 	while(1)
@@ -307,8 +304,7 @@ static void ConfigureGPU()
 		{
 			if(index) index--;
 		}
-
-		if(GetInput(DOWN, DOWN, DOWN))
+		else if(GetInput(DOWN, DOWN, DOWN))
 		{
 			if(index < 4) index++;
 		}
@@ -344,8 +340,7 @@ static void ConfigureGPU()
 					break;
 			}
 		}
-
-		if(GetInput(B, B, B)) 
+		else if(GetInput(B, B, B)) 
 		{
 			return;
 		}
@@ -395,8 +390,7 @@ static void ConfigureSPU()
 		{
 			if(index) index--;
 		}
-
-		if(GetInput(DOWN, DOWN, DOWN))
+		else if(GetInput(DOWN, DOWN, DOWN))
 		{
 			if(index < 9) index++;
 		}
@@ -457,8 +451,7 @@ static void ConfigureSPU()
 					return;
 			}
 		}
-
-		if(GetInput(B, B, B)) 
+		else if(GetInput(B, B, B)) 
 		{
 			return;
 		}

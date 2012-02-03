@@ -17,21 +17,30 @@
  */
 
 #include <di/di.h>
+#include <ogc/dvd.h>
 #include <iso9660.h>
 #include <unistd.h>
 #include "mount.h"
 
 static const short retries = 20;
+#ifdef HW_RVL
+const DISC_INTERFACE* dvd = &__io_wiidvd;
+#else
+const DISC_INTERFACE* dvd = &__io_gcdvd;
+#endif
 
-mount_state MountDVD()
+mount_state MountDVD(int num)
 {
 	#ifdef HW_RVL
 	mount_state ret = NOT_MOUNTED;
 	int x = retries;
-	DI_Mount();
+        if(dvd->isInserted()) {
+            ISO9660_Mount("dvd", dvd);
+        }
+        /*DI_Mount();
 	while (DI_GetStatus() & DVD_INIT) usleep(5000);
 	while (!(DI_GetStatus() & DVD_READY) && x--) usleep(50000);
-	if (DI_GetStatus() & DVD_READY) ret = (mount_state) ISO9660_Mount();
+        if (DI_GetStatus() & DVD_READY) ret = (mount_state) ISO9660_Mount();*/
 	return ret;
 	#endif
 }
@@ -39,15 +48,15 @@ mount_state MountDVD()
 void UnMountDVD()
 {
 	#ifdef HW_RVL
-	DI_StopMotor();
-	ISO9660_Unmount();
-	DI_Close();
+        //DI_StopMotor();
+        ISO9660_Unmount("dvd:");
+        //DI_Close();
 	#endif
 }
 
 void InitDVD()
 {
 	#ifdef HW_RVL
-	DI_Init();
+        //DI_Init();
 	#endif
 }

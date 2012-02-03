@@ -120,21 +120,21 @@ static void recMFC2() {
 		case 1: case 3: case 5:
 		case 8: case 9: case 10:
 		case 11:
-			MOVSX32M16toR(EAX, (uptr)&psxRegs.cp2d[ _Rd_ ].sw.l);
-			MOV32RtoM((uptr)&psxRegs.cp2d[ _Rd_ ].d, EAX);
+			MOVSX32M16toR(EAX, (uptr)&psxRegs.CP2D.r[ _Rd_ ].sw.l);
+			MOV32RtoM((uptr)&psxRegs.CP2D.r[ _Rd_ ].d, EAX);
 			MOV32RtoM((uptr)&psxRegs.GPR.r[_Rt_], EAX);
 			break;
 
 		case 7: case 16: case 17:
 		case 18: case 19:
-			MOVZX32M16toR(EAX, (uptr)&psxRegs.cp2d[ _Rd_ ].w.l);
-			MOV32RtoM((uptr)&psxRegs.cp2d[ _Rd_ ].d, EAX);
+			MOVZX32M16toR(EAX, (uptr)&psxRegs.CP2D.r[ _Rd_ ].w.l);
+			MOV32RtoM((uptr)&psxRegs.CP2D.r[ _Rd_ ].d, EAX);
 			MOV32RtoM((uptr)&psxRegs.GPR.r[_Rt_], EAX);
 			break;
 
 		case 15:
 			MOV32MtoR(EAX, (uptr)&gteSXY2);
-			MOV32RtoM((uptr)&psxRegs.cp2d[ _Rd_ ].d, EAX);
+			MOV32RtoM((uptr)&psxRegs.CP2D.r[ _Rd_ ].d, EAX);
 			MOV32RtoM((uptr)&psxRegs.GPR.r[_Rt_], EAX);
 			break;
 
@@ -142,14 +142,14 @@ static void recMFC2() {
 			MOV32ItoM((uptr)&psxRegs.code, (u32)psxRegs.code);
 			CALLFunc((uptr)gteMFC2);
 			/*
-				psxRegs.cp2d[ reg ] = LIM( gteIR1 >> 7, 0x1f, 0, 0 ) |
+				psxRegs.CP2D.r[ reg ] = LIM( gteIR1 >> 7, 0x1f, 0, 0 ) |
 									( LIM( gteIR2 >> 7, 0x1f, 0, 0 ) << 5 ) |
 									( LIM( gteIR3 >> 7, 0x1f, 0, 0 ) << 10 );
 			*/
 			break;
 
 		default:
-			MOV32MtoR(EAX, (uptr)&psxRegs.cp2d[_Rd_].d);
+			MOV32MtoR(EAX, (uptr)&psxRegs.CP2D.r[_Rd_].d);
 			MOV32RtoM((uptr)&psxRegs.GPR.r[_Rt_], EAX);
 			break;
 	}
@@ -211,10 +211,10 @@ static void recMTC2() {
 
 		default:
 			if (IsConst(_Rt_)) {
-				MOV32ItoM((uptr)&psxRegs.cp2d[_Rd_].d, iRegs[_Rt_].k);
+				MOV32ItoM((uptr)&psxRegs.CP2D.r[_Rd_].d, iRegs[_Rt_].k);
 			} else {
 				MOV32MtoR(EAX, (uptr)&psxRegs.GPR.r[_Rt_]);
-				MOV32RtoM((uptr)&psxRegs.cp2d[_Rd_].d, EAX);
+				MOV32RtoM((uptr)&psxRegs.CP2D.r[_Rd_].d, EAX);
 			}
 			break;
 	}
@@ -229,7 +229,7 @@ static void recCFC2() {
 	if (!_Rt_) return;
 
 	iRegs[_Rt_].state = ST_UNK;
-	MOV32MtoR(EAX, (uptr)&psxRegs.cp2c[_Rd_].d);
+	MOV32MtoR(EAX, (uptr)&psxRegs.CP2C.r[_Rd_].d);
 	MOV32RtoM((uptr)&psxRegs.GPR.r[_Rt_], EAX);
 }
 #endif
@@ -241,10 +241,10 @@ static void recCTC2() {
 // Cop2C->Rd = Rt
 
 	if (IsConst(_Rt_)) {
-		MOV32ItoM((uptr)&psxRegs.cp2c[_Rd_], iRegs[_Rt_].k);
+		MOV32ItoM((uptr)&psxRegs.CP2C.r[_Rd_], iRegs[_Rt_].k);
 	} else {
 		MOV32MtoR(EAX, (uptr)&psxRegs.GPR.r[_Rt_]);
-		MOV32RtoM((uptr)&psxRegs.cp2c[_Rd_], EAX);
+		MOV32RtoM((uptr)&psxRegs.CP2C.r[_Rd_], EAX);
 	}
 }
 #endif
@@ -263,19 +263,19 @@ if(_Rt_ != 30) { // TODO
 
 		if ((t & 0x1fe0) == 0 && (t & 0x1fff) != 0) {
 			MOV32MtoR(EAX, (uptr)&psxM[addr & 0x1fffff]);
-			//MOV32RtoM((uptr)&psxRegs.cp2d[_Rt_].d, EAX);
+			//MOV32RtoM((uptr)&psxRegs.CP2D.r[_Rt_].d, EAX);
 			j8Ptr[0] = JMP8(0);
 		}
 		if (t == 0x1f80 && addr < 0x1f801000) {
 			MOV32MtoR(EAX, (uptr)&psxH[addr & 0xfff]);
-			//MOV32RtoM((uptr)&psxRegs.cp2d[_Rt_].d, EAX);
+			//MOV32RtoM((uptr)&psxRegs.CP2D.r[_Rt_].d, EAX);
 			j8Ptr[0] = JMP8(0);
 		}
 	}
 
 	SetArg_OfB(X86ARG1);
 	CALLFunc((uptr)psxMemRead32);
-	//MOV32RtoM((uptr)&psxRegs.cp2d[_Rt_].d, EAX);
+	//MOV32RtoM((uptr)&psxRegs.CP2D.r[_Rt_].d, EAX);
 
 	if (IsConst(_Rs_)) {
 		x86SetJ8(j8Ptr[0]);
@@ -315,7 +315,7 @@ if(_Rt_ != 30) { // TODO
 			return;
 
 		default:
-			MOV32RtoM((uptr)&psxRegs.cp2d[_Rt_].d, EAX);
+			MOV32RtoM((uptr)&psxRegs.CP2D.r[_Rt_].d, EAX);
 	}
 	// All GTE memory access takes time of 2 instructions
 	resp += 8;
@@ -328,19 +328,19 @@ static void recSWC2() {
 		case 1: case 3: case 5:
 		case 8: case 9: case 10:
 		case 11:
-			MOVSX32M16toR(EAX, (uptr)&psxRegs.cp2d[ _Rt_ ].sw.l);
-			MOV32RtoM((uptr)&psxRegs.cp2d[ _Rt_ ].d, EAX);
+			MOVSX32M16toR(EAX, (uptr)&psxRegs.CP2D.r[ _Rt_ ].sw.l);
+			MOV32RtoM((uptr)&psxRegs.CP2D.r[ _Rt_ ].d, EAX);
 			break;
 
 		case 7: case 16: case 17:
 		case 18: case 19:
-			MOVZX32M16toR(EAX, (uptr)&psxRegs.cp2d[ _Rt_ ].w.l);
-			MOV32RtoM((uptr)&psxRegs.cp2d[ _Rt_ ].d, EAX);
+			MOVZX32M16toR(EAX, (uptr)&psxRegs.CP2D.r[ _Rt_ ].w.l);
+			MOV32RtoM((uptr)&psxRegs.CP2D.r[ _Rt_ ].d, EAX);
 			break;
 
 		case 15:
 			MOV32MtoR(EAX, (uptr)&gteSXY2);
-			MOV32RtoM((uptr)&psxRegs.cp2d[ _Rt_ ].d, EAX);
+			MOV32RtoM((uptr)&psxRegs.CP2D.r[ _Rt_ ].d, EAX);
 			break;
 
 		case 29:
@@ -355,20 +355,20 @@ static void recSWC2() {
 		int t = addr >> 16;
 
 		if ((t & 0x1fe0) == 0 && (t & 0x1fff) != 0) {
-			MOV32MtoR(EAX, (uptr)&psxRegs.cp2d[_Rt_].d);
+			MOV32MtoR(EAX, (uptr)&psxRegs.CP2D.r[_Rt_].d);
 			MOV32RtoM((uptr)&psxM[addr & 0x1fffff], EAX);
 			resp += 8;
 			return;
 		}
 		if (t == 0x1f80 && addr < 0x1f801000) {
-			MOV32MtoR(EAX, (uptr)&psxRegs.cp2d[_Rt_].d);
+			MOV32MtoR(EAX, (uptr)&psxRegs.CP2D.r[_Rt_].d);
 			MOV32RtoM((uptr)&psxH[addr & 0xfff], EAX);
 			resp += 8;
 			return;
 		}
 	}
 
-	MOV32MtoR(X86ARG2, (uptr)&psxRegs.cp2d[_Rt_].d);
+	MOV32MtoR(X86ARG2, (uptr)&psxRegs.CP2D.r[_Rt_].d);
 	SetArg_OfB(X86ARG1);
 	CALLFunc((uptr)psxMemWrite32);
 	// All GTE memory access takes time of 2 instructions

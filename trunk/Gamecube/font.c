@@ -13,6 +13,8 @@
 #include <ogc/color.h>
 #include <ogc/exi.h>
 
+#include "mem2.h"
+
 /* Backdrop Frame Width (to avoid writing outside of the background frame) */
 u16 back_framewidth = 640;
 
@@ -32,14 +34,8 @@ typedef struct
 	u16 s[256], t[256], font_size[256], fheight;
 } CHAR_INFO;
 
-#ifdef HW_RVL
-#include "MEM2.h"
-static unsigned char *fontFont = (unsigned char*)(FONT_LO);
-
-#else //GC
-
 static unsigned char fontFont[ 0x40000 ] __attribute__((aligned(32)));
-
+#ifdef HW_DOL
 //lowlevel Qoob Modchip disable
 void ipl_set_config(unsigned char c)
 {
@@ -158,9 +154,9 @@ extern void __SYS_ReadROM(void *buf,u32 len,u32 offset);
 void init_font(void)
 {
 #ifdef HW_RVL  
-	unsigned char *fontWork = (unsigned char*)FONTWORK_LO;
+	unsigned char *fontWork = (unsigned char*)mem2_malloc(131072);
 #else
-  unsigned char *fontWork = (unsigned char*)memalign(32,131072);
+	unsigned char *fontWork = (unsigned char*)memalign(32,131072);
 #endif
 	//because we can't SYS_ReadROM straight to MEM2 on Wii, we must use a MEM1 buffer
 	unsigned char *fontCompressed = (unsigned char*)memalign(32,0x3000);

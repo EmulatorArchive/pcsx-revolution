@@ -26,8 +26,8 @@
 #include <string.h>
 #include <math.h>
 
-#include "utils/usb2storage.h"
-#include "utils/mload.h"
+// #include "utils/usb2storage.h"
+// #include "utils/mload.h"
 
 #include "system.h"
 #include "DEBUG.h"
@@ -36,6 +36,7 @@
 #include "gcMisc.h"
 
 #include "storage/wiifat.h"
+#include "mem2.h"
 
 u32 *xfb[2] = { NULL, NULL };
 int whichfb = 0;
@@ -137,9 +138,7 @@ static void Initialise (void){
 
 #ifdef HW_RVL
 	WPAD_Init();
-#endif
 
-#ifdef HW_RVL
 	WPAD_SetDataFormat(WPAD_CHAN_ALL, WPAD_FMT_BTNS_ACC_IR);
 	// Wii Power/Reset buttons
 	// gcMisc,h
@@ -166,64 +165,14 @@ PluginTable plugins[] =
 
 long LoadCdBios;
 
-#ifdef HW_RVL
-static bool FindIOS(u32 ios)
-{
-	s32 ret;
-	u32 n;
-	
-	u64 *titles = NULL;
-	u32 num_titles=0;
-	
-	ret = ES_GetNumTitles(&num_titles);
-	if (ret < 0)
-		return false;
-	
-	if(num_titles < 1) 
-		return false;
-	
-	titles = (u64 *)memalign(32, num_titles * sizeof(u64) + 32);
-	if (!titles)
-		return false;
-	
-	ret = ES_GetTitles(titles, num_titles);
-	if (ret < 0)
-	{
-		free(titles);
-		return false;
-	}
-	
-	for(n=0; n < num_titles; n++)
-	{
-		if((titles[n] & 0xFFFFFFFF)==ios) 
-		{
-			free(titles); 
-			return true;
-		}
-	}
-	free(titles); 
-	return false;
-}
-#endif
-
 int main(int argc, char *argv[]) {
-
 #ifdef HW_RVL
-	// try to load IOS 202
-	if(IOS_GetVersion() != 202 && FindIOS(202))
-		IOS_ReloadIOS(202);
-	
-	if(IOS_GetVersion() == 202)
-	{
-		
-		// load usb2 driver
-		if(mload_init() >= 0 && load_ehci_module())
-			USB2Enable(true);
-	}
+	L2Enhance();
 #endif
-
 	Initialise();
-
+#ifdef HW_RVL
+	InitMem2Manager();
+#endif
 	/* Configure pcsx */
 	memset(&Config, 0, sizeof(PcsxConfig));
 	strcpy(Config.Net, "Disabled");

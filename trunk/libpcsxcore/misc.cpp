@@ -30,6 +30,11 @@
 #include "mdec.h"
 #include "psxbios.h"
 #include "psxcounters.h"
+#include "psxcounters.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 using namespace R3000A;
 

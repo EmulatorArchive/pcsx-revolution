@@ -17,7 +17,7 @@ include $(DEVKITPPC)/wii_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	pcsx
 BUILD		:=	build
-SOURCES		:=	source . ./ui ./storage ./GPU/ ./SPU/ ./PAD/ ../libpcsxcore/ ../libpcsxcore/R3000A/ ../libpcsxcore/R3000A/ppc/ ./utils
+SOURCES		:=	source . ./ui ./storage ./GPU/ ./SPU/ ./PAD/ ../libpcsxcore/ ../libpcsxcore/R3000A/ ../libpcsxcore/R3000A/ppc/
 DATA		:=	data  
 INCLUDES	:=	./ ../libpcsxcore/
 
@@ -26,22 +26,24 @@ INCLUDES	:=	./ ../libpcsxcore/
 #---------------------------------------------------------------------------------
 
 CFLAGS	= -g $(MACHDEP) $(INCLUDE) -D__ppc__ \
-		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -D'PACKAGE_VERSION="0.1a"'
+		  -D__GX__ -D_SDL -DEMBEDDED_FONTS -D'PACKAGE_VERSION="0.2"'  -DTHREADED_AUDIO
 
 ifneq ($(BUILD),debug)
 CFLAGS	+= -O2 -pipe
 else
-CFLAGS	+= -DSHOW_DEBUG
+CFLAGS	+= -DSHOW_DEBUG -DDEBUG_BUILD
 endif
-		  
-CXXFLAGS	=	$(CFLAGS)
+
+CXXFLAGS	= -fno-rtti -fpermissive $(CFLAGS)
+
+ASFLAGS		= $(CFLAGS)
 
 LDFLAGS	=	-g $(MACHDEP) -Wl,-Map,$(notdir $@).map,--cref
 
 #---------------------------------------------------------------------------------
 # any extra libraries we wish to link with the project
 #---------------------------------------------------------------------------------
-LIBS	:=	-lwiiuse -lbte -lm -lfat -logc -ldi -ltinysmb -liso9660 -lz
+LIBS	:=	-lwiiuse -lbte -lm -lfat -logc -ldi -ltinysmb -liso9660 -lz 
 
 #---------------------------------------------------------------------------------
 # list of directories containing libraries, this must be the top level containing
@@ -59,7 +61,7 @@ ifneq ($(BUILD),$(notdir $(CURDIR)))
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 
 export VPATH	:=	$(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
-					$(foreach dir,$(DATA),$(CURDIR)/$(dir))
+			$(foreach dir,$(DATA),$(CURDIR)/$(dir))
 
 export DEPSDIR	:=	$(CURDIR)/$(BUILD)
 
@@ -70,7 +72,8 @@ CFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 CPPFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
 sFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
 SFILES		:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.S)))
-BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+# BINFILES	:=	$(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+# TTFFILES	:=	$(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.ttf)))
 
 #---------------------------------------------------------------------------------
 # use CXX for linking C++ projects, CC for standard C
@@ -84,7 +87,7 @@ endif
 export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
 					$(CPPFILES:.cpp=.o) $(CFILES:.c=.o) \
 					$(sFILES:.s=.o) $(SFILES:.S=.o) \
-					$(CURDIR)/utils/ehcmodule.elf.o
+# 					$(TTFFILES:.ttf=.ttf.o)
 
 #---------------------------------------------------------------------------------
 # build a list of include paths
@@ -127,10 +130,14 @@ $(OUTPUT).elf: $(OFILES)
 #---------------------------------------------------------------------------------
 # This rule links in binary data with the .jpg extension
 #---------------------------------------------------------------------------------
-%.jpg.o	:	%.jpg
+# %.ttf.o : %.ttf
+# 	@echo $(notdir $<)
+# 	$(bin2o)
+
+# %.jpg.o	:	%.jpg
 #---------------------------------------------------------------------------------
-	@echo $(notdir $<)
-	$(bin2o)
+# 	@echo $(notdir $<)
+# 	$(bin2o)
 
 -include $(DEPENDS)
 

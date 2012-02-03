@@ -499,9 +499,9 @@ void SPUWriteConfig() {
 
 	char path[255];
 #ifdef HW_RVL
-		strcpy(path, "sd:/pcsx-r/audio.ini");
+	strcpy(path, "sd:/pcsx-r/audio.ini");
 #else
-		strcpy(path, "carda:/pcsx-r/audio.ini");
+	strcpy(path, "carda:/pcsx-r/audio.ini");
 #endif
 
 	f = fopen(path, "w");

@@ -22,11 +22,9 @@
 typedef enum {
 	FAT_DEVICE_0 = 0
 ,	FAT_DEVICE_1
+,	DEVICE_DVD
 #ifdef HW_RVL
 ,	DEVICE_SMB
-#ifdef DVD_FIXED
-,	DEVICE_DVD
-#endif
 #endif
 ,	DEVICES_COUNT
 ,	FAT_DEVICES_COUNT = FAT_DEVICE_1+1
@@ -41,13 +39,12 @@ static const char *device[DEVICES_COUNT] = {
 #ifdef HW_RVL
 	"sd:/"
 ,	"usb:/"
-,	"smb:/"
-#ifdef DVD_FIXED
 ,	"dvd:/"
-#endif
+,	"smb:/"
 #else
 	"carda:/"
 ,	"cardb:/"
+,	"dvd:/"
 #endif
 };
 

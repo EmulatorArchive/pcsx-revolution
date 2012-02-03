@@ -17,7 +17,6 @@
  */
 
 #include "textmenu.h"
-#include <sys/dir.h>
 #include <string.h>
 #include <stdio.h>
 #include "storage/wiismb.h"
@@ -26,6 +25,8 @@
 #include "storage/mount.h"
 #include "gcMisc.h"
 #include "Config.h"
+
+#include <dirent.h>
 
 #define TYPE_FILTER(x)	(strstr(x, ".bin") || strstr(x, ".BIN")   \
 			|| strstr(x, ".iso") || strstr(x, ".ISO") \
@@ -40,28 +41,27 @@ typedef enum {
 } ret_action;
 
 typedef struct {
-	char name[255];
-	int  size;
-	int  attr;
+	char name[MAXPATHLEN];
+	bool is_dir;
 } dir_ent;
 
 static int const per_page = 20;
 
 typedef struct {
 	char title[30];
-	char path[255];
+	char path[MAXPATHLEN];
 	int filter;
 } file_browser_st;
 
 static void browse_back(char *str){
 	int length = strlen(str);
 	int idx;
-	for( idx = length; idx > 0; idx-- ) {
+	for( idx = length; idx > 0; --idx ) {
 		char ch = str[idx];
 		str[idx] = '\0';
 		if( ch == '/' ) {
 			if( str[idx-1] == ':' )		// root folder.
-				str[idx] = '/';		// Check is here, because it happens only once per function call.
+				str[idx] = '/';
 			break;
 		}
 	}
@@ -69,33 +69,33 @@ static void browse_back(char *str){
 
 static ret_action textFileBrowser(file_browser_st *file_struct){
 	// Set everything up to read
-	DIR_ITER* dp = diropen(file_struct->path);
+	DIR* dp = opendir(file_struct->path);
 
 	if(!dp)
 		return BROWSER_FILE_NOT_FOUND;
 
-	struct stat fstat;
-	char filename[MAXPATHLEN];
+	struct dirent *entry;
+
 	int num_entries = 1, i = 0;
 	dir_ent* dir = (dir_ent*) malloc( num_entries * sizeof(dir_ent) );
 	// Read each entry of the directory
-	while( dirnext(dp, filename, &fstat) == 0 ){
-		if((strcmp(filename, ".") != 0 && (fstat.st_mode & S_IFDIR)) || (file_struct->filter ? TYPE_FILTER(filename) : 1) )
+	while( (entry = readdir(dp)) != NULL ){
+
+		if(((entry->d_type == DT_DIR) && strcmp(entry->d_name, ".") != 0) || (file_struct->filter ? TYPE_FILTER(entry->d_name) : 1) )
 		{
 			// Make sure we have room for this one
 			if(i == num_entries){
 				++num_entries;
 				dir = (dir_ent*) realloc( dir, num_entries * sizeof(dir_ent) ); 
 			}
-			strcpy(dir[i].name, filename);
-			dir[i].size = fstat.st_size;
-			dir[i].attr = fstat.st_mode;
+			strcpy(dir[i].name, entry->d_name);
+			dir[i].is_dir = entry->d_type == DT_DIR;
 			++i;
 		}
 	}
-	
-	dirclose(dp);
-	
+
+	closedir(dp);
+
 	int index	= 0;
 	int temp	= 0;
 
@@ -106,27 +106,25 @@ static ret_action textFileBrowser(file_browser_st *file_struct){
 	while(1)
 	{
 		CHECK_POWER_BUTTONS();
+
 		if(GetHeld(UP, UP, UP))
 		{
 			if(index) index--;
 			usleep(150000);
 			draw = 1;
 		}
-		
-		if(GetHeld(DOWN, DOWN, DOWN))
+		else if(GetHeld(DOWN, DOWN, DOWN))
 		{
 			if(index < num_entries - 1) index++;
 			usleep(150000);
 			draw = 1;
 		}
-
-		if(GetInput(LEFT, LEFT, LEFT))
+		else if(GetInput(LEFT, LEFT, LEFT))
 		{
 			index = 0;
 			draw = 1;
 		}
-
-		if(GetInput(RIGHT, RIGHT, RIGHT))
+		else if(GetInput(RIGHT, RIGHT, RIGHT))
 		{
 			index = num_entries - 1;
 			draw = 1;
@@ -140,17 +138,14 @@ static ret_action textFileBrowser(file_browser_st *file_struct){
 			else 
 				sprintf(file_struct->path, "%s/%s", file_struct->path, dir[index].name);
 
-			BOOL is_dir = (dir[index].attr & S_IFDIR);
+			bool is_dir = dir[index].is_dir;
 			free(dir);
-			if(is_dir) {
-				return BROWSER_CHANGE_FOLDER;
-			}
-			else
-				return BROWSER_FILE_SELECTED;
+
+			return is_dir ? BROWSER_CHANGE_FOLDER : BROWSER_FILE_SELECTED;
 		}
-		
-		if(GetInput(B, B, B)) 
+		else if(GetInput(B, B, B)) 
 		{
+			free(dir);
 			return BROWSER_CANCELED;
 		}
 
@@ -172,7 +167,7 @@ static ret_action textFileBrowser(file_browser_st *file_struct){
 			for(temp = start; temp < limit; temp++)
 			{
 				printf("\x1b[%um", (index == temp) ? 32 : 37);
-				printf("\t%s\t%s\n", (dir[temp].attr & S_IFDIR) ? "DIR" : "   ", dir[temp].name);
+				printf("\t%s\t%s\n", dir[temp].is_dir ? "DIR" : "   ", dir[temp].name);
 			}
 
 			printf("\x1b[37m");
@@ -185,11 +180,9 @@ static ret_action textFileBrowser(file_browser_st *file_struct){
 static mount_state (*mount_dev[DEVICES_COUNT])(int) = {
 	MountFAT
 ,	MountFAT
+,	MountDVD
 #ifdef HW_RVL
 ,	ConnectShare
-#ifdef DVD_FIXED
-,	MountDVD
-#endif
 #endif
 };
 
@@ -211,22 +204,22 @@ int GameBrowser() {
 	strcpy(game_filename.title, "Select game image");
 	game_filename.filter = 1;
 
-	DIR_ITER *dp = NULL;
+        DIR *dp = NULL;
 
 	if(Settings.filename) {
 		strcpy(game_filename.path, Settings.filename);
 		browse_back(game_filename.path);	// delete game filename
-		dp = diropen(game_filename.path);
+                dp = opendir(game_filename.path);
 	}
 
 	if(dp) {
-		dirclose(dp);
+                closedir(dp);
 	}
 	else {
 		sprintf(game_filename.path, "%s/%s", device[Settings.device], "pcsx-r/games");
-		dp = diropen(game_filename.path);
+                dp = opendir(game_filename.path);
 		if(dp) 
-			dirclose(dp);
+                        closedir(dp);
 		else 
 			sprintf(game_filename.path, "%s", device[Settings.device]);
 	}

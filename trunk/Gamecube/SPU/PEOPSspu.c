@@ -106,7 +106,7 @@
 #ifdef GEKKO
 # include <gccore.h>
 // # include <ogc/lwp.h>
-# include "DEBUG.h"
+//# include "DEBUG.h"
 # include "cube_audio.h"
 #endif
 ////////////////////////////////////////////////////////////////////////
