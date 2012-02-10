@@ -3,7 +3,8 @@
 
 = Compile =
 
-  * Download latest [http://wiibrew.org/wiki/DevkitPro Devkitpro] and install.
+  * Download latest [http://wiibrew.org/wiki/DevkitPro Devkitpro] and install it.
+  * Download latest zlib library from [http://sourceforge.net/projects/devkitpro/files/portlibs/ppc/ portlibs] and extract it into devkitPro/portlibs/ppc.
    # *Windows*: 
     * Download [http://tortoisesvn.net/downloads TortoiseSVN].
     * Create folder, right click on it -> TortoiseSVN -> checkout -> http://pcsx-revolution.googlecode.com/svn/trunk/
