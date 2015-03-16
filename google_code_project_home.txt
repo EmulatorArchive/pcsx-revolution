@@ -1,0 +1,8 @@
+pcsx-revolution
+[CLOSED] Port of pcsx for Nintendo Wii (formerly Revolution).
+
+Based on pcsx-reloaded and pcsxgc.
+
+Project officially closed. Maybe will be reopened, when Wii U comes out.
+
+(Saved: March 15, 2015)
